@@ -10,24 +10,30 @@ import Home from "@/pages/home";
 import SpareParts from "@/pages/spare-parts";
 import ProductDetail from "@/pages/product-detail";
 import Contact from "@/pages/contact";
+import AdminLogin from "@/pages/admin-login";
 import Admin from "@/pages/admin";
 
 function Router() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1">
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/spare-parts" component={SpareParts} />
-          <Route path="/product/:id" component={ProductDetail} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/admin" component={Admin} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-      <Footer />
-    </div>
+    <Switch>
+      <Route path="/agoraadminpanel" component={AdminLogin} />
+      <Route>
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1">
+            <Switch>
+              <Route path="/" component={Home} />
+              <Route path="/spare-parts" component={SpareParts} />
+              <Route path="/product/:id" component={ProductDetail} />
+              <Route path="/contact" component={Contact} />
+              <Route path="/admin" component={Admin} />
+              <Route component={NotFound} />
+            </Switch>
+          </main>
+          <Footer />
+        </div>
+      </Route>
+    </Switch>
   );
 }
 
