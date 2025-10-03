@@ -73,7 +73,7 @@ export default function Footer() {
             &copy; 2025 Agora Rock Drill. All rights reserved. | Quality Guaranteed Spare Parts
           </p>
           <p className="text-center text-background/60 text-sm max-w-4xl mx-auto">
-            Epiroc, Sandvik, Furukawa, Ingersoll Rand, Everdigm, Tamrock, Montabert and Atlas Copco are registered trademarks of equipment manufacturers. AGORA Rock Drill A.Ş. does not represent any of these trademarks.
+            Sandvik, Furukawa, Epiroc, Atlas Copco are registered trademarks of equipment manufacturers. AGORA Rock Drill A.Ş. does not represent any of these trademarks.
           </p>
         </div>
       </div>
