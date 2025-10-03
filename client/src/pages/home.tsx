@@ -487,17 +487,13 @@ export default function Home() {
               
               {/* Right Side with Curtain Animation */}
               <div className="relative h-full min-h-[400px] overflow-hidden bg-slate-200">
-                {/* Background Image */}
-                <motion.img 
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  viewport={{ once: true }}
+                {/* Background Image - Always visible */}
+                <img 
                   src={agoraHeadOfficeImage} 
                   alt="AGORA Rock Drill Head Office - Ankara, Turkey" 
-                  className="absolute inset-0 w-full h-full object-cover z-0"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 z-[1]"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20"></div>
 
                 {/* Left Curtain - Orange */}
                 <motion.div
@@ -505,7 +501,7 @@ export default function Home() {
                   whileInView={{ width: "0%" }}
                   transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
                   viewport={{ once: true }}
-                  className="absolute inset-y-0 left-0 bg-primary z-20"
+                  className="absolute inset-y-0 left-0 bg-primary z-10"
                 />
 
                 {/* Right Curtain - Blue */}
@@ -514,7 +510,7 @@ export default function Home() {
                   whileInView={{ width: "0%" }}
                   transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
                   viewport={{ once: true }}
-                  className="absolute inset-y-0 right-0 bg-accent z-20"
+                  className="absolute inset-y-0 right-0 bg-accent z-10"
                 />
               </div>
             </div>
