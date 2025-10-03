@@ -20,10 +20,10 @@ import tunnelDrillImage2 from "@assets/shutterstock_1204797238-1536x1025_1759491
 import tunnelDrillImage3 from "@assets/shutterstock_1624956124-1536x1024_1759491821276.jpg";
 import outdoorDrillImage from "@assets/shutterstock_713592-1536x1024_1759491821273.jpg";
 import agoraHeadOfficeImage from "@assets/Agora_Head_Office_1759491869193.jpg";
-import warehouseImage1 from "@assets/stock_images/warehouse_industrial_c96b9e5d.jpg";
-import warehouseImage2 from "@assets/stock_images/warehouse_industrial_5bd1059d.jpg";
-import warehouseImage3 from "@assets/stock_images/warehouse_industrial_5ad4d018.jpg";
-import teamCollaborationImage from "@assets/stock_images/professional_busines_a4681059.jpg";
+import atlasCopcoBrandLogo from "@assets/ref_atlas_copco_1759492041454.jpg";
+import epirocBrandLogo from "@assets/ref_epiroc_1759492041454.jpg";
+import sandvikBrandLogo from "@assets/sandvik-500x350-1_1759492041454.webp";
+import furukawaBrandLogo from "@assets/frukawa_logo_1759492041453.png";
 
 const heroSlides = [
   {
@@ -214,8 +214,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trusted Brands Carousel */}
-      <section className="py-12 bg-gradient-to-r from-slate-50 to-slate-100 overflow-hidden">
+      {/* Trusted Brands Grid */}
+      <section className="py-12 bg-gradient-to-r from-slate-50 to-slate-100">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -228,87 +228,71 @@ export default function Home() {
             <p className="text-muted-foreground">We supply spare parts for all major rock drilling manufacturers</p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="relative"
-          >
-            <div className="overflow-hidden" ref={brandsEmblaRef}>
-              <div className="flex gap-6">
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
-                >
-                  <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Epiroc_Logo.png/320px-Epiroc_Logo.png" 
-                    alt="Epiroc" 
-                    className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                    data-testid="brand-logo-epiroc"
-                  />
-                </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center"
+            >
+              <img 
+                src={atlasCopcoBrandLogo} 
+                alt="Atlas Copco" 
+                className="max-h-32 max-w-full w-auto object-contain"
+                data-testid="brand-logo-atlas-copco"
+              />
+            </motion.div>
 
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
-                >
-                  <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Atlas_Copco.jpg/320px-Atlas_Copco.jpg" 
-                    alt="Atlas Copco" 
-                    className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                    data-testid="brand-logo-atlas-copco"
-                  />
-                </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center"
+            >
+              <img 
+                src={epirocBrandLogo} 
+                alt="Epiroc" 
+                className="max-h-32 max-w-full w-auto object-contain"
+                data-testid="brand-logo-epiroc"
+              />
+            </motion.div>
 
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
-                >
-                  <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Sandvik_Logo.svg/320px-Sandvik_Logo.svg.png" 
-                    alt="Sandvik" 
-                    className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                    data-testid="brand-logo-sandvik"
-                  />
-                </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center"
+            >
+              <img 
+                src={sandvikBrandLogo} 
+                alt="Sandvik" 
+                className="max-h-32 max-w-full w-auto object-contain"
+                data-testid="brand-logo-sandvik"
+              />
+            </motion.div>
 
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
-                >
-                  <div className="text-2xl font-bold text-primary" data-testid="brand-logo-furukawa">
-                    <span className="block text-sm text-muted-foreground mb-1">FRD</span>
-                    FURUKAWA
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-primary">INGERSOLL RAND</div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-primary">EVERDIGM</div>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center"
+            >
+              <img 
+                src={furukawaBrandLogo} 
+                alt="Furukawa" 
+                className="max-h-32 max-w-full w-auto object-contain"
+                data-testid="brand-logo-furukawa"
+              />
+            </motion.div>
+          </div>
         </div>
       </section>
 
