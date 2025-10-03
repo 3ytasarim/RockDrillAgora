@@ -20,8 +20,6 @@ const productFormSchema = z.object({
   description: z.string().optional(),
   delkomCode: z.string().min(1, "Delkom code is required"),
   referenceCode: z.string().min(1, "Reference code is required"),
-  originalPrice: z.string().min(1, "Original price is required"),
-  discountPercentage: z.number().min(0).max(100).optional(),
   categoryId: z.string().optional(),
   brandCompatibility: z.string().optional(),
   stockStatus: z.enum(["in_stock", "out_of_stock", "pre_order"]),
@@ -47,8 +45,6 @@ export default function ProductForm({ categories }: ProductFormProps) {
       description: "",
       delkomCode: "",
       referenceCode: "",
-      originalPrice: "",
-      discountPercentage: 0,
       categoryId: "",
       brandCompatibility: "",
       stockStatus: "in_stock",
@@ -232,48 +228,6 @@ export default function ProductForm({ categories }: ProductFormProps) {
                 <FormLabel>Reference Code *</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., 3115600784" {...field} data-testid="reference-code-input" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="originalPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Original Price (€) *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    {...field}
-                    data-testid="original-price-input"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="discountPercentage"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Discount (%)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    placeholder="0"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    data-testid="discount-input"
-                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

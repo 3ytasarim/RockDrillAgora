@@ -52,6 +52,9 @@ export const insertProductSchema = createInsertSchema(products).omit({
   createdAt: true,
   updatedAt: true,
   finalPrice: true,
+  originalPrice: true,
+  discountPercentage: true,
+  isDiscounted: true,
 });
 
 export type InsertCategory = z.infer<typeof insertCategorySchema>;

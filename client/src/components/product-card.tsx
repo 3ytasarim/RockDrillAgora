@@ -8,19 +8,10 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
-  const originalPrice = parseFloat(product.originalPrice);
-  const finalPrice = parseFloat(product.finalPrice);
-  const hasDiscount = product.discountPercentage && product.discountPercentage > 0;
-
   return (
     <div className="product-card bg-card rounded-lg shadow-md overflow-hidden border border-border" data-testid={`product-card-${product.id}`}>
       <div className="relative">
-        {hasDiscount && (
-          <span className="discount-badge">
-            {product.discountPercentage}% Off
-          </span>
-        )}
-        {!hasDiscount && product.isFeatured && (
+        {product.isFeatured && (
           <span className="new-badge">
             Featured
           </span>
@@ -43,23 +34,13 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             <div>Brand: <span className="font-semibold">{product.brandCompatibility}</span></div>
           )}
         </div>
-        <div className="flex items-center gap-2 mb-3">
-          {hasDiscount && (
-            <span className="text-muted-foreground line-through text-sm">
-              €{originalPrice.toLocaleString()}
-            </span>
-          )}
-          <span className="text-2xl font-bold text-accent" data-testid={`product-price-${product.id}`}>
-            €{finalPrice.toLocaleString()}
-          </span>
-        </div>
         <Button 
           className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
           onClick={() => onAddToCart?.(product.id)}
           data-testid={`add-to-cart-${product.id}`}
         >
           <ShoppingCart size={16} className="mr-2" />
-          Add to Cart
+          Request Quote
         </Button>
       </div>
     </div>

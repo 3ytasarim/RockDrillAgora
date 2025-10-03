@@ -71,14 +71,6 @@ export default function Home() {
     },
   });
 
-  const { data: discountedProducts = [], isLoading: discountedLoading } = useQuery<ProductWithCategory[]>({
-    queryKey: ["/api/products", "discounted"],
-    queryFn: async () => {
-      const response = await fetch("/api/products?discounted=true");
-      if (!response.ok) throw new Error("Failed to fetch discounted products");
-      return response.json();
-    },
-  });
 
   const handleSearch = (query: string, code: string) => {
     const searchParams = new URLSearchParams();
@@ -243,12 +235,12 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-foreground mb-4">
               <Star className="inline text-accent mr-2" />
-              Best Seller Discounted Products
+              Featured Products
             </h2>
-            <p className="text-xl text-muted-foreground">Top quality spare parts at unbeatable prices</p>
+            <p className="text-xl text-muted-foreground">Top quality spare parts for your drilling equipment</p>
           </div>
 
-          {discountedLoading ? (
+          {featuredLoading ? (
             <div className="grid md:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="bg-card rounded-lg p-6 animate-pulse">
@@ -259,15 +251,15 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          ) : discountedProducts.length > 0 ? (
+          ) : featuredProducts.length > 0 ? (
             <div className="grid md:grid-cols-4 gap-6">
-              {discountedProducts.map((product) => (
+              {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">No discounted products available at the moment.</p>
+              <p className="text-muted-foreground text-lg">No featured products available at the moment.</p>
             </div>
           )}
 

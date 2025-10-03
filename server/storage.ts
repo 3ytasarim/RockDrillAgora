@@ -117,17 +117,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
-    // Calculate final price based on discount
-    const originalPrice = parseFloat(product.originalPrice);
-    const discount = product.discountPercentage || 0;
-    const finalPrice = originalPrice * (1 - discount / 100);
-    
     const [newProduct] = await db
       .insert(products)
       .values({
         ...product,
-        finalPrice: finalPrice.toFixed(2),
-        isDiscounted: discount > 0,
+        originalPrice: "0.00",
+        finalPrice: "0.00",
+        discountPercentage: 0,
+        isDiscounted: false,
       })
       .returning();
     
@@ -135,21 +132,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product> {
-    // Recalculate final price if original price or discount changed
-    let finalPrice: string | undefined;
-    if (product.originalPrice || product.discountPercentage !== undefined) {
-      const [existingProduct] = await db.select().from(products).where(eq(products.id, id));
-      const originalPrice = parseFloat(product.originalPrice || existingProduct.originalPrice);
-      const discount = product.discountPercentage !== undefined ? product.discountPercentage : existingProduct.discountPercentage;
-      finalPrice = (originalPrice * (1 - (discount || 0) / 100)).toFixed(2);
-    }
-
     const [updatedProduct] = await db
       .update(products)
       .set({
         ...product,
-        ...(finalPrice && { finalPrice }),
-        ...(product.discountPercentage !== undefined && { isDiscounted: (product.discountPercentage ?? 0) > 0 }),
         updatedAt: new Date(),
       })
       .where(eq(products.id, id))
