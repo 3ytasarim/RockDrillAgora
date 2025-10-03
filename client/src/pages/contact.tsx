@@ -277,19 +277,34 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Google Maps Info */}
-      <section className="py-8 bg-muted">
+      {/* Google Maps */}
+      <section className="py-12 bg-muted">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex items-center justify-center gap-3 text-muted-foreground"
+            className="space-y-4"
           >
-            <MapPin className="text-primary" size={24} />
-            <p className="text-lg">
-              <span className="font-semibold text-foreground">Agora Rock Drill</span> diye Google Maps'de var
-            </p>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-foreground mb-2">Find Us on Google Maps</h2>
+              <p className="text-muted-foreground">
+                <MapPin className="inline text-primary mr-2" size={20} />
+                Search for <span className="font-semibold text-foreground">Agora Rock Drill</span> on Google Maps
+              </p>
+            </div>
+            <div className="w-full h-[450px] rounded-2xl overflow-hidden shadow-xl border border-border" data-testid="google-maps-container">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3060.8287536738734!2d32.7326!3d39.9334!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMznCsDU2JzAwLjIiTiAzMsKwNDMnNTcuNCJF!5e0!3m2!1sen!2str!4v1234567890"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Agora Rock Drill Location"
+              ></iframe>
+            </div>
           </motion.div>
         </div>
       </section>
