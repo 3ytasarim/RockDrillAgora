@@ -276,6 +276,23 @@ export default function Contact() {
           </div>
         </div>
       </section>
+
+      {/* Google Maps Info */}
+      <section className="py-8 bg-muted">
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center justify-center gap-3 text-muted-foreground"
+          >
+            <MapPin className="text-primary" size={24} />
+            <p className="text-lg">
+              <span className="font-semibold text-foreground">Agora Rock Drill</span> diye Google Maps'de var
+            </p>
+          </motion.div>
+        </div>
+      </section>
     </div>
   );
 }
