@@ -35,7 +35,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             <div>Brand: <span className="font-semibold" data-testid={`brand-${product.id}`}>{product.brandCompatibility}</span></div>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-3">
           <Button 
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
             onClick={(e) => {
