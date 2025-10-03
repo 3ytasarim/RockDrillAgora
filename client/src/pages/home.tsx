@@ -19,6 +19,7 @@ import tunnelDrillImage1 from "@assets/shutterstock_453380569-1536x1025_17594883
 import tunnelDrillImage2 from "@assets/shutterstock_1204797238-1536x1025_1759488326747.jpg";
 import tunnelDrillImage3 from "@assets/shutterstock_1624956124-1536x1024_1759488326748.jpg";
 import outdoorDrillImage from "@assets/shutterstock_713592-1536x1024_1759488326745.jpg";
+import agoraHeadOfficeImage from "@assets/Agora_Head_Office_1759488410078.jpg";
 import warehouseImage1 from "@assets/stock_images/warehouse_industrial_c96b9e5d.jpg";
 import warehouseImage2 from "@assets/stock_images/warehouse_industrial_5bd1059d.jpg";
 import warehouseImage3 from "@assets/stock_images/warehouse_industrial_5ad4d018.jpg";
@@ -406,8 +407,8 @@ export default function Home() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.8, delay: 0.3 }}
                   viewport={{ once: true }}
-                  src={outdoorDrillImage} 
-                  alt="Professional rock drilling operations" 
+                  src={agoraHeadOfficeImage} 
+                  alt="AGORA Rock Drill Head Office - Ankara, Turkey" 
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20"></div>
