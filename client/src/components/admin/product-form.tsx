@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import type { Category } from "@shared/schema";
+import type { Category, ProductWithCategory } from "@shared/schema";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from "@uppy/core";
 
@@ -29,9 +29,11 @@ type ProductFormData = z.infer<typeof productFormSchema>;
 
 interface ProductFormProps {
   categories: Category[];
+  editProduct?: ProductWithCategory | null;
+  onEditComplete?: () => void;
 }
 
-export default function ProductForm({ categories }: ProductFormProps) {
+export default function ProductForm({ categories, editProduct, onEditComplete }: ProductFormProps) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
@@ -49,6 +51,38 @@ export default function ProductForm({ categories }: ProductFormProps) {
       isFeatured: false,
     },
   });
+
+  useEffect(() => {
+    if (editProduct) {
+      form.reset({
+        name: editProduct.name,
+        description: editProduct.description || "",
+        delkomCode: editProduct.delkomCode,
+        categoryId: editProduct.categoryId || "",
+        brandCompatibility: editProduct.brandCompatibility || "",
+        stockStatus: editProduct.stockStatus as "in_stock" | "out_of_stock" | "pre_order",
+        isFeatured: editProduct.isFeatured || false,
+      });
+      if (editProduct.imageUrl) {
+        setImagePreview(editProduct.imageUrl);
+      }
+      setUploadedImageUrl("");
+      setPublicImagePath("");
+    } else {
+      form.reset({
+        name: "",
+        description: "",
+        delkomCode: "",
+        categoryId: "",
+        brandCompatibility: "",
+        stockStatus: "in_stock",
+        isFeatured: false,
+      });
+      setImagePreview("");
+      setUploadedImageUrl("");
+      setPublicImagePath("");
+    }
+  }, [editProduct, form]);
 
   const updateProductImageMutation = useMutation({
     mutationFn: async ({ productId, imageURL }: { productId: string; imageURL: string }) => {
@@ -70,12 +104,8 @@ export default function ProductForm({ categories }: ProductFormProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
         title: "Success",
-        description: "Product created with image successfully!",
+        description: "Product image updated successfully!",
       });
-      form.reset();
-      setImagePreview("");
-      setUploadedImageUrl("");
-      setPublicImagePath("");
     },
     onError: (error: Error) => {
       toast({
@@ -83,10 +113,61 @@ export default function ProductForm({ categories }: ProductFormProps) {
         description: "Failed to update product image: " + error.message,
         variant: "destructive",
       });
+      setUploadedImageUrl("");
+      setPublicImagePath("");
+    },
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: async ({ id, data, shouldRemoveImage }: { id: string; data: ProductFormData; shouldRemoveImage?: boolean }) => {
+      const response = await fetch(`/api/products/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update product");
+      }
+      
+      return { product: await response.json(), shouldRemoveImage };
+    },
+    onSuccess: async ({ product, shouldRemoveImage }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({
+        title: "Success",
+        description: "Product updated successfully!",
+      });
+      
+      if (uploadedImageUrl) {
+        updateProductImageMutation.mutate({
+          productId: product.id,
+          imageURL: uploadedImageUrl,
+        });
+      } else if (shouldRemoveImage) {
+        updateProductImageMutation.mutate({
+          productId: product.id,
+          imageURL: "",
+        });
+      }
+      
       form.reset();
       setImagePreview("");
       setUploadedImageUrl("");
       setPublicImagePath("");
+      if (onEditComplete) {
+        onEditComplete();
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -108,20 +189,23 @@ export default function ProductForm({ categories }: ProductFormProps) {
       return response.json();
     },
     onSuccess: async (product) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({
+        title: "Success",
+        description: "Product created successfully!",
+      });
+      
       if (uploadedImageUrl) {
         updateProductImageMutation.mutate({
           productId: product.id,
           imageURL: uploadedImageUrl,
         });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-        toast({
-          title: "Success",
-          description: "Product created successfully!",
-        });
-        form.reset();
-        setImagePreview("");
       }
+      
+      form.reset();
+      setImagePreview("");
+      setUploadedImageUrl("");
+      setPublicImagePath("");
     },
     onError: (error: Error) => {
       toast({
@@ -133,7 +217,16 @@ export default function ProductForm({ categories }: ProductFormProps) {
   });
 
   const onSubmit = (data: ProductFormData) => {
-    createProductMutation.mutate(data);
+    if (editProduct) {
+      const shouldRemoveImage = imagePreview === "" && !!editProduct.imageUrl;
+      updateProductMutation.mutate({ 
+        id: editProduct.id, 
+        data,
+        shouldRemoveImage
+      });
+    } else {
+      createProductMutation.mutate(data);
+    }
   };
 
   const handleGetUploadParameters = useCallback(async () => {
@@ -330,12 +423,16 @@ export default function ProductForm({ categories }: ProductFormProps) {
         <div className="flex gap-4">
           <Button
             type="submit"
-            disabled={createProductMutation.isPending}
+            disabled={createProductMutation.isPending || updateProductMutation.isPending}
             className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
             data-testid="save-product-btn"
           >
             <Save size={16} className="mr-2" />
-            {createProductMutation.isPending ? "Saving..." : "Save Product"}
+            {(createProductMutation.isPending || updateProductMutation.isPending) 
+              ? "Saving..." 
+              : editProduct 
+                ? "Update Product" 
+                : "Save Product"}
           </Button>
           
           <Button

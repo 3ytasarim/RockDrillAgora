@@ -8,10 +8,11 @@ interface ProductListProps {
   products: ProductWithCategory[];
   isLoading: boolean;
   onDelete: (productId: string) => void;
+  onEdit: (product: ProductWithCategory) => void;
   isDeleting: boolean;
 }
 
-export default function ProductList({ products, isLoading, onDelete, isDeleting }: ProductListProps) {
+export default function ProductList({ products, isLoading, onDelete, onEdit, isDeleting }: ProductListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredProducts = products.filter(product =>
@@ -94,6 +95,7 @@ export default function ProductList({ products, isLoading, onDelete, isDeleting 
                         variant="ghost"
                         size="sm"
                         className="text-primary hover:text-primary/80"
+                        onClick={() => onEdit(product)}
                         data-testid={`edit-product-${product.id}`}
                       >
                         <Edit size={16} />

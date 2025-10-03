@@ -1,17 +1,46 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, LogOut } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Shield, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 import ProductList from "@/components/admin/product-list";
 import ProductForm from "@/components/admin/product-form";
 import { queryClient } from "@/lib/queryClient";
 import type { ProductWithCategory, Category } from "@shared/schema";
 
+const categoryFormSchema = z.object({
+  name: z.string().min(1, "Category name is required"),
+  description: z.string().optional(),
+  icon: z.string().min(1, "Icon is required"),
+});
+
+type CategoryFormData = z.infer<typeof categoryFormSchema>;
+
 export default function Admin() {
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("products");
+  const [editingProduct, setEditingProduct] = useState<ProductWithCategory | null>(null);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  const categoryForm = useForm<CategoryFormData>({
+    resolver: zodResolver(categoryFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      icon: "fas fa-cog",
+    },
+  });
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("adminAuthenticated");
@@ -19,6 +48,22 @@ export default function Admin() {
       setLocation("/agoraadminpanel");
     }
   }, [setLocation]);
+
+  useEffect(() => {
+    if (editingCategory) {
+      categoryForm.reset({
+        name: editingCategory.name,
+        description: editingCategory.description || "",
+        icon: editingCategory.icon || "fas fa-cog",
+      });
+    } else {
+      categoryForm.reset({
+        name: "",
+        description: "",
+        icon: "fas fa-cog",
+      });
+    }
+  }, [editingCategory, categoryForm]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminAuthenticated");
@@ -42,6 +87,17 @@ export default function Admin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      toast({
+        title: "Success",
+        description: "Product deleted successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -49,6 +105,135 @@ export default function Admin() {
     if (confirm('Are you sure you want to delete this product?')) {
       deleteProductMutation.mutate(productId);
     }
+  };
+
+  const handleEditProduct = (product: ProductWithCategory) => {
+    setEditingProduct(product);
+    setActiveTab("add-product");
+  };
+
+  const handleEditComplete = () => {
+    setEditingProduct(null);
+    setActiveTab("products");
+  };
+
+  const createCategoryMutation = useMutation({
+    mutationFn: async (data: CategoryFormData) => {
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create category");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      toast({
+        title: "Success",
+        description: "Category created successfully!",
+      });
+      categoryForm.reset();
+      setCategoryDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: CategoryFormData }) => {
+      const response = await fetch(`/api/categories/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update category");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      toast({
+        title: "Success",
+        description: "Category updated successfully!",
+      });
+      categoryForm.reset();
+      setEditingCategory(null);
+      setCategoryDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      const response = await fetch(`/api/categories/${categoryId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete category');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      toast({
+        title: "Success",
+        description: "Category deleted successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCategorySubmit = (data: CategoryFormData) => {
+    if (editingCategory) {
+      updateCategoryMutation.mutate({ id: editingCategory.id, data });
+    } else {
+      createCategoryMutation.mutate(data);
+    }
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setCategoryDialogOpen(true);
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    if (confirm('Are you sure you want to delete this category?')) {
+      deleteCategoryMutation.mutate(categoryId);
+    }
+  };
+
+  const handleAddCategory = () => {
+    setEditingCategory(null);
+    categoryForm.reset();
+    setCategoryDialogOpen(true);
   };
 
   return (
@@ -98,6 +283,7 @@ export default function Admin() {
                 products={products}
                 isLoading={productsLoading}
                 onDelete={handleDeleteProduct}
+                onEdit={handleEditProduct}
                 isDeleting={deleteProductMutation.isPending}
               />
             </div>
@@ -105,17 +291,116 @@ export default function Admin() {
 
           <TabsContent value="add-product" className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Add New Product</h2>
-              <ProductForm categories={categories} />
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                {editingProduct ? "Edit Product" : "Add New Product"}
+              </h2>
+              <ProductForm 
+                categories={categories} 
+                editProduct={editingProduct}
+                onEditComplete={handleEditComplete}
+              />
             </div>
           </TabsContent>
 
           <TabsContent value="categories" className="space-y-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-foreground">Category Management</h2>
-              <button className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 transition-colors font-semibold">
-                <i className="fas fa-plus mr-2"></i>Add Category
-              </button>
+              <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                    onClick={handleAddCategory}
+                    data-testid="button-add-category"
+                  >
+                    <Plus size={16} className="mr-2" />
+                    Add Category
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingCategory ? "Edit Category" : "Add New Category"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <Form {...categoryForm}>
+                    <form onSubmit={categoryForm.handleSubmit(handleCategorySubmit)} className="space-y-4">
+                      <FormField
+                        control={categoryForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category Name *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Pistons" {...field} data-testid="input-category-name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={categoryForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Enter category description..." 
+                                rows={3}
+                                {...field} 
+                                data-testid="input-category-description" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={categoryForm.control}
+                        name="icon"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Icon (Font Awesome Class) *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., fas fa-cog" {...field} data-testid="input-category-icon" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex gap-3 pt-4">
+                        <Button
+                          type="submit"
+                          disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                          className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                          data-testid="button-save-category"
+                        >
+                          {(createCategoryMutation.isPending || updateCategoryMutation.isPending)
+                            ? "Saving..."
+                            : editingCategory
+                            ? "Update Category"
+                            : "Add Category"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setCategoryDialogOpen(false);
+                            setEditingCategory(null);
+                            categoryForm.reset();
+                          }}
+                          data-testid="button-cancel-category"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {categoriesLoading ? (
@@ -138,10 +423,21 @@ export default function Admin() {
                         <i className={category.icon || "fas fa-cog"}></i>
                       </div>
                       <div className="flex gap-2">
-                        <button className="text-primary hover:text-primary/80" title="Edit" data-testid={`edit-category-${category.id}`}>
+                        <button 
+                          onClick={() => handleEditCategory(category)}
+                          className="text-primary hover:text-primary/80" 
+                          title="Edit" 
+                          data-testid={`edit-category-${category.id}`}
+                        >
                           <i className="fas fa-edit"></i>
                         </button>
-                        <button className="text-destructive hover:text-destructive/80" title="Delete" data-testid={`delete-category-${category.id}`}>
+                        <button 
+                          onClick={() => handleDeleteCategory(category.id)}
+                          disabled={deleteCategoryMutation.isPending}
+                          className="text-destructive hover:text-destructive/80 disabled:opacity-50" 
+                          title="Delete" 
+                          data-testid={`delete-category-${category.id}`}
+                        >
                           <i className="fas fa-trash"></i>
                         </button>
                       </div>
