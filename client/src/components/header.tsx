@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ChevronDown, Home, Cog, Info, Mail, Shield, Menu, X } from "lucide-react";
+import { ChevronDown, Home, Cog, Info, Mail, FileText, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import logoImage from "@assets/AgoraRockDrillLogo_1759477799213.png";
+import RequestQuoteModal from "@/components/request-quote-modal";
 
 export default function Header() {
   const [location] = useLocation();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
 
   return (
     <>
@@ -89,13 +91,15 @@ export default function Header() {
                 Contact
               </a>
               
-              {/* Admin Panel Button */}
-              <Link href="/admin" data-testid="nav-admin" asChild>
-                <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold">
-                  <Shield size={16} className="mr-1" />
-                  Admin Panel
-                </Button>
-              </Link>
+              {/* Free Request Button */}
+              <Button 
+                onClick={() => setRequestModalOpen(true)}
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                data-testid="nav-request"
+              >
+                <FileText size={16} className="mr-2" />
+                Free Request
+              </Button>
             </div>
 
             {/* Mobile Menu Button */}
@@ -130,15 +134,28 @@ export default function Header() {
                   <Mail size={16} className="inline mr-2" />
                   Contact
                 </a>
-                <Link href="/admin" data-testid="mobile-nav-admin" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                  <Shield size={16} className="inline mr-2" />
-                  Admin Panel
-                </Link>
+                <button 
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setRequestModalOpen(true);
+                  }}
+                  className="block w-full text-left text-foreground hover:text-primary font-semibold" 
+                  data-testid="mobile-nav-request"
+                >
+                  <FileText size={16} className="inline mr-2" />
+                  Free Request
+                </button>
               </div>
             </div>
           )}
         </div>
       </nav>
+      
+      {/* Request Quote Modal */}
+      <RequestQuoteModal 
+        open={requestModalOpen} 
+        onOpenChange={setRequestModalOpen}
+      />
     </>
   );
 }
