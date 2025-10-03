@@ -1,12 +1,14 @@
+import logoImage from "@assets/AgoraRockDrillLogo_1759477799213.png";
+
 export default function Footer() {
   return (
     <footer className="bg-foreground text-background py-12">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="text-2xl font-bold mb-4">
-              <i className="fas fa-industry mr-2"></i>AGORA ROCK DRILL
-            </h3>
+            <div className="mb-4">
+              <img src={logoImage} alt="Agora Rock Drill" className="h-16 w-auto brightness-0 invert" />
+            </div>
             <p className="text-background/80 mb-4">
               Professional solutions for spare parts, service and maintenance needs of rock drilling machines. 20 years of experience with 700+ m² warehouse.
             </p>
@@ -67,8 +69,13 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-background/20 pt-6 text-center text-background/70">
-          <p>&copy; 2025 Agora Rock Drill. All rights reserved. | Quality Guaranteed Spare Parts</p>
+        <div className="border-t border-background/20 pt-6 space-y-3">
+          <p className="text-center text-background/70">
+            &copy; 2025 Agora Rock Drill. All rights reserved. | Quality Guaranteed Spare Parts
+          </p>
+          <p className="text-center text-background/60 text-sm max-w-4xl mx-auto">
+            Epiroc, Sandvik, Furukawa, Ingersoll Rand, Everdigm, Tamrock, Montabert and Atlas Copco are registered trademarks of equipment manufacturers. AGORA Rock Drill A.Ş. does not represent any of these trademarks.
+          </p>
         </div>
       </div>
     </footer>
