@@ -19,7 +19,7 @@ import tunnelDrillImage1 from "@assets/shutterstock_453380569-1536x1025_17594918
 import tunnelDrillImage2 from "@assets/shutterstock_1204797238-1536x1025_1759491821274.jpg";
 import tunnelDrillImage3 from "@assets/shutterstock_1624956124-1536x1024_1759491821276.jpg";
 import outdoorDrillImage from "@assets/shutterstock_713592-1536x1024_1759491821273.jpg";
-import agoraHeadOfficeImage from "@assets/Agora_Head_Office_1759491869193.jpg";
+import agoraHeadOfficeImage from "@assets/Agora_Head_Office_1759492287573.jpg";
 import atlasCopcoBrandLogo from "@assets/ref_atlas_copco_1759492041454.jpg";
 import epirocBrandLogo from "@assets/ref_epiroc_1759492041454.jpg";
 import sandvikBrandLogo from "@assets/sandvik-500x350-1_1759492041454.webp";
@@ -501,20 +501,22 @@ export default function Home() {
 
                 {/* Left Curtain */}
                 <motion.div
-                  initial={{ x: 0 }}
-                  whileInView={{ x: '-100%' }}
+                  initial={{ x: 0, opacity: 1 }}
+                  whileInView={{ x: '-100%', opacity: 0 }}
                   transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
                   viewport={{ once: true }}
-                  className="absolute inset-y-0 left-0 w-1/2 bg-primary z-10"
+                  className="absolute inset-y-0 left-0 w-full bg-primary z-10"
+                  style={{ transformOrigin: 'left' }}
                 />
 
                 {/* Right Curtain */}
                 <motion.div
-                  initial={{ x: 0 }}
-                  whileInView={{ x: '100%' }}
+                  initial={{ x: 0, opacity: 1 }}
+                  whileInView={{ x: '100%', opacity: 0 }}
                   transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
                   viewport={{ once: true }}
-                  className="absolute inset-y-0 right-0 w-1/2 bg-accent z-10"
+                  className="absolute inset-y-0 right-0 w-full bg-accent z-10"
+                  style={{ transformOrigin: 'right' }}
                 />
               </div>
             </div>
