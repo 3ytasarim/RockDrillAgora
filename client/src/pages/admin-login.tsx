@@ -69,9 +69,6 @@ export default function AdminLogin() {
               transition={{ duration: 0.5 }}
               className="flex flex-col items-center"
             >
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
-                <Shield className="text-primary" size={40} />
-              </div>
               <img src={logoImage} alt="Agora Rock Drill" className="h-16 mb-4 brightness-0 invert" />
               <h1 className="text-3xl font-bold mb-2">Admin Panel</h1>
               <p className="text-white/90 text-center">Secure Access Portal</p>
