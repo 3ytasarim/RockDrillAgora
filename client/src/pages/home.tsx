@@ -54,6 +54,7 @@ const heroSlides = [
 
 export default function Home() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000 })]);
+  const [brandsEmblaRef] = useEmblaCarousel({ loop: true, align: 'start', slidesToScroll: 1 }, [Autoplay({ delay: 3000, stopOnInteraction: false })]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
@@ -214,7 +215,7 @@ export default function Home() {
       </section>
 
       {/* Trusted Brands Carousel */}
-      <section className="py-12 bg-gradient-to-r from-slate-50 to-slate-100">
+      <section className="py-12 bg-gradient-to-r from-slate-50 to-slate-100 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -232,56 +233,81 @@ export default function Home() {
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center"
+            className="relative"
           >
-            <motion.div
-              whileHover={{ scale: 1.05, y: -5 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-full h-32 flex items-center justify-center"
-            >
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Epiroc_Logo.png/320px-Epiroc_Logo.png" 
-                alt="Epiroc" 
-                className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                data-testid="brand-logo-epiroc"
-              />
-            </motion.div>
+            <div className="overflow-hidden" ref={brandsEmblaRef}>
+              <div className="flex gap-6">
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
+                >
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Epiroc_Logo.png/320px-Epiroc_Logo.png" 
+                    alt="Epiroc" 
+                    className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    data-testid="brand-logo-epiroc"
+                  />
+                </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05, y: -5 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-full h-32 flex items-center justify-center"
-            >
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Atlas_Copco.jpg/320px-Atlas_Copco.jpg" 
-                alt="Atlas Copco" 
-                className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                data-testid="brand-logo-atlas-copco"
-              />
-            </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
+                >
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Atlas_Copco.jpg/320px-Atlas_Copco.jpg" 
+                    alt="Atlas Copco" 
+                    className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    data-testid="brand-logo-atlas-copco"
+                  />
+                </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05, y: -5 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-full h-32 flex items-center justify-center"
-            >
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Sandvik_Logo.svg/320px-Sandvik_Logo.svg.png" 
-                alt="Sandvik" 
-                className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                data-testid="brand-logo-sandvik"
-              />
-            </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
+                >
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Sandvik_Logo.svg/320px-Sandvik_Logo.svg.png" 
+                    alt="Sandvik" 
+                    className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    data-testid="brand-logo-sandvik"
+                  />
+                </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05, y: -5 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-full h-32 flex items-center justify-center"
-            >
-              <div className="text-2xl font-bold text-primary" data-testid="brand-logo-furukawa">
-                FURUKAWA
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
+                >
+                  <div className="text-2xl font-bold text-primary" data-testid="brand-logo-furukawa">
+                    <span className="block text-sm text-muted-foreground mb-1">FRD</span>
+                    FURUKAWA
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
+                >
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-primary">INGERSOLL RAND</div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex-[0_0_280px] h-32 flex items-center justify-center"
+                >
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-primary">EVERDIGM</div>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       </section>
