@@ -425,97 +425,102 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Company Production Info */}
-      <motion.section 
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-        className="py-16 bg-gradient-to-br from-slate-50 to-slate-100"
-      >
+      {/* Company Production Info with Curtain Animation */}
+      <section className="py-16 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="bg-white rounded-3xl shadow-2xl overflow-hidden"
+            className="relative rounded-3xl shadow-2xl overflow-hidden min-h-[500px]"
           >
-            <div className="grid md:grid-cols-2 gap-0">
-              <div className="p-8 md:p-12 flex flex-col justify-center">
-                <motion.h2 
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  viewport={{ once: true }}
-                  className="text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight"
-                >
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img 
+                src={agoraHeadOfficeImage} 
+                alt="Agora Head Office" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/40"></div>
+            </div>
+
+            {/* Left Curtain */}
+            <motion.div
+              initial={{ x: 0 }}
+              whileInView={{ x: '-100%' }}
+              transition={{ duration: 1.2, delay: 0.3, ease: "easeInOut" }}
+              viewport={{ once: true }}
+              className="absolute inset-y-0 left-0 w-1/2 bg-primary z-10"
+            />
+
+            {/* Right Curtain */}
+            <motion.div
+              initial={{ x: 0 }}
+              whileInView={{ x: '100%' }}
+              transition={{ duration: 1.2, delay: 0.3, ease: "easeInOut" }}
+              viewport={{ once: true }}
+              className="absolute inset-y-0 right-0 w-1/2 bg-accent z-10"
+            />
+
+            {/* Content */}
+            <div className="relative z-20 p-8 md:p-12 flex flex-col justify-center min-h-[500px]">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.2 }}
+                viewport={{ once: true }}
+                className="max-w-3xl mx-auto text-center"
+              >
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight drop-shadow-2xl">
                   We produce professional solutions for spare parts, service and maintenance needs of rock drilling machines
-                </motion.h2>
-                <motion.p 
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  viewport={{ once: true }}
-                  className="text-lg text-muted-foreground mb-8"
-                >
+                </h2>
+                <p className="text-lg md:text-xl text-white/95 mb-8 drop-shadow-lg">
                   As AGORA Rock Drill A.Ş., we continue our work with 20 years of experience in the sector of rock drilling machinery and mining equipment. We stock thousands of original and alternative spare parts in our 700+ m² warehouse and deliver to dozens of countries through DHL, FedEx and UPS.
-                </motion.p>
+                </p>
                 <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 1.5 }}
                   viewport={{ once: true }}
-                  className="grid grid-cols-3 gap-4"
+                  className="flex justify-center gap-4"
                 >
                   <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
+                    whileHover={{ scale: 1.05, rotate: 3 }}
+                    className="relative rounded-xl overflow-hidden shadow-2xl border-4 border-white cursor-pointer"
                   >
                     <img 
                       src={tunnelDrillImage1} 
                       alt="Tunnel drilling operations" 
-                      className="w-full h-24 object-cover"
+                      className="w-32 h-32 object-cover"
                     />
                   </motion.div>
                   <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
+                    whileHover={{ scale: 1.05, rotate: -3 }}
+                    className="relative rounded-xl overflow-hidden shadow-2xl border-4 border-white cursor-pointer"
                   >
                     <img 
                       src={tunnelDrillImage2} 
                       alt="Underground drilling equipment" 
-                      className="w-full h-24 object-cover"
+                      className="w-32 h-32 object-cover"
                     />
                   </motion.div>
                   <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
+                    whileHover={{ scale: 1.05, rotate: 3 }}
+                    className="relative rounded-xl overflow-hidden shadow-2xl border-4 border-white cursor-pointer"
                   >
                     <img 
                       src={tunnelDrillImage3} 
                       alt="Professional drilling machinery" 
-                      className="w-full h-24 object-cover"
+                      className="w-32 h-32 object-cover"
                     />
                   </motion.div>
                 </motion.div>
-              </div>
-              <div className="relative h-full min-h-[400px]">
-                <motion.img 
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  viewport={{ once: true }}
-                  src={agoraHeadOfficeImage} 
-                  alt="AGORA Rock Drill Head Office - Ankara, Turkey" 
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20"></div>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
-      </motion.section>
+      </section>
 
       {/* Quality Guarantee & Request Form */}
       <section className="py-16 bg-background">
