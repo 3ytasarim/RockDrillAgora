@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProductCard from "@/components/product-card";
+import RequestQuoteModal from "@/components/request-quote-modal";
 import type { ProductWithCategory, Category } from "@shared/schema";
 
 export default function SpareParts() {
@@ -13,6 +14,11 @@ export default function SpareParts() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("featured");
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+
+  const handleRequestQuote = () => {
+    setQuoteModalOpen(true);
+  };
 
   // Get search params from URL
   useEffect(() => {
@@ -223,7 +229,7 @@ export default function SpareParts() {
                 <>
                   <div className="grid md:grid-cols-3 gap-6">
                     {sortedProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
+                      <ProductCard key={product.id} product={product} onAddToCart={handleRequestQuote} />
                     ))}
                   </div>
 
@@ -258,6 +264,8 @@ export default function SpareParts() {
           </div>
         </div>
       </section>
+
+      <RequestQuoteModal open={quoteModalOpen} onOpenChange={setQuoteModalOpen} />
     </div>
   );
 }

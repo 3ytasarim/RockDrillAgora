@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import SearchBar from "@/components/search-bar";
 import CategoryCard from "@/components/category-card";
 import ProductCard from "@/components/product-card";
+import RequestQuoteModal from "@/components/request-quote-modal";
 import type { ProductWithCategory, Category } from "@shared/schema";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
@@ -56,6 +57,11 @@ export default function Home() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000 })]);
   const [brandsEmblaRef] = useEmblaCarousel({ loop: true, align: 'start', slidesToScroll: 1 }, [Autoplay({ delay: 3000, stopOnInteraction: false })]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+
+  const handleRequestQuote = () => {
+    setQuoteModalOpen(true);
+  };
 
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
@@ -383,7 +389,7 @@ export default function Home() {
                     
                     <div className="grid md:grid-cols-4 gap-6">
                       {categoryProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                        <ProductCard key={product.id} product={product} onAddToCart={handleRequestQuote} />
                       ))}
                     </div>
                   </div>
@@ -678,6 +684,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <RequestQuoteModal open={quoteModalOpen} onOpenChange={setQuoteModalOpen} />
     </div>
   );
 }
