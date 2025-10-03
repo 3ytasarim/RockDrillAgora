@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
+import { ObjectStorageService } from "./objectStorage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Products API
@@ -140,6 +141,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting category:', error);
       res.status(500).json({ error: "Failed to delete category" });
+    }
+  });
+
+  // Object Storage - Product Images
+  app.post("/api/products/image-upload", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getProductImageUploadURL();
+      const publicPath = objectStorageService.normalizeProductImagePath(uploadURL);
+      res.json({ uploadURL, publicPath: `/public-objects/${publicPath}` });
+    } catch (error) {
+      console.error('Error generating upload URL:', error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
+  app.put("/api/products/:id/image", async (req, res) => {
+    try {
+      if (!req.body.imageURL) {
+        return res.status(400).json({ error: "imageURL is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      let imagePath = objectStorageService.normalizeProductImagePath(req.body.imageURL);
+      
+      if (!imagePath.startsWith("/public-objects/")) {
+        imagePath = `/public-objects/${imagePath}`;
+      }
+      
+      await storage.updateProduct(req.params.id, { imageUrl: imagePath });
+      
+      res.json({ imagePath });
+    } catch (error) {
+      console.error('Error updating product image:', error);
+      res.status(500).json({ error: "Failed to update product image" });
+    }
+  });
+
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
     }
   });
 

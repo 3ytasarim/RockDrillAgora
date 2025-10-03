@@ -85,6 +85,11 @@ Preferred communication style: Simple, everyday language.
 - `DELETE /api/products/:id` - Delete product
 - Similar CRUD endpoints exist for `/api/categories`
 
+**Image Upload Endpoints**
+- `POST /api/products/image-upload` - Generate presigned URL for product image upload (returns { uploadURL, publicPath })
+- `PUT /api/products/:id/image` - Associate uploaded image with product (idempotent path normalization)
+- `GET /public-objects/:filePath(*)` - Serve uploaded product images from object storage
+
 **Query Parameters**
 - Products can be filtered by: search term, category ID, featured status, discounted status
 - The storage layer translates these filters into Drizzle ORM queries
@@ -94,6 +99,37 @@ Preferred communication style: Simple, everyday language.
 - Not found resources return 404
 - Server errors return 500 with generic error messages
 - Client-side errors are caught by React Query and displayed via toast notifications
+
+## Object Storage Integration
+
+**Replit Object Storage**
+- Uses Replit's built-in Google Cloud Storage integration
+- Default bucket: `replit-objstore-49a775fc-ae30-4753-be2a-a4e4716732bf`
+- Public directory for product images: `/replit-objstore-49a775fc-ae30-4753-be2a-a4e4716732bf/public`
+- Environment variables: `PUBLIC_OBJECT_SEARCH_PATHS`, `PRIVATE_OBJECT_DIR`, `DEFAULT_OBJECT_STORAGE_BUCKET_ID`
+
+**ObjectStorageService** (`server/objectStorage.ts`)
+- Generates presigned URLs for direct browser-to-storage uploads
+- Normalizes upload URLs to public paths for database storage
+- Serves uploaded images via `/public-objects/` endpoint
+- Handles path validation and idempotent updates
+
+**ObjectUploader Component** (`client/src/components/ObjectUploader.tsx`)
+- Reusable React component using Uppy for file uploads
+- Features: modal UI, progress tracking, file type validation
+- Uses useEffect pattern to properly manage Uppy lifecycle
+- Cleanup with `cancelAll()` and `clear()` to prevent memory leaks
+- Memoized handlers via useCallback to avoid stale closures
+
+**Image Upload Flow**
+1. User clicks "Browse Files" in product form
+2. Frontend fetches presigned URL and public path from backend
+3. Preview is set immediately using public path
+4. User selects and uploads file directly to storage via presigned URL
+5. On upload complete, upload URL is stored in component state
+6. User submits product form → Product created in database
+7. If image was uploaded, product is automatically updated with image path
+8. Images are served from `/public-objects/product-images/` path
 
 # External Dependencies
 
@@ -135,3 +171,8 @@ Preferred communication style: Simple, everyday language.
 - `clsx` and `tailwind-merge` for conditional class names
 - `nanoid` for generating unique IDs
 - `embla-carousel-react` for carousel components
+
+**Object Storage & File Upload**
+- `@google-cloud/storage` - Google Cloud Storage client for Replit object storage
+- `@uppy/core`, `@uppy/react`, `@uppy/dashboard`, `@uppy/aws-s3` - File upload UI and S3-compatible upload handling
+- Uppy CSS loaded via CDN in `index.css` to avoid build errors

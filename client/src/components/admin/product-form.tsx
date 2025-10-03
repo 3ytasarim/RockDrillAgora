@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, Eye, RotateCcw } from "lucide-react";
+import { Save, Eye, RotateCcw, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import type { Category } from "@shared/schema";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 const productFormSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -35,6 +37,8 @@ interface ProductFormProps {
 export default function ProductForm({ categories }: ProductFormProps) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [publicImagePath, setPublicImagePath] = useState<string>("");
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -49,6 +53,46 @@ export default function ProductForm({ categories }: ProductFormProps) {
       brandCompatibility: "",
       stockStatus: "in_stock",
       isFeatured: false,
+    },
+  });
+
+  const updateProductImageMutation = useMutation({
+    mutationFn: async ({ productId, imageURL }: { productId: string; imageURL: string }) => {
+      const response = await fetch(`/api/products/${productId}/image`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageURL }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update product image");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({
+        title: "Success",
+        description: "Product created with image successfully!",
+      });
+      form.reset();
+      setImagePreview("");
+      setUploadedImageUrl("");
+      setPublicImagePath("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update product image: " + error.message,
+        variant: "destructive",
+      });
+      form.reset();
+      setImagePreview("");
+      setUploadedImageUrl("");
+      setPublicImagePath("");
     },
   });
 
@@ -69,14 +113,21 @@ export default function ProductForm({ categories }: ProductFormProps) {
       
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      toast({
-        title: "Success",
-        description: "Product created successfully!",
-      });
-      form.reset();
-      setImagePreview("");
+    onSuccess: async (product) => {
+      if (uploadedImageUrl) {
+        updateProductImageMutation.mutate({
+          productId: product.id,
+          imageURL: uploadedImageUrl,
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        toast({
+          title: "Success",
+          description: "Product created successfully!",
+        });
+        form.reset();
+        setImagePreview("");
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -91,16 +142,30 @@ export default function ProductForm({ categories }: ProductFormProps) {
     createProductMutation.mutate(data);
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleGetUploadParameters = useCallback(async () => {
+    const response = await fetch("/api/products/image-upload", {
+      method: "POST",
+    });
+    const { uploadURL, publicPath } = await response.json();
+    setPublicImagePath(publicPath);
+    setImagePreview(publicPath);
+    return {
+      method: "PUT" as const,
+      url: uploadURL,
+    };
+  }, []);
+
+  const handleUploadComplete = useCallback((result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadURL = result.successful[0].uploadURL as string;
+      setUploadedImageUrl(uploadURL);
+      
+      toast({
+        title: "Image uploaded",
+        description: "Image uploaded successfully. Click Save to complete product creation.",
+      });
     }
-  };
+  }, [toast]);
 
   return (
     <Form {...form}>
@@ -293,7 +358,11 @@ export default function ProductForm({ categories }: ProductFormProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setImagePreview("")}
+                  onClick={() => {
+                    setImagePreview("");
+                    setUploadedImageUrl("");
+                    setPublicImagePath("");
+                  }}
                 >
                   Remove Image
                 </Button>
@@ -301,20 +370,17 @@ export default function ProductForm({ categories }: ProductFormProps) {
             ) : (
               <>
                 <i className="fas fa-cloud-upload-alt text-5xl text-muted-foreground mb-3"></i>
-                <p className="text-muted-foreground mb-2">Drag and drop image here or</p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                  data-testid="image-upload-input"
-                />
-                <label htmlFor="image-upload">
-                  <Button type="button" variant="secondary" asChild>
-                    <span>Browse Files</span>
-                  </Button>
-                </label>
+                <p className="text-muted-foreground mb-2">Upload product image</p>
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={5242880}
+                  onGetUploadParameters={handleGetUploadParameters}
+                  onComplete={handleUploadComplete}
+                  buttonClassName="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                >
+                  <Upload size={16} className="mr-2" />
+                  Browse Files
+                </ObjectUploader>
                 <p className="text-sm text-muted-foreground mt-2">
                   Supported formats: JPG, PNG, WebP (Max 5MB)
                 </p>
