@@ -102,14 +102,12 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
 
   const handleProductClick = (productName: string) => {
     setSearchQuery(productName);
-    setShowDropdown(false);
-    onSearch(productName, "");
+    setTimeout(() => setShowDropdown(false), 50);
   };
 
   const handleCodeProductClick = (productCode: string) => {
     setSearchCode(productCode);
-    setShowCodeDropdown(false);
-    onSearch("", productCode);
+    setTimeout(() => setShowCodeDropdown(false), 50);
   };
 
   const handleClearSearch = () => {
@@ -217,14 +215,16 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                       <>
                         <div className="max-h-[400px] overflow-y-auto">
                           {filteredProducts.map((product) => (
-                            <button
+                            <div
                               key={product.id}
-                              onClick={() => handleProductClick(product.name)}
-                              className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 text-left"
+                              className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
                               data-testid={`product-suggestion-${product.id}`}
                             >
                               {/* Product Image */}
-                              <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                              <button
+                                onClick={() => handleProductClick(product.name)}
+                                className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                              >
                                 {product.imageUrls && product.imageUrls.length > 0 ? (
                                   <img
                                     src={product.imageUrls[0]}
@@ -242,30 +242,45 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                     <Package size={24} className="text-slate-400" />
                                   </div>
                                 )}
-                              </div>
+                              </button>
                               
                               {/* Product Info */}
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-bold text-slate-900 truncate">
-                                  {product.name}
-                                </h4>
-                                <p className="text-sm text-slate-600">
-                                  {product.delkomCode && (
-                                    <span className="inline-block">
-                                      SKU: {product.delkomCode}
-                                    </span>
-                                  )}
-                                  {product.referenceCode && product.delkomCode && (
-                                    <span className="mx-2">•</span>
-                                  )}
-                                  {product.referenceCode && (
-                                    <span className="inline-block">
-                                      Ref: {product.referenceCode}
-                                    </span>
-                                  )}
-                                </p>
+                                <button
+                                  onClick={() => handleProductClick(product.name)}
+                                  className="text-left w-full mb-2"
+                                >
+                                  <h4 className="font-bold text-slate-900 truncate hover:text-primary transition-colors">
+                                    {product.name}
+                                  </h4>
+                                  <p className="text-sm text-slate-600">
+                                    {product.delkomCode && (
+                                      <span className="inline-block">
+                                        SKU: {product.delkomCode}
+                                      </span>
+                                    )}
+                                    {product.referenceCode && product.delkomCode && (
+                                      <span className="mx-2">•</span>
+                                    )}
+                                    {product.referenceCode && (
+                                      <span className="inline-block">
+                                        Ref: {product.referenceCode}
+                                      </span>
+                                    )}
+                                  </p>
+                                </button>
+                                
+                                {/* Go to Product Button */}
+                                <Link href={`/product/${product.id}`}>
+                                  <div
+                                    className="inline-block bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer"
+                                    data-testid={`go-to-product-${product.id}`}
+                                  >
+                                    Go to Product
+                                  </div>
+                                </Link>
                               </div>
-                            </button>
+                            </div>
                           ))}
                         </div>
                         
@@ -344,14 +359,16 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                       <>
                         <div className="max-h-[400px] overflow-y-auto">
                           {filteredCodeProducts.map((product) => (
-                            <button
+                            <div
                               key={product.id}
-                              onClick={() => handleCodeProductClick(product.delkomCode || product.referenceCode || "")}
-                              className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 text-left"
+                              className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
                               data-testid={`code-suggestion-${product.id}`}
                             >
                               {/* Product Image */}
-                              <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                              <button
+                                onClick={() => handleCodeProductClick(product.delkomCode || product.referenceCode || "")}
+                                className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                              >
                                 {product.imageUrls && product.imageUrls.length > 0 ? (
                                   <img
                                     src={product.imageUrls[0]}
@@ -369,30 +386,45 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                     <Package size={24} className="text-slate-400" />
                                   </div>
                                 )}
-                              </div>
+                              </button>
                               
                               {/* Product Info */}
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-bold text-slate-900 truncate">
-                                  {product.name}
-                                </h4>
-                                <p className="text-sm text-slate-600">
-                                  {product.delkomCode && (
-                                    <span className="inline-block">
-                                      SKU: {product.delkomCode}
-                                    </span>
-                                  )}
-                                  {product.referenceCode && product.delkomCode && (
-                                    <span className="mx-2">•</span>
-                                  )}
-                                  {product.referenceCode && (
-                                    <span className="inline-block">
-                                      Ref: {product.referenceCode}
-                                    </span>
-                                  )}
-                                </p>
+                                <button
+                                  onClick={() => handleCodeProductClick(product.delkomCode || product.referenceCode || "")}
+                                  className="text-left w-full mb-2"
+                                >
+                                  <h4 className="font-bold text-slate-900 truncate hover:text-accent transition-colors">
+                                    {product.name}
+                                  </h4>
+                                  <p className="text-sm text-slate-600">
+                                    {product.delkomCode && (
+                                      <span className="inline-block">
+                                        SKU: {product.delkomCode}
+                                      </span>
+                                    )}
+                                    {product.referenceCode && product.delkomCode && (
+                                      <span className="mx-2">•</span>
+                                    )}
+                                    {product.referenceCode && (
+                                      <span className="inline-block">
+                                        Ref: {product.referenceCode}
+                                      </span>
+                                    )}
+                                  </p>
+                                </button>
+                                
+                                {/* Go to Product Button */}
+                                <Link href={`/product/${product.id}`}>
+                                  <div
+                                    className="inline-block bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer"
+                                    data-testid={`go-to-product-code-${product.id}`}
+                                  >
+                                    Go to Product
+                                  </div>
+                                </Link>
                               </div>
-                            </button>
+                            </div>
                           ))}
                         </div>
                         
