@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/search-bar";
 import CategoryCard from "@/components/category-card";
 import ProductCard from "@/components/product-card";
-import type { ProductWithCategory } from "@shared/schema";
+import type { ProductWithCategory, Category } from "@shared/schema";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
@@ -62,15 +62,23 @@ export default function Home() {
     };
   }, [emblaApi]);
 
-  const { data: featuredProducts = [], isLoading: featuredLoading } = useQuery<ProductWithCategory[]>({
-    queryKey: ["/api/products", "featured"],
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
     queryFn: async () => {
-      const response = await fetch("/api/products?featured=true");
-      if (!response.ok) throw new Error("Failed to fetch featured products");
+      const response = await fetch("/api/categories");
+      if (!response.ok) throw new Error("Failed to fetch categories");
       return response.json();
     },
   });
 
+  const { data: allProducts = [], isLoading: productsLoading } = useQuery<ProductWithCategory[]>({
+    queryKey: ["/api/products"],
+    queryFn: async () => {
+      const response = await fetch("/api/products");
+      if (!response.ok) throw new Error("Failed to fetch products");
+      return response.json();
+    },
+  });
 
   const handleSearch = (query: string, code: string) => {
     const searchParams = new URLSearchParams();
@@ -229,37 +237,67 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Products by Category */}
       <section className="py-16 bg-muted">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-foreground mb-4">
-              <Star className="inline text-accent mr-2" />
-              Featured Products
-            </h2>
-            <p className="text-xl text-muted-foreground">Top quality spare parts for your drilling equipment</p>
-          </div>
-
-          {featuredLoading ? (
-            <div className="grid md:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-card rounded-lg p-6 animate-pulse">
-                  <div className="bg-muted h-48 rounded mb-4"></div>
-                  <div className="bg-muted h-4 rounded mb-2"></div>
-                  <div className="bg-muted h-4 rounded mb-4 w-2/3"></div>
-                  <div className="bg-muted h-8 rounded"></div>
+          {productsLoading ? (
+            <div className="space-y-12">
+              {[1, 2, 3].map(catIndex => (
+                <div key={catIndex}>
+                  <div className="bg-muted h-8 w-64 rounded mb-6 animate-pulse"></div>
+                  <div className="grid md:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="bg-card rounded-lg p-6 animate-pulse">
+                        <div className="bg-muted h-48 rounded mb-4"></div>
+                        <div className="bg-muted h-4 rounded mb-2"></div>
+                        <div className="bg-muted h-4 rounded mb-4 w-2/3"></div>
+                        <div className="bg-muted h-8 rounded"></div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
-          ) : featuredProducts.length > 0 ? (
-            <div className="grid md:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">No featured products available at the moment.</p>
+            <div className="space-y-16">
+              {categories.map((category) => {
+                const categoryProducts = allProducts.filter(p => p.categoryId === category.id).slice(0, 4);
+                
+                if (categoryProducts.length === 0) return null;
+                
+                return (
+                  <div key={category.id}>
+                    <div className="flex justify-between items-center mb-8">
+                      <div>
+                        <h2 className="text-3xl font-bold text-foreground mb-2">
+                          <i className={`${category.icon} text-primary mr-3`}></i>
+                          {category.name}
+                        </h2>
+                        {category.description && (
+                          <p className="text-muted-foreground">{category.description}</p>
+                        )}
+                      </div>
+                      <Link href={`/spare-parts?category=${category.id}`}>
+                        <Button variant="outline" className="font-semibold">
+                          View All <ChevronRight size={16} className="ml-2" />
+                        </Button>
+                      </Link>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-4 gap-6">
+                      {categoryProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {allProducts.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground text-lg">No products available at the moment.</p>
+                </div>
+              )}
             </div>
           )}
 
