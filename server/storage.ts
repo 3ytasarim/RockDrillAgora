@@ -60,8 +60,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         or(
           like(products.name, `%${query}%`),
-          like(products.delkomCode, `%${query}%`),
-          like(products.referenceCode, `%${query}%`)
+          like(products.delkomCode, `%${query}%`)
         )
       )
       .orderBy(desc(products.createdAt));
@@ -178,6 +177,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCategory(id: string): Promise<void> {
+    const productsInCategory = await db
+      .select()
+      .from(products)
+      .where(eq(products.categoryId, id));
+    
+    if (productsInCategory.length > 0) {
+      throw new Error(
+        `Cannot delete category. It has ${productsInCategory.length} product(s) assigned to it. Please reassign or delete the products first.`
+      );
+    }
+    
     await db.delete(categories).where(eq(categories.id, id));
   }
 }
