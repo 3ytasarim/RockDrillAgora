@@ -109,8 +109,8 @@ export default function RequestQuoteModal({ open, onOpenChange }: RequestQuoteMo
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <DialogTitle className="text-3xl md:text-4xl font-black mb-4 text-center flex items-center justify-center gap-3">
-                      <img src={logoPath} alt="Agora Rock Drill" className="h-12 w-auto" />
+                    <DialogTitle className="text-3xl md:text-4xl font-black mb-4 text-center flex flex-col items-center justify-center gap-3">
+                      <img src={logoPath} alt="Agora Rock Drill" className="h-16 md:h-20 w-auto" />
                       Free Quote Request
                     </DialogTitle>
                   </motion.div>
