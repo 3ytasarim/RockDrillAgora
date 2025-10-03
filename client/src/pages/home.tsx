@@ -15,6 +15,10 @@ import { motion } from "framer-motion";
 import rockDrillImage1 from "@assets/stock_images/hydraulic_rock_drill_f13a1ccf.jpg";
 import rockDrillImage2 from "@assets/stock_images/hydraulic_rock_drill_a3d8bb85.jpg";
 import rockDrillImage3 from "@assets/stock_images/hydraulic_rock_drill_2c311439.jpg";
+import warehouseImage1 from "@assets/stock_images/warehouse_industrial_c96b9e5d.jpg";
+import warehouseImage2 from "@assets/stock_images/warehouse_industrial_5bd1059d.jpg";
+import warehouseImage3 from "@assets/stock_images/warehouse_industrial_5ad4d018.jpg";
+import teamCollaborationImage from "@assets/stock_images/professional_busines_a4681059.jpg";
 
 const heroSlides = [
   {
@@ -365,8 +369,8 @@ export default function Home() {
                     className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
                   >
                     <img 
-                      src="https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-3.webp" 
-                      alt="Team meeting" 
+                      src={warehouseImage1} 
+                      alt="Warehouse storage" 
                       className="w-full h-24 object-cover"
                     />
                   </motion.div>
@@ -375,8 +379,8 @@ export default function Home() {
                     className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
                   >
                     <img 
-                      src="https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-1.webp" 
-                      alt="Warehouse" 
+                      src={warehouseImage2} 
+                      alt="Industrial warehouse" 
                       className="w-full h-24 object-cover"
                     />
                   </motion.div>
@@ -385,8 +389,8 @@ export default function Home() {
                     className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
                   >
                     <img 
-                      src="https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-2.webp" 
-                      alt="Stock room" 
+                      src={warehouseImage3} 
+                      alt="Parts storage" 
                       className="w-full h-24 object-cover"
                     />
                   </motion.div>
@@ -398,7 +402,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.8, delay: 0.3 }}
                   viewport={{ once: true }}
-                  src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=800" 
+                  src={teamCollaborationImage} 
                   alt="Professional team collaboration" 
                   className="absolute inset-0 w-full h-full object-cover"
                 />
