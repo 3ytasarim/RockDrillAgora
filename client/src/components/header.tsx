@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { ChevronDown, Home, Cog, Info, Mail, Shield, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import logoImage from "@assets/AgoraRockDrillLogo_1759477799213.png";
 
 export default function Header() {
   const [location] = useLocation();
@@ -42,9 +43,7 @@ export default function Header() {
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center" data-testid="logo">
-              <div className="text-2xl font-bold text-primary">
-                <i className="fas fa-industry mr-2"></i>AGORA ROCK DRILL
-              </div>
+              <img src={logoImage} alt="Agora Rock Drill" className="h-12 w-auto" />
             </Link>
 
             {/* Desktop Navigation */}

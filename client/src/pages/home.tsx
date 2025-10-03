@@ -49,7 +49,7 @@ export default function Home() {
               </p>
               <div className="flex gap-4">
                 <Link href="/spare-parts">
-                  <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 py-3 text-lg font-semibold" data-testid="browse-products-btn">
+                  <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 px-8 py-3 text-lg font-semibold shadow-lg" data-testid="browse-products-btn">
                     <i className="fas fa-shopping-cart mr-2"></i>Browse Products
                   </Button>
                 </Link>
