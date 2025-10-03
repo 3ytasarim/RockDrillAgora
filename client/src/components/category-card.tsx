@@ -37,10 +37,7 @@ export default function CategoryCard({
           <h3 className="text-2xl font-bold text-foreground">{title}</h3>
         </div>
         <p className="text-muted-foreground mb-4">{description}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            <i className="fas fa-box mr-1"></i>{productCount}+ Products
-          </span>
+        <div className="flex items-center justify-end">
           <span className="text-primary font-semibold">
             View Products <i className="fas fa-arrow-right ml-1"></i>
           </span>
