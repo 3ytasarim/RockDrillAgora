@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Search, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import type { ProductWithCategory } from "@shared/schema";
 
 interface ProductListProps {
@@ -18,7 +17,7 @@ export default function ProductList({ products, isLoading, onDelete, isDeleting 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.delkomCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.referenceCode.toLowerCase().includes(searchQuery.toLowerCase())
+    (product.brandCompatibility && product.brandCompatibility.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   if (isLoading) {
@@ -63,10 +62,8 @@ export default function ProductList({ products, isLoading, onDelete, isDeleting 
               <tr>
                 <th className="px-4 py-3 text-left text-foreground font-semibold">Image</th>
                 <th className="px-4 py-3 text-left text-foreground font-semibold">Product Name</th>
-                <th className="px-4 py-3 text-left text-foreground font-semibold">Delkom Code</th>
-                <th className="px-4 py-3 text-left text-foreground font-semibold">Reference Code</th>
-                <th className="px-4 py-3 text-left text-foreground font-semibold">Price</th>
-                <th className="px-4 py-3 text-left text-foreground font-semibold">Discount</th>
+                <th className="px-4 py-3 text-left text-foreground font-semibold">Product Number</th>
+                <th className="px-4 py-3 text-left text-foreground font-semibold">Brand</th>
                 <th className="px-4 py-3 text-left text-foreground font-semibold">Actions</th>
               </tr>
             </thead>
@@ -88,21 +85,8 @@ export default function ProductList({ products, isLoading, onDelete, isDeleting 
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground font-mono">{product.delkomCode}</td>
-                  <td className="px-4 py-3 text-muted-foreground font-mono">{product.referenceCode}</td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold">€{parseFloat(product.finalPrice).toLocaleString()}</div>
-                    {product.discountPercentage && product.discountPercentage > 0 && (
-                      <div className="text-sm text-muted-foreground line-through">
-                        €{parseFloat(product.originalPrice).toLocaleString()}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {product.discountPercentage && product.discountPercentage > 0 ? (
-                      <Badge variant="destructive">{product.discountPercentage}%</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {product.brandCompatibility || <span className="text-muted-foreground/50">-</span>}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
