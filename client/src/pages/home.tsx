@@ -12,13 +12,13 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
-import heroImage1 from "@assets/shutterstock_1082374520-1536x1024_1759491821274.jpg";
-import heroImage2 from "@assets/shutterstock_1489860854-1536x1024_1759491821275.jpg";
-import heroImage3 from "@assets/shutterstock_782926648-1536x1017_1759491821274.jpg";
-import tunnelDrillImage1 from "@assets/shutterstock_453380569-1536x1025_1759491821274.jpg";
-import tunnelDrillImage2 from "@assets/shutterstock_1204797238-1536x1025_1759491821274.jpg";
-import tunnelDrillImage3 from "@assets/shutterstock_1624956124-1536x1024_1759491821276.jpg";
-import outdoorDrillImage from "@assets/shutterstock_713592-1536x1024_1759491821273.jpg";
+import heroImage1 from "@assets/shutterstock_1082374520-1536x1024_1759495597328.jpg";
+import heroImage2 from "@assets/shutterstock_453380569-1536x1025_1759495597327.jpg";
+import heroImage3 from "@assets/shutterstock_782926648-1536x1017_1759495597327.jpg";
+import tunnelDrillImage1 from "@assets/shutterstock_453380569-1536x1025_1759495597327.jpg";
+import tunnelDrillImage2 from "@assets/shutterstock_1204797238-1536x1025_1759495597328.jpg";
+import tunnelDrillImage3 from "@assets/shutterstock_1624956124-1536x1024_1759495597328.jpg";
+import outdoorDrillImage from "@assets/shutterstock_713592-1536x1024_1759495597327.jpg";
 import agoraHeadOfficeImage from "@assets/Agora_Head_Office_1759495281959.jpg";
 import atlasCopcoBrandLogo from "@assets/ref_atlas_copco_1759492041454.jpg";
 import epirocBrandLogo from "@assets/ref_epiroc_1759492041454.jpg";
@@ -39,7 +39,7 @@ const heroSlides = [
     subtitle: "700+ m² Warehouse",
     highlight: "THOUSANDS OF PARTS",
     description: "Wide inventory advantage with original and alternative spare parts stocked in our large warehouse in Ankara, Turkey.",
-    image: tunnelDrillImage1,
+    image: heroImage2,
     bgGradient: "from-slate-900 via-slate-800 to-blue-900"
   },
   {
@@ -47,7 +47,7 @@ const heroSlides = [
     subtitle: "Fast & Reliable Shipping",
     highlight: "DOZENS OF COUNTRIES",
     description: "High speed delivery worldwide through DHL, FedEx and UPS. Expert teams speaking English, Russian and Turkish.",
-    image: outdoorDrillImage,
+    image: heroImage3,
     bgGradient: "from-blue-950 via-slate-900 to-slate-800"
   }
 ];
