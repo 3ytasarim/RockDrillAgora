@@ -326,10 +326,8 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
                   <SelectContent>
                     <SelectItem value="Atlas Copco">Atlas Copco</SelectItem>
                     <SelectItem value="Epiroc">Epiroc</SelectItem>
+                    <SelectItem value="Sandvik">Sandvik</SelectItem>
                     <SelectItem value="Furukawa">Furukawa</SelectItem>
-                    <SelectItem value="Montabert">Montabert</SelectItem>
-                    <SelectItem value="CAT">CAT</SelectItem>
-                    <SelectItem value="Junjin">Junjin</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
