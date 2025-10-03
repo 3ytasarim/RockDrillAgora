@@ -6,12 +6,12 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
-            <div className="mb-4">
-              <img src={logoImage} alt="Agora Rock Drill" className="h-16 w-auto brightness-0 invert" />
+            <div className="mb-6">
+              <img src={logoImage} alt="Agora Rock Drill" className="h-20 w-auto brightness-0 invert mb-3" data-testid="footer-logo" />
+              <p className="text-background/80 text-base leading-relaxed">
+                Professional solutions for spare parts, service and maintenance needs of rock drilling machines. 20 years of experience with 700+ m² warehouse.
+              </p>
             </div>
-            <p className="text-background/80 mb-4">
-              Professional solutions for spare parts, service and maintenance needs of rock drilling machines. 20 years of experience with 700+ m² warehouse.
-            </p>
             <div className="flex gap-3">
               <a href="https://www.facebook.com/agorarockdrill" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-facebook">
                 <i className="fab fa-facebook"></i>
