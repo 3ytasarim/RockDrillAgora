@@ -23,25 +23,25 @@ import teamCollaborationImage from "@assets/stock_images/professional_busines_a4
 const heroSlides = [
   {
     title: "AGORA ROCK DRILL",
-    subtitle: "Alternative Spare Parts",
-    highlight: "A WORLD BRAND",
-    description: "High quality spare parts for Atlas Copco, Epiroc, Jumbo, Furukawa. Exported to 100+ countries.",
+    subtitle: "Professional Spare Parts Solutions",
+    highlight: "20 YEARS EXPERIENCE",
+    description: "Original and alternative spare parts for Atlas Copco, Epiroc, Sandvik, Furukawa, Ingersoll Rand, Everdigm and more.",
     image: rockDrillImage1,
     bgGradient: "from-slate-900 via-blue-900 to-slate-800"
   },
   {
-    title: "PREMIUM QUALITY",
-    subtitle: "Rock Drill Components",
-    highlight: "OEM STANDARDS",
-    description: "Durable, high-performance parts made with premium materials. 3 months warranty guarantee.",
+    title: "EXTENSIVE INVENTORY",
+    subtitle: "700+ m² Warehouse",
+    highlight: "THOUSANDS OF PARTS",
+    description: "Wide inventory advantage with original and alternative spare parts stocked in our large warehouse in Ankara, Turkey.",
     image: rockDrillImage2,
     bgGradient: "from-slate-900 via-slate-800 to-blue-900"
   },
   {
-    title: "GLOBAL EXPORT",
-    subtitle: "Trusted Worldwide",
-    highlight: "100+ COUNTRIES",
-    description: "International certifications. Dedicated support for all sales processes worldwide.",
+    title: "GLOBAL DELIVERY",
+    subtitle: "Fast & Reliable Shipping",
+    highlight: "DOZENS OF COUNTRIES",
+    description: "High speed delivery worldwide through DHL, FedEx and UPS. Expert teams speaking English, Russian and Turkish.",
     image: rockDrillImage3,
     bgGradient: "from-blue-950 via-slate-900 to-slate-800"
   }
@@ -346,7 +346,7 @@ export default function Home() {
                   viewport={{ once: true }}
                   className="text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight"
                 >
-                  We produce top quality alternative rock drill and drill rig spare parts for Epiroc, Jumbo, Furukawa, Atlas Copco, Montabert etc.
+                  We produce professional solutions for spare parts, service and maintenance needs of rock drilling machines
                 </motion.h2>
                 <motion.p 
                   initial={{ opacity: 0, x: -20 }}
@@ -355,7 +355,7 @@ export default function Home() {
                   viewport={{ once: true }}
                   className="text-lg text-muted-foreground mb-8"
                 >
-                  With ready stock and large warehouse, we ship to all over the world as soon as possible.
+                  As AGORA Rock Drill A.Ş., we continue our work with 20 years of experience in the sector of rock drilling machinery and mining equipment. We stock thousands of original and alternative spare parts in our 700+ m² warehouse and deliver to dozens of countries through DHL, FedEx and UPS.
                 </motion.p>
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
@@ -467,7 +467,7 @@ export default function Home() {
                   <motion.a
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    href="mailto:info@agorarockdrill.com"
+                    href="mailto:agora@agorarockdrill.com"
                     className="flex items-center gap-3 bg-white border-2 border-slate-200 rounded-xl px-6 py-3 hover:border-accent transition-colors shadow-sm"
                     data-testid="link-email-contact"
                   >
@@ -477,7 +477,7 @@ export default function Home() {
                   <motion.a
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    href="https://wa.me/905304992891"
+                    href="https://wa.me/905435755300"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 bg-white border-2 border-slate-200 rounded-xl px-6 py-3 hover:border-green-500 transition-colors shadow-sm"

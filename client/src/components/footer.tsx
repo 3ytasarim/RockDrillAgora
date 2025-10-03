@@ -8,16 +8,16 @@ export default function Footer() {
               <i className="fas fa-industry mr-2"></i>AGORA ROCK DRILL
             </h3>
             <p className="text-background/80 mb-4">
-              High quality alternative spare parts for drill rigs and rock drilling machines exported to over 100 countries.
+              Professional solutions for spare parts, service and maintenance needs of rock drilling machines. 20 years of experience with 700+ m² warehouse.
             </p>
             <div className="flex gap-3">
-              <a href="#" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-facebook">
+              <a href="https://www.facebook.com/agorarockdrill" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-facebook">
                 <i className="fab fa-facebook"></i>
               </a>
-              <a href="#" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-linkedin">
+              <a href="https://www.linkedin.com/company/agorarockdrill" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-linkedin">
                 <i className="fab fa-linkedin"></i>
               </a>
-              <a href="#" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-whatsapp">
+              <a href="https://wa.me/905435755300" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-whatsapp">
                 <i className="fab fa-whatsapp"></i>
               </a>
             </div>
@@ -50,15 +50,18 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <i className="fas fa-phone mt-1"></i>
-                <span className="text-background/80">+90 530 499 28 91</span>
+                <div className="text-background/80">
+                  <div>+90 312 385 60 03</div>
+                  <div>+90 543 575 53 00</div>
+                </div>
               </li>
               <li className="flex items-start gap-2">
                 <i className="fas fa-envelope mt-1"></i>
-                <span className="text-background/80">info@agorarockdrill.com</span>
+                <span className="text-background/80">agora@agorarockdrill.com</span>
               </li>
               <li className="flex items-start gap-2">
                 <i className="fas fa-map-marker-alt mt-1"></i>
-                <span className="text-background/80">Istanbul, Turkey</span>
+                <span className="text-background/80">Ostim, Ankara, Turkey</span>
               </li>
             </ul>
           </div>

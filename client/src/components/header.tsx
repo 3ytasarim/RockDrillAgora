@@ -17,20 +17,20 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center text-sm">
           <div className="flex gap-6">
             <span>
-              <i className="fas fa-phone mr-2"></i>+90 530 499 28 91
+              <i className="fas fa-phone mr-2"></i>+90 312 385 60 03
             </span>
             <span className="hidden sm:inline">
-              <i className="fas fa-envelope mr-2"></i>info@agorarockdrill.com
+              <i className="fas fa-envelope mr-2"></i>agora@agorarockdrill.com
             </span>
           </div>
           <div className="flex gap-4">
-            <a href="#" className="hover:scale-110 transition-transform" data-testid="social-facebook">
+            <a href="https://www.facebook.com/agorarockdrill" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-facebook">
               <i className="fab fa-facebook"></i>
             </a>
-            <a href="#" className="hover:scale-110 transition-transform" data-testid="social-linkedin">
+            <a href="https://www.linkedin.com/company/agorarockdrill" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-linkedin">
               <i className="fab fa-linkedin"></i>
             </a>
-            <a href="#" className="hover:scale-110 transition-transform" data-testid="social-whatsapp">
+            <a href="https://wa.me/905435755300" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-whatsapp">
               <i className="fab fa-whatsapp"></i>
             </a>
           </div>

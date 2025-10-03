@@ -188,13 +188,18 @@ Preferred communication style: Simple, everyday language.
 - Pagination dots at bottom with active state indicator
 - Responsive design with gradient backgrounds and overlay patterns
 - Test IDs: `button-hero-prev`, `button-hero-next`, `button-hero-dot-{index}`
+- Real content:
+  - Slide 1: "AGORA ROCK DRILL" - 20 YEARS EXPERIENCE
+  - Slide 2: "EXTENSIVE INVENTORY" - 700+ m² Warehouse
+  - Slide 3: "GLOBAL DELIVERY" - DHL, FedEx, UPS
 
 **Company Production Info Section**
 - Modern split-screen card with rounded corners and shadow
-- Left: Company mission text + 3 warehouse thumbnail images
-- Right: Professional team collaboration image with gradient overlay
+- Left: Company mission text + 3 warehouse thumbnail images (local stock images)
+- Right: Professional team collaboration image (local stock image)
 - Framer Motion animations: fade-in on scroll, hover scale on thumbnails
-- Text: "We produce top quality alternative rock drill and drill rig spare parts..."
+- Text: "We produce professional solutions for spare parts, service and maintenance needs of rock drilling machines"
+- Real company data: AGORA Rock Drill A.Ş., 20 years experience, 700+ m² warehouse in Ankara
 
 **Quality Guarantee Section**
 - White card with golden award badge icon (rotates on hover)
