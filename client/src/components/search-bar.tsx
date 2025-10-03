@@ -492,7 +492,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
             <div className="inline-flex items-center gap-2 bg-blue-50 px-6 py-3 rounded-full border border-blue-100">
               <i className="fas fa-info-circle text-blue-500"></i>
               <p className="text-sm text-blue-700 font-medium">
-                Search using product name, reference number, or Delkom part number
+                Search using product name, reference number, or product number
               </p>
             </div>
           </motion.div>
