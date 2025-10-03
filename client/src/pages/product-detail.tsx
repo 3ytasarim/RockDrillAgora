@@ -25,13 +25,14 @@ export default function ProductDetail() {
     enabled: !!id,
   });
 
-  // Mock multiple images (in real app, this would come from product data)
-  const productImages = product ? [
-    product.imageUrl || "/api/placeholder/600/600",
-    product.imageUrl || "/api/placeholder/600/600",
-    product.imageUrl || "/api/placeholder/600/600",
-    product.imageUrl || "/api/placeholder/600/600",
-  ] : [];
+  // Use product imageUrls array, fallback to imageUrl or placeholder
+  const productImages = product ? (
+    product.imageUrls && product.imageUrls.length > 0
+      ? product.imageUrls
+      : product.imageUrl
+        ? [product.imageUrl]
+        : ["/api/placeholder/600/600"]
+  ) : [];
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -143,12 +144,14 @@ export default function ProductDetail() {
                 <button
                   onClick={scrollPrev}
                   className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white backdrop-blur-sm p-3 rounded-full shadow-lg transition-all hover:scale-110"
+                  data-testid="button-gallery-prev"
                 >
                   <ChevronLeft size={24} className="text-primary" />
                 </button>
                 <button
                   onClick={scrollNext}
                   className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white backdrop-blur-sm p-3 rounded-full shadow-lg transition-all hover:scale-110"
+                  data-testid="button-gallery-next"
                 >
                   <ChevronRight size={24} className="text-primary" />
                 </button>
@@ -167,6 +170,7 @@ export default function ProductDetail() {
                         ? 'border-primary shadow-lg'
                         : 'border-transparent hover:border-slate-300'
                     }`}
+                    data-testid={`button-thumbnail-${index}`}
                   >
                     <img
                       src={image}
@@ -318,6 +322,7 @@ export default function ProductDetail() {
                 <Button
                   variant="outline"
                   className="flex-1 border-2 hover:bg-slate-50 py-6 rounded-xl font-semibold"
+                  data-testid="button-save-favorite"
                 >
                   <Heart size={20} className="mr-2" />
                   Save to Favorites
@@ -325,6 +330,7 @@ export default function ProductDetail() {
                 <Button
                   variant="outline"
                   className="flex-1 border-2 hover:bg-slate-50 py-6 rounded-xl font-semibold"
+                  data-testid="button-share-product"
                 >
                   <Share2 size={20} className="mr-2" />
                   Share Product

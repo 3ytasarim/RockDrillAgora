@@ -22,6 +22,7 @@ export const products = pgTable("products", {
   discountPercentage: integer("discount_percentage").default(0),
   finalPrice: decimal("final_price", { precision: 10, scale: 2 }).notNull(),
   imageUrl: text("image_url"),
+  imageUrls: text("image_urls").array(),
   categoryId: varchar("category_id").references(() => categories.id),
   brandCompatibility: text("brand_compatibility"),
   stockStatus: text("stock_status").notNull().default("in_stock"),

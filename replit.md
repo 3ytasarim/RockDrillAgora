@@ -24,7 +24,8 @@ Preferred communication style: Simple, everyday language.
 
 **Routing Strategy**
 - Wouter is used instead of React Router for a lightweight client-side routing solution
-- Routes are defined in `App.tsx` with three main pages: Home, Spare Parts listing, and Admin panel
+- Routes are defined in `App.tsx` with main pages: Home, Spare Parts listing, Product Detail, and Admin panel
+- Product detail route: `/product/:id` displays individual product information
 - A catch-all NotFound component handles undefined routes
 
 **State Management**
@@ -64,7 +65,7 @@ Preferred communication style: Simple, everyday language.
 
 **Schema Structure**
 - **Categories Table**: id (UUID), name, description, icon (Font Awesome class), createdAt
-- **Products Table**: id (UUID), name, description, delkomCode (unique), referenceCode, pricing fields (originalPrice, discountPercentage, finalPrice), imageUrl, categoryId (FK), brandCompatibility, stockStatus, feature flags (isFeatured, isDiscounted), timestamps
+- **Products Table**: id (UUID), name, description, delkomCode (unique), referenceCode, pricing fields (originalPrice, discountPercentage, finalPrice), imageUrl (single image, legacy), imageUrls (array for multiple images), categoryId (FK), brandCompatibility, stockStatus, feature flags (isFeatured, isDiscounted), timestamps
 
 **Relationships**
 - Products have a many-to-one relationship with categories
@@ -232,3 +233,50 @@ Preferred communication style: Simple, everyday language.
   - Up to 4 products in responsive grid
   - "View All" button linking to filtered spare parts page
 - Font Awesome 6.5.1 loaded via CDN for category icons
+
+## Product Detail Page
+
+**Modern Animated Design**
+- Professional, animated product detail page with Framer Motion transitions
+- Gradient background (from-slate-50 to-slate-100)
+- Route: `/product/:id` - Individual product view
+- ProductCard components are clickable and navigate to detail page with hover animations
+
+**Image Gallery Carousel**
+- Embla Carousel with loop enabled for product image gallery
+- Supports multiple product images via `imageUrls` array (fallback to single `imageUrl`)
+- Previous/Next navigation buttons with hover scale animations
+- Thumbnail gallery (grid layout) with active state indicators
+- Clicking thumbnails navigates to specific image
+- All images displayed with object-contain on gradient backgrounds
+- Test IDs: `button-gallery-prev`, `button-gallery-next`, `button-thumbnail-{index}`
+
+**Product Information Display**
+- Breadcrumb navigation: Home > Spare Parts > Category > Product Name
+- Product title (text-4xl/5xl), description, and featured badge
+- Product details cards with icons:
+  - Delkom Code (Package icon)
+  - Reference Code (FileText icon)
+  - Brand Compatibility (displayed as gradient pills/badges)
+  - Category (Font Awesome icon + name, links to filtered spare parts)
+- Feature cards:
+  - 3 Months Warranty (Shield icon, green accent)
+  - Worldwide Shipping (Truck icon, blue accent)
+
+**Action Buttons**
+- Main "REQUEST A QUOTE" button (gradient from-primary to-accent) - opens RequestQuoteModal
+- Secondary action buttons:
+  - Save to Favorites (Heart icon) - placeholder
+  - Share Product (Share2 icon) - placeholder
+- Test IDs: `request-quote-btn`, `button-save-favorite`, `button-share-product`
+
+**Need Help Section**
+- Blue gradient info card (from-blue-50 to-indigo-50)
+- Company contact information: agora@agorarockdrill.com, +90 312 385 60 03
+- Expert assistance messaging
+
+**Animations**
+- Page sections fade-in and slide from left/right on mount (staggered delays)
+- Hover effects on all interactive elements (scale, shadow)
+- Image carousel smooth transitions
+- All animations use Framer Motion for performance
