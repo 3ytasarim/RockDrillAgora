@@ -24,13 +24,13 @@ export default function Header() {
             </span>
           </div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-accent transition-colors" data-testid="social-facebook">
+            <a href="#" className="hover:scale-110 transition-transform" data-testid="social-facebook">
               <i className="fab fa-facebook"></i>
             </a>
-            <a href="#" className="hover:text-accent transition-colors" data-testid="social-linkedin">
+            <a href="#" className="hover:scale-110 transition-transform" data-testid="social-linkedin">
               <i className="fab fa-linkedin"></i>
             </a>
-            <a href="#" className="hover:text-accent transition-colors" data-testid="social-whatsapp">
+            <a href="#" className="hover:scale-110 transition-transform" data-testid="social-whatsapp">
               <i className="fab fa-whatsapp"></i>
             </a>
           </div>
@@ -43,7 +43,7 @@ export default function Header() {
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center" data-testid="logo">
-              <img src={logoImage} alt="Agora Rock Drill" className="h-12 w-auto" />
+              <img src={logoImage} alt="Agora Rock Drill" className="h-16 w-auto" />
             </Link>
 
             {/* Desktop Navigation */}
