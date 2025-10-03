@@ -9,6 +9,7 @@ import Footer from "@/components/footer";
 import Home from "@/pages/home";
 import SpareParts from "@/pages/spare-parts";
 import ProductDetail from "@/pages/product-detail";
+import Contact from "@/pages/contact";
 import Admin from "@/pages/admin";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/spare-parts" component={SpareParts} />
           <Route path="/product/:id" component={ProductDetail} />
+          <Route path="/contact" component={Contact} />
           <Route path="/admin" component={Admin} />
           <Route component={NotFound} />
         </Switch>

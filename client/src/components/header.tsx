@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ChevronDown, Home, Cog, Info, Mail, FileText, Menu, X } from "lucide-react";
+import { ChevronDown, Home, Cog, Mail, FileText, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import logoImage from "@assets/AgoraRockDrillLogo_1759477799213.png";
@@ -81,15 +81,10 @@ export default function Header() {
                 </div>
               </div>
 
-              <a href="#about" className="flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors" data-testid="nav-about">
-                <Info size={16} />
-                About Us
-              </a>
-              
-              <a href="#contact" className="flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors" data-testid="nav-contact">
+              <Link href="/contact" data-testid="nav-contact" className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/contact" ? "text-primary" : ""}`}>
                 <Mail size={16} />
-                Contact
-              </a>
+                Contact Us
+              </Link>
               
               {/* Free Request Button */}
               <Button 
@@ -126,14 +121,10 @@ export default function Header() {
                   <Cog size={16} className="inline mr-2" />
                   Spare Parts
                 </Link>
-                <a href="#about" className="block text-foreground hover:text-primary font-semibold" data-testid="mobile-nav-about">
-                  <Info size={16} className="inline mr-2" />
-                  About Us
-                </a>
-                <a href="#contact" className="block text-foreground hover:text-primary font-semibold" data-testid="mobile-nav-contact">
+                <Link href="/contact" data-testid="mobile-nav-contact" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
                   <Mail size={16} className="inline mr-2" />
-                  Contact
-                </a>
+                  Contact Us
+                </Link>
                 <button 
                   onClick={() => {
                     setMobileMenuOpen(false);

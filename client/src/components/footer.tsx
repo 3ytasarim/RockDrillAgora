@@ -30,8 +30,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li><a href="/" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-home">Home</a></li>
               <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-spare-parts">Spare Parts</a></li>
-              <li><a href="#about" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-about">About Us</a></li>
-              <li><a href="#contact" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-contact">Contact</a></li>
+              <li><a href="/contact" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-contact">Contact Us</a></li>
               <li><a href="#" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-privacy">Privacy Policy</a></li>
             </ul>
           </div>
