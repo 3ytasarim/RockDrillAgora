@@ -21,9 +21,12 @@ export default function AdminLogin() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login - replace with actual authentication later
     setTimeout(() => {
-      if (formData.username && formData.password) {
+      if (
+        formData.username === "info@agorarockdrill.com" &&
+        formData.password === "Administrator"
+      ) {
+        localStorage.setItem("adminAuthenticated", "true");
         toast({
           title: "Login Successful",
           description: "Welcome to Admin Panel",
@@ -32,7 +35,7 @@ export default function AdminLogin() {
       } else {
         toast({
           title: "Login Failed",
-          description: "Please enter valid credentials",
+          description: "Invalid username or password",
           variant: "destructive",
         });
       }

@@ -1,14 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield } from "lucide-react";
+import { Shield, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import ProductList from "@/components/admin/product-list";
 import ProductForm from "@/components/admin/product-form";
 import { queryClient } from "@/lib/queryClient";
 import type { ProductWithCategory, Category } from "@shared/schema";
 
 export default function Admin() {
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("products");
+
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem("adminAuthenticated");
+    if (isAuthenticated !== "true") {
+      setLocation("/agoraadminpanel");
+    }
+  }, [setLocation]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminAuthenticated");
+    setLocation("/agoraadminpanel");
+  };
 
   const { data: products = [], isLoading: productsLoading } = useQuery<ProductWithCategory[]>({
     queryKey: ["/api/products"],
@@ -40,14 +55,25 @@ export default function Admin() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold">
-            <Shield className="inline mr-2" size={32} />
-            Admin Panel
-          </h1>
-          <p className="text-primary-foreground/90 mt-2">
-            Manage products, categories, and website content
-          </p>
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">
+              <Shield className="inline mr-2" size={32} />
+              Admin Panel
+            </h1>
+            <p className="text-primary-foreground/90 mt-2">
+              Manage products, categories, and website content
+            </p>
+          </div>
+          <Button
+            onClick={handleLogout}
+            variant="secondary"
+            className="flex items-center gap-2"
+            data-testid="button-logout"
+          >
+            <LogOut size={18} />
+            Logout
+          </Button>
         </div>
       </div>
 
