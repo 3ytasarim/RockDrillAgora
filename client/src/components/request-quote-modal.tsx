@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, Mail, MapPin, Send, Package, User, Building2, MessageSquare, Hash } from "lucide-react";
+import { Phone, Mail, MapPin, Send, User, Building2, MessageSquare, Hash } from "lucide-react";
+import logoPath from "@assets/AgoraRockDrillLogo_1759477799213.png";
 import {
   Dialog,
   DialogContent,
@@ -108,8 +109,8 @@ export default function RequestQuoteModal({ open, onOpenChange }: RequestQuoteMo
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <DialogTitle className="text-3xl md:text-4xl font-black mb-4 text-center">
-                      <Package className="inline-block mr-3 mb-1" size={36} />
+                    <DialogTitle className="text-3xl md:text-4xl font-black mb-4 text-center flex items-center justify-center gap-3">
+                      <img src={logoPath} alt="Agora Rock Drill" className="h-12 w-auto" />
                       Free Quote Request
                     </DialogTitle>
                   </motion.div>
