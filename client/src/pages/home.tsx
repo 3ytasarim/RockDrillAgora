@@ -499,23 +499,23 @@ export default function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20"></div>
 
-                {/* Left Curtain */}
+                {/* Left Curtain - Orange */}
                 <motion.div
-                  initial={{ x: 0, opacity: 1 }}
-                  whileInView={{ x: '-100%', opacity: 0 }}
+                  initial={{ scaleX: 1 }}
+                  whileInView={{ scaleX: 0 }}
                   transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
                   viewport={{ once: true }}
-                  className="absolute inset-y-0 left-0 w-full bg-primary z-10"
+                  className="absolute inset-y-0 left-0 w-1/2 bg-primary z-10"
                   style={{ transformOrigin: 'left' }}
                 />
 
-                {/* Right Curtain */}
+                {/* Right Curtain - Blue */}
                 <motion.div
-                  initial={{ x: 0, opacity: 1 }}
-                  whileInView={{ x: '100%', opacity: 0 }}
+                  initial={{ scaleX: 1 }}
+                  whileInView={{ scaleX: 0 }}
                   transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
                   viewport={{ once: true }}
-                  className="absolute inset-y-0 right-0 w-full bg-accent z-10"
+                  className="absolute inset-y-0 right-0 w-1/2 bg-accent z-10"
                   style={{ transformOrigin: 'right' }}
                 />
               </div>
