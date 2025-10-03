@@ -75,8 +75,8 @@ export default function SpareParts() {
     switch (sortBy) {
       case "newest":
         return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-      case "best-selling":
-        return (b.isDiscounted ? 1 : 0) - (a.isDiscounted ? 1 : 0);
+      case "a-z":
+        return a.name.localeCompare(b.name);
       default:
         return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
     }
@@ -209,7 +209,7 @@ export default function SpareParts() {
                   <SelectContent>
                     <SelectItem value="featured">Sort by: Featured</SelectItem>
                     <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="best-selling">Best Selling</SelectItem>
+                    <SelectItem value="a-z">A-Z</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
