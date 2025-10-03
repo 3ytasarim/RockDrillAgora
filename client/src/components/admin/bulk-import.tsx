@@ -151,6 +151,7 @@ export default function BulkImport() {
                     onClick={() => setSelectedFile(null)}
                     variant="outline"
                     disabled={importMutation.isPending}
+                    data-testid="button-cancel-file"
                   >
                     Cancel
                   </Button>
@@ -171,7 +172,7 @@ export default function BulkImport() {
                       className="hidden"
                       data-testid="input-file"
                     />
-                    <Button variant="outline" className="pointer-events-none">
+                    <Button variant="outline" className="pointer-events-none" data-testid="button-browse-file">
                       <Upload size={16} className="mr-2" />
                       Browse Files
                     </Button>
@@ -190,32 +191,32 @@ export default function BulkImport() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+              <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg" data-testid="result-success">
                 <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                   <CheckCircle className="w-5 h-5" />
                   <span className="font-semibold">Successful</span>
                 </div>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-2">
+                <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-2" data-testid="count-success">
                   {importResult.success}
                 </p>
               </div>
-              <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
+              <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg" data-testid="result-errors">
                 <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
                   <XCircle className="w-5 h-5" />
                   <span className="font-semibold">Failed</span>
                 </div>
-                <p className="text-2xl font-bold text-red-700 dark:text-red-300 mt-2">
+                <p className="text-2xl font-bold text-red-700 dark:text-red-300 mt-2" data-testid="count-errors">
                   {importResult.errors}
                 </p>
               </div>
             </div>
 
             {importResult.errorDetails.length > 0 && (
-              <div className="mt-4">
+              <div className="mt-4" data-testid="error-details-section">
                 <h4 className="font-semibold text-foreground mb-2">Error Details:</h4>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {importResult.errorDetails.map((error, index) => (
-                    <div key={index} className="p-3 bg-red-50 dark:bg-red-950 rounded-md text-sm">
+                    <div key={index} className="p-3 bg-red-50 dark:bg-red-950 rounded-md text-sm" data-testid={`error-detail-${index}`}>
                       <p className="text-red-700 dark:text-red-300 font-medium">{error.error}</p>
                       <p className="text-red-600 dark:text-red-400 text-xs mt-1">
                         Row: {JSON.stringify(error.row)}
