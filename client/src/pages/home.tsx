@@ -9,6 +9,9 @@ import type { ProductWithCategory } from "@shared/schema";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
+import rockDrillImage1 from "@assets/stock_images/hydraulic_rock_drill_f13a1ccf.jpg";
+import rockDrillImage2 from "@assets/stock_images/hydraulic_rock_drill_a3d8bb85.jpg";
+import rockDrillImage3 from "@assets/stock_images/hydraulic_rock_drill_2c311439.jpg";
 
 const heroSlides = [
   {
@@ -16,7 +19,7 @@ const heroSlides = [
     subtitle: "Alternative Spare Parts",
     highlight: "A WORLD BRAND",
     description: "High quality spare parts for Atlas Copco, Epiroc, Jumbo, Furukawa. Exported to 100+ countries.",
-    image: "https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-3.webp",
+    image: rockDrillImage1,
     bgGradient: "from-slate-900 via-blue-900 to-slate-800"
   },
   {
@@ -24,7 +27,7 @@ const heroSlides = [
     subtitle: "Rock Drill Components",
     highlight: "OEM STANDARDS",
     description: "Durable, high-performance parts made with premium materials. 3 months warranty guarantee.",
-    image: "https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-1.webp",
+    image: rockDrillImage2,
     bgGradient: "from-slate-900 via-slate-800 to-blue-900"
   },
   {
@@ -32,7 +35,7 @@ const heroSlides = [
     subtitle: "Trusted Worldwide",
     highlight: "100+ COUNTRIES",
     description: "International certifications. Dedicated support for all sales processes worldwide.",
-    image: "https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-2.webp",
+    image: rockDrillImage3,
     bgGradient: "from-blue-950 via-slate-900 to-slate-800"
   }
 ];
