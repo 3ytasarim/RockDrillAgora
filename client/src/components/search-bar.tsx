@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { Search, Package, Hash } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Package, Hash, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import type { ProductWithCategory } from "@shared/schema";
+import { Link } from "wouter";
 
 interface SearchBarProps {
   onSearch: (query: string, code: string) => void;
@@ -13,17 +16,72 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCode, setSearchCode] = useState("");
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: allProducts = [] } = useQuery<ProductWithCategory[]>({
+    queryKey: ["/api/products"],
+    enabled: searchQuery.length > 0,
+  });
+
+  const filteredProducts = allProducts
+    .filter(product => {
+      const query = searchQuery.toLowerCase();
+      return (
+        product.name.toLowerCase().includes(query) ||
+        (product.delkomCode?.toLowerCase().includes(query) ?? false) ||
+        (product.referenceCode?.toLowerCase().includes(query) ?? false)
+      );
+    })
+    .slice(0, 5);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+          inputRef.current && !inputRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+        setFocusedInput(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.length > 0 && focusedInput === 'name') {
+      setShowDropdown(true);
+    } else if (searchQuery.length === 0) {
+      setShowDropdown(false);
+    }
+  }, [searchQuery, focusedInput]);
 
   const handleSearch = () => {
     if (searchQuery.trim() || searchCode.trim()) {
       onSearch(searchQuery.trim(), searchCode.trim());
+      setShowDropdown(false);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSearch();
+    } else if (e.key === "Escape") {
+      setShowDropdown(false);
     }
+  };
+
+  const handleProductClick = (productName: string) => {
+    setSearchQuery(productName);
+    setShowDropdown(false);
+    onSearch(productName, "");
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setShowDropdown(false);
+    inputRef.current?.focus();
   };
 
   return (
@@ -37,7 +95,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 rounded-3xl blur-xl"></div>
       
       {/* Main container */}
-      <div className="relative bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+      <div className="relative bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 overflow-visible">
         {/* Decorative gradient bar */}
         <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary"></div>
         
@@ -68,7 +126,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
 
           {/* Search inputs */}
           <div className="grid md:grid-cols-2 gap-4 mb-6">
-            {/* Product Name Input */}
+            {/* Product Name Input with Autocomplete */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -77,21 +135,122 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
             >
               <div className={`absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl blur transition-all duration-300 ${focusedInput === 'name' ? 'opacity-100' : 'opacity-0'}`}></div>
               <div className="relative flex items-center">
-                <div className={`absolute left-4 transition-all duration-300 ${focusedInput === 'name' ? 'text-primary scale-110' : 'text-muted-foreground'}`}>
+                <div className={`absolute left-4 transition-all duration-300 z-10 ${focusedInput === 'name' ? 'text-primary scale-110' : 'text-muted-foreground'}`}>
                   <Package size={20} />
                 </div>
                 <Input
+                  ref={inputRef}
                   type="text"
                   placeholder="Product Name (e.g., COP MD20 Piston)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setFocusedInput('name')}
-                  onBlur={() => setFocusedInput(null)}
-                  onKeyPress={handleKeyPress}
-                  className="pl-12 pr-4 py-6 bg-white/80 border-2 border-slate-200 rounded-xl focus:border-primary focus:bg-white transition-all duration-300 text-base font-medium hover:border-primary/50"
+                  onKeyDown={handleKeyPress}
+                  className="pl-12 pr-12 py-6 bg-white/80 border-2 border-slate-200 rounded-xl focus:border-primary focus:bg-white transition-all duration-300 text-base font-medium hover:border-primary/50"
                   data-testid="search-input-name"
+                  autoComplete="off"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-4 text-muted-foreground hover:text-primary transition-colors z-10"
+                    data-testid="clear-search-btn"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
               </div>
+
+              {/* Autocomplete Dropdown */}
+              <AnimatePresence>
+                {showDropdown && (
+                  <motion.div
+                    ref={dropdownRef}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-2xl border-2 border-slate-200 z-50 overflow-hidden"
+                    data-testid="autocomplete-dropdown"
+                  >
+                    {filteredProducts.length > 0 ? (
+                      <>
+                        <div className="max-h-[400px] overflow-y-auto">
+                          {filteredProducts.map((product) => (
+                            <button
+                              key={product.id}
+                              onClick={() => handleProductClick(product.name)}
+                              className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 text-left"
+                              data-testid={`product-suggestion-${product.id}`}
+                            >
+                              {/* Product Image */}
+                              <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                                {product.imageUrls && product.imageUrls.length > 0 ? (
+                                  <img
+                                    src={product.imageUrls[0]}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : product.imageUrl ? (
+                                  <img
+                                    src={product.imageUrl}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Package size={24} className="text-slate-400" />
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Product Info */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-bold text-slate-900 truncate">
+                                  {product.name}
+                                </h4>
+                                <p className="text-sm text-slate-600">
+                                  {product.delkomCode && (
+                                    <span className="inline-block">
+                                      SKU: {product.delkomCode}
+                                    </span>
+                                  )}
+                                  {product.referenceCode && product.delkomCode && (
+                                    <span className="mx-2">•</span>
+                                  )}
+                                  {product.referenceCode && (
+                                    <span className="inline-block">
+                                      Ref: {product.referenceCode}
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {/* See All Products Link */}
+                        <Link href={`/spare-parts?search=${encodeURIComponent(searchQuery)}`}>
+                          <div 
+                            className="p-4 bg-slate-50 hover:bg-slate-100 transition-colors border-t-2 border-slate-200 text-center"
+                            data-testid="see-all-products-link"
+                          >
+                            <p className="text-sm text-slate-600 font-medium">
+                              SEE ALL PRODUCTS... ({allProducts.length})
+                            </p>
+                          </div>
+                        </Link>
+                      </>
+                    ) : (
+                      <div className="p-8 text-center" data-testid="no-results-message">
+                        <Package size={48} className="mx-auto text-slate-300 mb-3" />
+                        <p className="text-slate-600 font-medium">No products found</p>
+                        <p className="text-sm text-slate-400 mt-1">Try a different search term</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* Product Code Input */}
@@ -113,7 +272,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                   onChange={(e) => setSearchCode(e.target.value)}
                   onFocus={() => setFocusedInput('code')}
                   onBlur={() => setFocusedInput(null)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyPress}
                   className="pl-12 pr-4 py-6 bg-white/80 border-2 border-slate-200 rounded-xl focus:border-accent focus:bg-white transition-all duration-300 text-base font-medium hover:border-accent/50"
                   data-testid="search-input-code"
                 />
