@@ -11,7 +11,6 @@ import type { ProductWithCategory, Category } from "@shared/schema";
 export default function SpareParts() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<string[]>([]);
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("featured");
 
@@ -55,26 +54,6 @@ export default function SpareParts() {
       return false;
     }
 
-    // Price filter
-    if (priceRange.length > 0) {
-      const price = parseFloat(product.finalPrice);
-      const inRange = priceRange.some(range => {
-        switch (range) {
-          case "under-500":
-            return price < 500;
-          case "500-1000":
-            return price >= 500 && price <= 1000;
-          case "1000-2500":
-            return price >= 1000 && price <= 2500;
-          case "over-2500":
-            return price > 2500;
-          default:
-            return true;
-        }
-      });
-      if (!inRange) return false;
-    }
-
     // Brand filter
     if (brandFilter.length > 0 && product.brandCompatibility) {
       const hasMatchingBrand = brandFilter.some(brand => 
@@ -88,10 +67,6 @@ export default function SpareParts() {
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
-      case "price-low":
-        return parseFloat(a.finalPrice) - parseFloat(b.finalPrice);
-      case "price-high":
-        return parseFloat(b.finalPrice) - parseFloat(a.finalPrice);
       case "newest":
         return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       case "best-selling":
@@ -109,14 +84,6 @@ export default function SpareParts() {
     );
   };
 
-  const handlePriceRangeChange = (range: string, checked: boolean) => {
-    setPriceRange(prev => 
-      checked 
-        ? [...prev, range]
-        : prev.filter(r => r !== range)
-    );
-  };
-
   const handleBrandChange = (brand: string, checked: boolean) => {
     setBrandFilter(prev => 
       checked 
@@ -127,7 +94,6 @@ export default function SpareParts() {
 
   const resetFilters = () => {
     setSelectedCategories([]);
-    setPriceRange([]);
     setBrandFilter([]);
     setSearchQuery("");
   };
@@ -194,30 +160,6 @@ export default function SpareParts() {
                   </div>
                 </div>
 
-                {/* Price Filter */}
-                <div className="mb-6">
-                  <h4 className="font-semibold text-foreground mb-3">Price Range</h4>
-                  <div className="space-y-2">
-                    {[
-                      { id: "under-500", label: "Under €500" },
-                      { id: "500-1000", label: "€500 - €1,000" },
-                      { id: "1000-2500", label: "€1,000 - €2,500" },
-                      { id: "over-2500", label: "Over €2,500" }
-                    ].map((range) => (
-                      <div key={range.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`price-${range.id}`}
-                          checked={priceRange.includes(range.id)}
-                          onCheckedChange={(checked) => handlePriceRangeChange(range.id, checked as boolean)}
-                        />
-                        <label htmlFor={`price-${range.id}`} className="text-sm cursor-pointer">
-                          {range.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Brand Filter */}
                 <div className="mb-6">
                   <h4 className="font-semibold text-foreground mb-3">Brand Compatibility</h4>
@@ -260,8 +202,6 @@ export default function SpareParts() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="featured">Sort by: Featured</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
                     <SelectItem value="newest">Newest First</SelectItem>
                     <SelectItem value="best-selling">Best Selling</SelectItem>
                   </SelectContent>
