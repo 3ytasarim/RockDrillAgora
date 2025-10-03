@@ -295,7 +295,7 @@ export default function Contact() {
             </div>
             <div className="w-full h-[450px] rounded-2xl overflow-hidden shadow-xl border border-border" data-testid="google-maps-container">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3060.8287536738734!2d32.7326!3d39.9334!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMznCsDU2JzAwLjIiTiAzMsKwNDMnNTcuNCJF!5e0!3m2!1sen!2str!4v1234567890"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3057.529076907873!2d32.75485457607011!3d39.97428037151423!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14d349d0baef5dc5%3A0x9fa61170baf96c03!2sAGORA%20Rock%20Drill%20A.%C5%9E.!5e0!3m2!1str!2str!4v1759505610611!5m2!1str!2str"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
