@@ -39,7 +39,7 @@ const heroSlides = [
     subtitle: "700+ m² Warehouse",
     highlight: "THOUSANDS OF PARTS",
     description: "Wide inventory advantage with original and alternative spare parts stocked in our large warehouse in Ankara, Turkey.",
-    image: heroImage2,
+    image: tunnelDrillImage1,
     bgGradient: "from-slate-900 via-slate-800 to-blue-900"
   },
   {
@@ -47,7 +47,7 @@ const heroSlides = [
     subtitle: "Fast & Reliable Shipping",
     highlight: "DOZENS OF COUNTRIES",
     description: "High speed delivery worldwide through DHL, FedEx and UPS. Expert teams speaking English, Russian and Turkish.",
-    image: heroImage3,
+    image: outdoorDrillImage,
     bgGradient: "from-blue-950 via-slate-900 to-slate-800"
   }
 ];
