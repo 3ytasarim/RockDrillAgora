@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Hammer, RotateCcw, Gauge, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { Hammer, RotateCcw, Gauge, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowRight, Mail, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import SearchBar from "@/components/search-bar";
 import CategoryCard from "@/components/category-card";
 import ProductCard from "@/components/product-card";
@@ -9,6 +11,7 @@ import type { ProductWithCategory, Category } from "@shared/schema";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
+import { motion } from "framer-motion";
 import rockDrillImage1 from "@assets/stock_images/hydraulic_rock_drill_f13a1ccf.jpg";
 import rockDrillImage2 from "@assets/stock_images/hydraulic_rock_drill_a3d8bb85.jpg";
 import rockDrillImage3 from "@assets/stock_images/hydraulic_rock_drill_2c311439.jpg";
@@ -166,6 +169,7 @@ export default function Home() {
           onClick={scrollPrev}
           className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all hover:scale-110"
           aria-label="Previous slide"
+          data-testid="button-hero-prev"
         >
           <ChevronLeft size={28} />
         </button>
@@ -173,6 +177,7 @@ export default function Home() {
           onClick={scrollNext}
           className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all hover:scale-110"
           aria-label="Next slide"
+          data-testid="button-hero-next"
         >
           <ChevronRight size={28} />
         </button>
@@ -186,6 +191,7 @@ export default function Home() {
                 index === selectedIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'
               }`}
               aria-label={`Go to slide ${index + 1}`}
+              data-testid={`button-hero-dot-${index}`}
             />
           ))}
         </div>
@@ -311,139 +317,257 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quality Guarantee */}
+      {/* Company Production Info */}
+      <motion.section 
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+        className="py-16 bg-gradient-to-br from-slate-50 to-slate-100"
+      >
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-3xl shadow-2xl overflow-hidden"
+          >
+            <div className="grid md:grid-cols-2 gap-0">
+              <div className="p-8 md:p-12 flex flex-col justify-center">
+                <motion.h2 
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  viewport={{ once: true }}
+                  className="text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight"
+                >
+                  We produce top quality alternative rock drill and drill rig spare parts for Epiroc, Jumbo, Furukawa, Atlas Copco, Montabert etc.
+                </motion.h2>
+                <motion.p 
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  viewport={{ once: true }}
+                  className="text-lg text-muted-foreground mb-8"
+                >
+                  With ready stock and large warehouse, we ship to all over the world as soon as possible.
+                </motion.p>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  viewport={{ once: true }}
+                  className="grid grid-cols-3 gap-4"
+                >
+                  <motion.div 
+                    whileHover={{ scale: 1.05 }}
+                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
+                  >
+                    <img 
+                      src="https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-3.webp" 
+                      alt="Team meeting" 
+                      className="w-full h-24 object-cover"
+                    />
+                  </motion.div>
+                  <motion.div 
+                    whileHover={{ scale: 1.05 }}
+                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
+                  >
+                    <img 
+                      src="https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-1.webp" 
+                      alt="Warehouse" 
+                      className="w-full h-24 object-cover"
+                    />
+                  </motion.div>
+                  <motion.div 
+                    whileHover={{ scale: 1.05 }}
+                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
+                  >
+                    <img 
+                      src="https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-2.webp" 
+                      alt="Stock room" 
+                      className="w-full h-24 object-cover"
+                    />
+                  </motion.div>
+                </motion.div>
+              </div>
+              <div className="relative h-full min-h-[400px]">
+                <motion.img 
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  viewport={{ once: true }}
+                  src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=800" 
+                  alt="Professional team collaboration" 
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20"></div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Quality Guarantee & Request Form */}
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl font-bold text-foreground mb-6">
-                <i className="fas fa-shield-check text-accent mr-2"></i>Quality Guarantee
-              </h2>
-              <p className="text-lg text-muted-foreground mb-6">
-                Our store produces high quality alternative spare parts for drill rigs, rock drilling machines and drifters 
-                produced by the world's leading companies such as Atlas Copco, Epiroc, Jumbo, Furukawa, Montabert, CAT, Junjin.
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="text-accent text-xl mt-1" size={20} />
-                  <div>
-                    <h4 className="font-semibold text-foreground">3 Months Warranty</h4>
-                    <p className="text-muted-foreground">Against breakage except for user faults, on condition that the necessary overhaul is made</p>
-                  </div>
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            {/* Quality Guarantee */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-2xl p-8 shadow-lg border border-slate-200 mb-8"
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <motion.div 
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.8 }}
+                    className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-full p-4 shadow-lg"
+                  >
+                    <i className="fas fa-award text-white text-3xl"></i>
+                  </motion.div>
+                  <h2 className="text-3xl font-bold text-foreground">Quality Guarantee</h2>
                 </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="text-accent text-xl mt-1" size={20} />
-                  <div>
-                    <h4 className="font-semibold text-foreground">OEM Quality Materials</h4>
-                    <p className="text-muted-foreground">Made of high durable materials, many products are OEM quality</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="text-accent text-xl mt-1" size={20} />
-                  <div>
-                    <h4 className="font-semibold text-foreground">Global Export</h4>
-                    <p className="text-muted-foreground">Exported to more than 100 countries with international certifications</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="text-accent text-xl mt-1" size={20} />
-                  <div>
-                    <h4 className="font-semibold text-foreground">Dedicated Support</h4>
-                    <p className="text-muted-foreground">Customer-specific representative assigned for all sales processes</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <img 
-                src="https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-3.webp" 
-                alt="Quality rock drill spare parts" 
-                className="rounded-lg shadow-lg"
-                loading="lazy"
-              />
-              <img 
-                src="https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-1.webp" 
-                alt="Rock drill spare parts warehouse" 
-                className="rounded-lg shadow-lg mt-8"
-                loading="lazy"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  "We give 3 months warranty against breakage except for user faults, on condition that the necessary overhaul is made"
+                </p>
+              </motion.div>
 
-      {/* Contact Section */}
-      <section id="contact" className="py-16 bg-primary text-primary-foreground">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Need Help? Contact Our Experts</h2>
-            <p className="text-xl text-primary-foreground/90">Get assistance from our experienced sales consultants</p>
-          </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                viewport={{ once: true }}
+              >
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-1 h-12 bg-accent rounded-full"></div>
+                    <h3 className="text-2xl font-bold text-foreground">NEED HELP?</h3>
+                  </div>
+                  <h4 className="text-3xl font-black text-foreground mb-4">You need experienced Spare Parts Expert</h4>
+                  <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                    You can get help from our experienced sales consultants for all the questions you want to ask, such as the parts and parts lists you want, spare parts you cannot find. To do this, simply fill out the contact form. Our experts will get back to you as soon as possible.
+                  </p>
+                </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-primary-foreground text-foreground rounded-lg p-6">
-              <h3 className="text-2xl font-bold mb-4">Quick Contact</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <i className="fas fa-envelope text-primary text-xl"></i>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Email</div>
-                    <div className="font-semibold">info@agorarockdrill.com</div>
-                  </div>
+                <div className="flex flex-wrap gap-4">
+                  <motion.a
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href="mailto:info@agorarockdrill.com"
+                    className="flex items-center gap-3 bg-white border-2 border-slate-200 rounded-xl px-6 py-3 hover:border-accent transition-colors shadow-sm"
+                    data-testid="link-email-contact"
+                  >
+                    <Mail className="text-accent" size={24} />
+                    <span className="font-semibold text-foreground">Send us a Mail</span>
+                  </motion.a>
+                  <motion.a
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href="https://wa.me/905304992891"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 bg-white border-2 border-slate-200 rounded-xl px-6 py-3 hover:border-green-500 transition-colors shadow-sm"
+                    data-testid="link-whatsapp-contact"
+                  >
+                    <i className="fab fa-whatsapp text-green-500 text-2xl"></i>
+                    <span className="font-semibold text-foreground">Write to Whatsapp</span>
+                  </motion.a>
                 </div>
-                <div className="flex items-center gap-3">
-                  <i className="fas fa-phone text-primary text-xl"></i>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Phone</div>
-                    <div className="font-semibold">+90 530 499 28 91</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <i className="fab fa-whatsapp text-primary text-xl"></i>
-                  <div>
-                    <div className="text-sm text-muted-foreground">WhatsApp</div>
-                    <div className="font-semibold">Chat with us instantly</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
-            <div className="bg-primary-foreground text-foreground rounded-lg p-6">
-              <h3 className="text-2xl font-bold mb-4">Request a Quote</h3>
-              <form className="space-y-3">
-                <input 
-                  type="text" 
-                  placeholder="Your Name" 
-                  className="w-full px-4 py-2 rounded-md border border-input" 
-                  data-testid="contact-name-input"
-                />
-                <input 
-                  type="email" 
-                  placeholder="Email Address" 
-                  className="w-full px-4 py-2 rounded-md border border-input" 
-                  data-testid="contact-email-input"
-                />
-                <input 
-                  type="tel" 
-                  placeholder="Phone Number" 
-                  className="w-full px-4 py-2 rounded-md border border-input" 
-                  data-testid="contact-phone-input"
-                />
-                <textarea 
-                  placeholder="Your Message" 
-                  rows={3} 
-                  className="w-full px-4 py-2 rounded-md border border-input" 
-                  data-testid="contact-message-input"
-                ></textarea>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-                  data-testid="contact-submit-btn"
-                >
-                  <i className="fas fa-paper-plane mr-2"></i>Send Request
-                </Button>
-              </form>
-            </div>
+            {/* Request Form */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="sticky top-24"
+            >
+              <motion.div 
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.3 }}
+                className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-3xl p-8 shadow-2xl"
+              >
+                <h3 className="text-3xl font-black text-slate-900 mb-6 text-center">Request Form</h3>
+                <form className="space-y-4">
+                  <div>
+                    <label className="block text-slate-900 font-semibold mb-2">
+                      Name <span className="text-red-600">*</span>
+                    </label>
+                    <Input 
+                      type="text" 
+                      className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" 
+                      data-testid="contact-name-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-900 font-semibold mb-2">
+                      Corporate <span className="text-red-600">*</span>
+                    </label>
+                    <Input 
+                      type="text" 
+                      className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" 
+                      data-testid="contact-company-input"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-slate-900 font-semibold mb-2">
+                        Mail <span className="text-red-600">*</span>
+                      </label>
+                      <Input 
+                        type="email" 
+                        className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" 
+                        data-testid="contact-email-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-900 font-semibold mb-2">
+                        Phone <span className="text-red-600">*</span>
+                      </label>
+                      <Input 
+                        type="tel" 
+                        className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" 
+                        data-testid="contact-phone-input"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-slate-900 font-semibold mb-2">
+                      Message <span className="text-red-600">*</span>
+                    </label>
+                    <Textarea 
+                      rows={4} 
+                      className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900 resize-none" 
+                      data-testid="contact-message-input"
+                    />
+                  </div>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-slate-900 text-white hover:bg-slate-800 font-bold py-6 text-lg rounded-xl shadow-lg"
+                      data-testid="contact-submit-btn"
+                    >
+                      REQUEST A QUOTE
+                    </Button>
+                  </motion.div>
+                </form>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </section>

@@ -1,12 +1,13 @@
 # Overview
 
-This is a full-stack e-commerce application for industrial spare parts, specifically hydraulic rock drill and drill rig components. The application allows users to browse, search, and filter spare parts for various industrial equipment brands (Atlas Copco, Epiroc, Jumbo, Furukawa, etc.). It includes an admin panel for managing products and categories.
+This is a full-stack catalog website for industrial spare parts, specifically hydraulic rock drill and drill rig components. The application allows users to browse, search, and filter spare parts for various industrial equipment brands (Atlas Copco, Epiroc, Jumbo, Furukawa, etc.). It features a "Request Quote" system (no e-commerce checkout) and includes an admin panel for managing products and categories.
 
 The stack consists of:
-- **Frontend**: React with TypeScript, Vite build tool, Wouter for routing
+- **Frontend**: React with TypeScript, Vite build tool, Wouter for routing, Framer Motion for animations
 - **Backend**: Express.js with TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
 - **UI Components**: Radix UI primitives with shadcn/ui styling and Tailwind CSS
+- **Brand Colors**: Orange #ed582e (hsl(13 84% 55%)) and Blue #1856a3 (hsl(213 74% 37%))
 
 # User Preferences
 
@@ -171,8 +172,58 @@ Preferred communication style: Simple, everyday language.
 - `clsx` and `tailwind-merge` for conditional class names
 - `nanoid` for generating unique IDs
 - `embla-carousel-react` for carousel components
+- `framer-motion` for scroll-based and interactive animations
 
 **Object Storage & File Upload**
 - `@google-cloud/storage` - Google Cloud Storage client for Replit object storage
 - `@uppy/core`, `@uppy/react`, `@uppy/dashboard`, `@uppy/aws-s3` - File upload UI and S3-compatible upload handling
 - Uppy CSS loaded via CDN in `index.css` to avoid build errors
+
+## Homepage Design
+
+**Hero Carousel Slider**
+- Professional Embla carousel with 3 rock drill stock images
+- Auto-play (5-second delay) with manual navigation controls
+- Previous/Next buttons with backdrop blur and scale animations
+- Pagination dots at bottom with active state indicator
+- Responsive design with gradient backgrounds and overlay patterns
+- Test IDs: `button-hero-prev`, `button-hero-next`, `button-hero-dot-{index}`
+
+**Company Production Info Section**
+- Modern split-screen card with rounded corners and shadow
+- Left: Company mission text + 3 warehouse thumbnail images
+- Right: Professional team collaboration image with gradient overlay
+- Framer Motion animations: fade-in on scroll, hover scale on thumbnails
+- Text: "We produce top quality alternative rock drill and drill rig spare parts..."
+
+**Quality Guarantee Section**
+- White card with golden award badge icon (rotates on hover)
+- 3 months warranty guarantee quote
+- Clean typography with professional spacing
+- Slide-in animation from left on scroll
+
+**Need Help / Expert Consultation Section**
+- Red accent bar for visual emphasis
+- "NEED HELP?" heading with bold expert title
+- Description of consultation services
+- Contact buttons with animations:
+  - "Send us a Mail" - email link with Mail icon (data-testid: `link-email-contact`)
+  - "Write to Whatsapp" - WhatsApp link with icon (data-testid: `link-whatsapp-contact`)
+- Scale animations on hover/tap
+
+**Request Form**
+- Yellow/amber gradient background (from-amber-400 to-amber-500)
+- Sticky positioning for better UX
+- Form fields: Name, Corporate, Mail, Phone, Message (all required)
+- Dark "REQUEST A QUOTE" button with hover effects
+- Lift animation on card hover, slide-in from right on scroll
+- Uses shadcn Input and Textarea components
+
+**Category-Based Product Listing**
+- Products grouped by category instead of featured/discounted
+- Each category section shows:
+  - Font Awesome icon + category name
+  - Category description
+  - Up to 4 products in responsive grid
+  - "View All" button linking to filtered spare parts page
+- Font Awesome 6.5.1 loaded via CDN for category icons
