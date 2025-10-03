@@ -157,7 +157,6 @@ export default function Home() {
                       
                       <div className="hidden md:block relative">
                         <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
-                          <div className="absolute inset-0 bg-gradient-to-tr from-accent/20 to-primary/20 z-10"></div>
                           <img 
                             src={slide.image}
                             alt={slide.title}
