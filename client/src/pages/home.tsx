@@ -486,7 +486,7 @@ export default function Home() {
               </div>
               
               {/* Right Side with Curtain Animation */}
-              <div className="relative h-full min-h-[400px] overflow-hidden">
+              <div className="relative h-full min-h-[400px] overflow-hidden bg-slate-200">
                 {/* Background Image */}
                 <motion.img 
                   initial={{ opacity: 0, scale: 1.1 }}
@@ -495,28 +495,26 @@ export default function Home() {
                   viewport={{ once: true }}
                   src={agoraHeadOfficeImage} 
                   alt="AGORA Rock Drill Head Office - Ankara, Turkey" 
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover z-0"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 z-[1]"></div>
 
                 {/* Left Curtain - Orange */}
                 <motion.div
-                  initial={{ scaleX: 1 }}
-                  whileInView={{ scaleX: 0 }}
+                  initial={{ width: "50%" }}
+                  whileInView={{ width: "0%" }}
                   transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
                   viewport={{ once: true }}
-                  className="absolute inset-y-0 left-0 w-1/2 bg-primary z-10"
-                  style={{ transformOrigin: 'left' }}
+                  className="absolute inset-y-0 left-0 bg-primary z-20"
                 />
 
                 {/* Right Curtain - Blue */}
                 <motion.div
-                  initial={{ scaleX: 1 }}
-                  whileInView={{ scaleX: 0 }}
+                  initial={{ width: "50%" }}
+                  whileInView={{ width: "0%" }}
                   transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
                   viewport={{ once: true }}
-                  className="absolute inset-y-0 right-0 w-1/2 bg-accent z-10"
-                  style={{ transformOrigin: 'right' }}
+                  className="absolute inset-y-0 right-0 bg-accent z-20"
                 />
               </div>
             </div>
