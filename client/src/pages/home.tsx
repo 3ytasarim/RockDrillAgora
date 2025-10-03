@@ -12,9 +12,13 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
-import rockDrillImage1 from "@assets/stock_images/hydraulic_rock_drill_f13a1ccf.jpg";
-import rockDrillImage2 from "@assets/stock_images/hydraulic_rock_drill_a3d8bb85.jpg";
-import rockDrillImage3 from "@assets/stock_images/hydraulic_rock_drill_2c311439.jpg";
+import heroImage1 from "@assets/shutterstock_1082374520-1536x1024_1759488326747.jpg";
+import heroImage2 from "@assets/shutterstock_1489860854-1536x1024_1759488326747.jpg";
+import heroImage3 from "@assets/shutterstock_782926648-1536x1017_1759488326746.jpg";
+import tunnelDrillImage1 from "@assets/shutterstock_453380569-1536x1025_1759488326746.jpg";
+import tunnelDrillImage2 from "@assets/shutterstock_1204797238-1536x1025_1759488326747.jpg";
+import tunnelDrillImage3 from "@assets/shutterstock_1624956124-1536x1024_1759488326748.jpg";
+import outdoorDrillImage from "@assets/shutterstock_713592-1536x1024_1759488326745.jpg";
 import warehouseImage1 from "@assets/stock_images/warehouse_industrial_c96b9e5d.jpg";
 import warehouseImage2 from "@assets/stock_images/warehouse_industrial_5bd1059d.jpg";
 import warehouseImage3 from "@assets/stock_images/warehouse_industrial_5ad4d018.jpg";
@@ -26,7 +30,7 @@ const heroSlides = [
     subtitle: "Professional Spare Parts Solutions",
     highlight: "20 YEARS EXPERIENCE",
     description: "Original and alternative spare parts for Atlas Copco, Epiroc, Sandvik, Furukawa, Ingersoll Rand, Everdigm and more.",
-    image: rockDrillImage1,
+    image: heroImage1,
     bgGradient: "from-slate-900 via-blue-900 to-slate-800"
   },
   {
@@ -34,7 +38,7 @@ const heroSlides = [
     subtitle: "700+ m² Warehouse",
     highlight: "THOUSANDS OF PARTS",
     description: "Wide inventory advantage with original and alternative spare parts stocked in our large warehouse in Ankara, Turkey.",
-    image: rockDrillImage2,
+    image: heroImage2,
     bgGradient: "from-slate-900 via-slate-800 to-blue-900"
   },
   {
@@ -42,7 +46,7 @@ const heroSlides = [
     subtitle: "Fast & Reliable Shipping",
     highlight: "DOZENS OF COUNTRIES",
     description: "High speed delivery worldwide through DHL, FedEx and UPS. Expert teams speaking English, Russian and Turkish.",
-    image: rockDrillImage3,
+    image: heroImage3,
     bgGradient: "from-blue-950 via-slate-900 to-slate-800"
   }
 ];
@@ -369,8 +373,8 @@ export default function Home() {
                     className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
                   >
                     <img 
-                      src={warehouseImage1} 
-                      alt="Warehouse storage" 
+                      src={tunnelDrillImage1} 
+                      alt="Tunnel drilling operations" 
                       className="w-full h-24 object-cover"
                     />
                   </motion.div>
@@ -379,8 +383,8 @@ export default function Home() {
                     className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
                   >
                     <img 
-                      src={warehouseImage2} 
-                      alt="Industrial warehouse" 
+                      src={tunnelDrillImage2} 
+                      alt="Underground drilling equipment" 
                       className="w-full h-24 object-cover"
                     />
                   </motion.div>
@@ -389,8 +393,8 @@ export default function Home() {
                     className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
                   >
                     <img 
-                      src={warehouseImage3} 
-                      alt="Parts storage" 
+                      src={tunnelDrillImage3} 
+                      alt="Professional drilling machinery" 
                       className="w-full h-24 object-cover"
                     />
                   </motion.div>
@@ -402,8 +406,8 @@ export default function Home() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.8, delay: 0.3 }}
                   viewport={{ once: true }}
-                  src={teamCollaborationImage} 
-                  alt="Professional team collaboration" 
+                  src={outdoorDrillImage} 
+                  alt="Professional rock drilling operations" 
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20"></div>
