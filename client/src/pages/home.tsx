@@ -213,6 +213,79 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Trusted Brands Carousel */}
+      <section className="py-12 bg-gradient-to-r from-slate-50 to-slate-100">
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl font-bold text-foreground mb-2">Trusted Equipment Brands</h2>
+            <p className="text-muted-foreground">We supply spare parts for all major rock drilling manufacturers</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center"
+          >
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-full h-32 flex items-center justify-center"
+            >
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Epiroc_Logo.png/320px-Epiroc_Logo.png" 
+                alt="Epiroc" 
+                className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                data-testid="brand-logo-epiroc"
+              />
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-full h-32 flex items-center justify-center"
+            >
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Atlas_Copco.jpg/320px-Atlas_Copco.jpg" 
+                alt="Atlas Copco" 
+                className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                data-testid="brand-logo-atlas-copco"
+              />
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-full h-32 flex items-center justify-center"
+            >
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Sandvik_Logo.svg/320px-Sandvik_Logo.svg.png" 
+                alt="Sandvik" 
+                className="max-h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                data-testid="brand-logo-sandvik"
+              />
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-full h-32 flex items-center justify-center"
+            >
+              <div className="text-2xl font-bold text-primary" data-testid="brand-logo-furukawa">
+                FURUKAWA
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Product Categories */}
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4">
