@@ -217,6 +217,33 @@ export default function Contact() {
                   <h3 className="font-bold text-lg mb-4 text-foreground">Follow Us</h3>
                   <div className="flex gap-4">
                     <a 
+                      href="https://www.instagram.com/agorarockdrill/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white hover:bg-primary/90 transition-all hover:scale-110"
+                      data-testid="social-instagram"
+                    >
+                      <i className="fab fa-instagram text-xl"></i>
+                    </a>
+                    <a 
+                      href="https://www.linkedin.com/company/agorarockdrill/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white hover:bg-primary/90 transition-all hover:scale-110"
+                      data-testid="social-linkedin"
+                    >
+                      <i className="fab fa-linkedin text-xl"></i>
+                    </a>
+                    <a 
+                      href="https://x.com/agorarockdrill" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white hover:bg-primary/90 transition-all hover:scale-110"
+                      data-testid="social-twitter"
+                    >
+                      <i className="fab fa-x-twitter text-xl"></i>
+                    </a>
+                    <a 
                       href="https://www.facebook.com/agorarockdrill" 
                       target="_blank" 
                       rel="noopener noreferrer"
@@ -226,22 +253,13 @@ export default function Contact() {
                       <i className="fab fa-facebook text-xl"></i>
                     </a>
                     <a 
-                      href="https://www.linkedin.com/company/agorarockdrill" 
+                      href="https://www.youtube.com/@agorarockdrill" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white hover:bg-primary/90 transition-all hover:scale-110"
-                      data-testid="social-linkedin"
+                      data-testid="social-youtube"
                     >
-                      <i className="fab fa-linkedin text-xl"></i>
-                    </a>
-                    <a 
-                      href="https://wa.me/905435755300" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="w-12 h-12 bg-[#25D366] rounded-full flex items-center justify-center text-white hover:bg-[#25D366]/90 transition-all hover:scale-110"
-                      data-testid="social-whatsapp"
-                    >
-                      <i className="fab fa-whatsapp text-xl"></i>
+                      <i className="fab fa-youtube text-xl"></i>
                     </a>
                   </div>
                 </div>

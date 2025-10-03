@@ -13,14 +13,20 @@ export default function Footer() {
               </p>
             </div>
             <div className="flex gap-3">
+              <a href="https://www.instagram.com/agorarockdrill/" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-instagram">
+                <i className="fab fa-instagram"></i>
+              </a>
+              <a href="https://www.linkedin.com/company/agorarockdrill/" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-linkedin">
+                <i className="fab fa-linkedin"></i>
+              </a>
+              <a href="https://x.com/agorarockdrill" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-twitter">
+                <i className="fab fa-x-twitter"></i>
+              </a>
               <a href="https://www.facebook.com/agorarockdrill" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-facebook">
                 <i className="fab fa-facebook"></i>
               </a>
-              <a href="https://www.linkedin.com/company/agorarockdrill" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-linkedin">
-                <i className="fab fa-linkedin"></i>
-              </a>
-              <a href="https://wa.me/905435755300" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-whatsapp">
-                <i className="fab fa-whatsapp"></i>
+              <a href="https://www.youtube.com/@agorarockdrill" target="_blank" rel="noopener noreferrer" className="bg-background/10 hover:bg-accent w-10 h-10 rounded-full flex items-center justify-center transition-colors" data-testid="footer-youtube">
+                <i className="fab fa-youtube"></i>
               </a>
             </div>
           </div>

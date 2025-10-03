@@ -26,14 +26,20 @@ export default function Header() {
             </span>
           </div>
           <div className="flex gap-4">
+            <a href="https://www.instagram.com/agorarockdrill/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-instagram">
+              <i className="fab fa-instagram"></i>
+            </a>
+            <a href="https://www.linkedin.com/company/agorarockdrill/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-linkedin">
+              <i className="fab fa-linkedin"></i>
+            </a>
+            <a href="https://x.com/agorarockdrill" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-twitter">
+              <i className="fab fa-x-twitter"></i>
+            </a>
             <a href="https://www.facebook.com/agorarockdrill" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-facebook">
               <i className="fab fa-facebook"></i>
             </a>
-            <a href="https://www.linkedin.com/company/agorarockdrill" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-linkedin">
-              <i className="fab fa-linkedin"></i>
-            </a>
-            <a href="https://wa.me/905435755300" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-whatsapp">
-              <i className="fab fa-whatsapp"></i>
+            <a href="https://www.youtube.com/@agorarockdrill" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" data-testid="social-youtube">
+              <i className="fab fa-youtube"></i>
             </a>
           </div>
         </div>
