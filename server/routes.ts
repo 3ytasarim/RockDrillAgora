@@ -4,6 +4,10 @@ import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
+import multer from "multer";
+import * as XLSX from "xlsx";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Products API
@@ -79,6 +83,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting product:', error);
       res.status(500).json({ error: "Failed to delete product" });
+    }
+  });
+
+  // Bulk Import Products
+  app.post("/api/products/bulk-import", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet);
+
+      const results = {
+        success: [] as any[],
+        errors: [] as any[],
+      };
+
+      for (const row of data) {
+        try {
+          const productData: any = {
+            name: (row as any)['Product Name'] || (row as any)['name'] || '',
+            delkomCode: (row as any)['Product Number'] || (row as any)['productNumber'] || '',
+            brandCompatibility: (row as any)['Brand'] || (row as any)['brand'] || '',
+            stockStatus: 'in_stock',
+          };
+
+          if (!productData.name || !productData.delkomCode) {
+            results.errors.push({
+              row,
+              error: 'Missing required fields: Product Name or Product Number'
+            });
+            continue;
+          }
+
+          const validatedProduct = insertProductSchema.parse(productData);
+          const product = await storage.createProduct(validatedProduct);
+          results.success.push(product);
+        } catch (error) {
+          results.errors.push({
+            row,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      res.json({
+        message: `Import completed: ${results.success.length} products added, ${results.errors.length} errors`,
+        success: results.success.length,
+        errors: results.errors.length,
+        errorDetails: results.errors,
+      });
+    } catch (error) {
+      console.error('Error importing products:', error);
+      res.status(500).json({ error: "Failed to import products" });
     }
   });
 
