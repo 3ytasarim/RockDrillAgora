@@ -18,8 +18,7 @@ import type { UploadResult } from "@uppy/core";
 const productFormSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   description: z.string().optional(),
-  delkomCode: z.string().min(1, "Delkom code is required"),
-  referenceCode: z.string().min(1, "Reference code is required"),
+  delkomCode: z.string().min(1, "Product number is required"),
   categoryId: z.string().optional(),
   brandCompatibility: z.string().optional(),
   stockStatus: z.enum(["in_stock", "out_of_stock", "pre_order"]),
@@ -44,7 +43,6 @@ export default function ProductForm({ categories }: ProductFormProps) {
       name: "",
       description: "",
       delkomCode: "",
-      referenceCode: "",
       categoryId: "",
       brandCompatibility: "",
       stockStatus: "in_stock",
@@ -211,23 +209,9 @@ export default function ProductForm({ categories }: ProductFormProps) {
             name="delkomCode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Delkom Code *</FormLabel>
+                <FormLabel>Product Number *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 120102772" {...field} data-testid="delkom-code-input" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="referenceCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Reference Code *</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., 3115600784" {...field} data-testid="reference-code-input" />
+                  <Input placeholder="e.g., 120102772" {...field} data-testid="product-number-input" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -269,7 +253,7 @@ export default function ProductForm({ categories }: ProductFormProps) {
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger data-testid="stock-status-select">
-                      <SelectValue placeholder="Select Status" />
+                      <SelectValue placeholder="In Stock" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
