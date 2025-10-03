@@ -1,13 +1,64 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Hammer, RotateCcw, Gauge, CheckCircle, Star } from "lucide-react";
+import { Hammer, RotateCcw, Gauge, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/search-bar";
 import CategoryCard from "@/components/category-card";
 import ProductCard from "@/components/product-card";
 import type { ProductWithCategory } from "@shared/schema";
+import useEmblaCarousel from "embla-carousel-react";
+import { useCallback, useEffect, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
+
+const heroSlides = [
+  {
+    title: "AGORA ROCK DRILL",
+    subtitle: "Alternative Spare Parts",
+    highlight: "A WORLD BRAND",
+    description: "High quality spare parts for Atlas Copco, Epiroc, Jumbo, Furukawa. Exported to 100+ countries.",
+    image: "https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-3.webp",
+    bgGradient: "from-slate-900 via-blue-900 to-slate-800"
+  },
+  {
+    title: "PREMIUM QUALITY",
+    subtitle: "Rock Drill Components",
+    highlight: "OEM STANDARDS",
+    description: "Durable, high-performance parts made with premium materials. 3 months warranty guarantee.",
+    image: "https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-1.webp",
+    bgGradient: "from-slate-900 via-slate-800 to-blue-900"
+  },
+  {
+    title: "GLOBAL EXPORT",
+    subtitle: "Trusted Worldwide",
+    highlight: "100+ COUNTRIES",
+    description: "International certifications. Dedicated support for all sales processes worldwide.",
+    image: "https://rockdrill.shop/wp-content/uploads/2025/01/Best-rock-drill-spare-parts-2.webp",
+    bgGradient: "from-blue-950 via-slate-900 to-slate-800"
+  }
+];
 
 export default function Home() {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000 })]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    const onSelect = () => {
+      setSelectedIndex(emblaApi.selectedScrollSnap());
+    };
+    
+    emblaApi.on('select', onSelect);
+    onSelect();
+    
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
+  }, [emblaApi]);
+
   const { data: featuredProducts = [], isLoading: featuredLoading } = useQuery<ProductWithCategory[]>({
     queryKey: ["/api/products", "featured"],
     queryFn: async () => {
@@ -35,42 +86,105 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="relative industrial-gradient text-primary-foreground py-20">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-5xl font-bold mb-6 leading-tight">
-                Hydraulic Rock Drill, Drill Rig & Drifter Spare Parts
-              </h1>
-              <p className="text-xl mb-8 text-primary-foreground/90">
-                High quality alternative spare parts for Atlas Copco, Epiroc, Jumbo, Furukawa, Montabert, CAT, and Junjin. 
-                Exported to over 100 countries worldwide.
-              </p>
-              <div className="flex gap-4">
-                <Link href="/spare-parts">
-                  <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 px-8 py-3 text-lg font-semibold shadow-lg" data-testid="browse-products-btn">
-                    <i className="fas fa-shopping-cart mr-2"></i>Browse Products
-                  </Button>
-                </Link>
-                <Button 
-                  variant="outline" 
-                  className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary px-8 py-3 text-lg font-semibold"
-                  data-testid="contact-us-btn"
-                >
-                  <i className="fas fa-phone mr-2"></i>Contact Us
-                </Button>
+      {/* Hero Slider */}
+      <section className="relative overflow-hidden">
+        <div ref={emblaRef} className="overflow-hidden">
+          <div className="flex">
+            {heroSlides.map((slide, index) => (
+              <div key={index} className="flex-[0_0_100%] min-w-0">
+                <div className={`relative bg-gradient-to-br ${slide.bgGradient} text-white overflow-hidden`}>
+                  <div className="absolute inset-0 bg-black/40"></div>
+                  
+                  <div className="max-w-7xl mx-auto px-4 py-24 md:py-32 relative z-10">
+                    <div className="grid md:grid-cols-2 gap-12 items-center">
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none">
+                            <span className="text-accent drop-shadow-lg">{slide.title.split(' ')[0]}</span>
+                            <br />
+                            <span className="text-white drop-shadow-lg">{slide.title.split(' ').slice(1).join(' ')}</span>
+                          </h1>
+                          <h2 className="text-3xl md:text-5xl font-bold text-secondary drop-shadow-lg">
+                            {slide.subtitle}
+                          </h2>
+                        </div>
+                        
+                        <div className="inline-block bg-accent/90 px-6 py-3 rounded-lg">
+                          <p className="text-xl md:text-2xl font-black tracking-wider">
+                            {slide.highlight}
+                          </p>
+                        </div>
+                        
+                        <p className="text-lg md:text-xl text-white/90 max-w-xl leading-relaxed">
+                          {slide.description}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-4 pt-4">
+                          <Link href="/spare-parts">
+                            <Button 
+                              className="bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg font-bold shadow-2xl rounded-full group transition-all hover:scale-105" 
+                              data-testid="browse-products-btn"
+                            >
+                              Browse Products
+                              <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
+                            </Button>
+                          </Link>
+                          <Button 
+                            variant="outline" 
+                            className="border-3 border-white text-white hover:bg-white hover:text-primary px-8 py-6 text-lg font-bold rounded-full backdrop-blur-sm bg-white/10 transition-all hover:scale-105"
+                            data-testid="contact-us-btn"
+                          >
+                            Contact Us
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="hidden md:block relative">
+                        <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
+                          <div className="absolute inset-0 bg-gradient-to-tr from-accent/20 to-primary/20 z-10"></div>
+                          <img 
+                            src={slide.image}
+                            alt={slide.title}
+                            className="w-full h-[500px] object-cover"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDMiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
+                </div>
               </div>
-            </div>
-            <div className="hidden md:block">
-              <img 
-                src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600" 
-                alt="Rock drilling equipment in mining operation" 
-                className="rounded-lg shadow-2xl"
-                loading="lazy"
-              />
-            </div>
+            ))}
           </div>
+        </div>
+        
+        <button 
+          onClick={scrollPrev}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all hover:scale-110"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft size={28} />
+        </button>
+        <button 
+          onClick={scrollNext}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all hover:scale-110"
+          aria-label="Next slide"
+        >
+          <ChevronRight size={28} />
+        </button>
+        
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => emblaApi?.scrollTo(index)}
+              className={`h-2 rounded-full transition-all ${
+                index === selectedIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </div>
       </section>
 
