@@ -19,7 +19,7 @@ import tunnelDrillImage1 from "@assets/shutterstock_453380569-1536x1025_17594918
 import tunnelDrillImage2 from "@assets/shutterstock_1204797238-1536x1025_1759491821274.jpg";
 import tunnelDrillImage3 from "@assets/shutterstock_1624956124-1536x1024_1759491821276.jpg";
 import outdoorDrillImage from "@assets/shutterstock_713592-1536x1024_1759491821273.jpg";
-import agoraHeadOfficeImage from "@assets/Agora_Head_Office_1759492287573.jpg";
+import agoraHeadOfficeImage from "@assets/Agora_Head_Office_1759495281959.jpg";
 import atlasCopcoBrandLogo from "@assets/ref_atlas_copco_1759492041454.jpg";
 import epirocBrandLogo from "@assets/ref_epiroc_1759492041454.jpg";
 import sandvikBrandLogo from "@assets/sandvik-500x350-1_1759492041454.webp";
@@ -487,13 +487,12 @@ export default function Home() {
               
               {/* Right Side with Curtain Animation */}
               <div className="relative h-full min-h-[400px] overflow-hidden bg-slate-200">
-                {/* Background Image - Always visible */}
+                {/* Background Image - Always visible, highest layer below curtains */}
                 <img 
                   src={agoraHeadOfficeImage} 
                   alt="AGORA Rock Drill Head Office - Ankara, Turkey" 
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover z-[5]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20"></div>
 
                 {/* Left Curtain - Orange */}
                 <motion.div
