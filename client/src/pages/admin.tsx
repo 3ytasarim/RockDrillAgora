@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import ProductList from "@/components/admin/product-list";
 import ProductForm from "@/components/admin/product-form";
+import BulkImport from "@/components/admin/bulk-import";
 import { queryClient } from "@/lib/queryClient";
 import type { ProductWithCategory, Category } from "@shared/schema";
 
@@ -264,12 +265,15 @@ export default function Admin() {
 
       <div className="max-w-7xl mx-auto p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="products" data-testid="tab-products">
               <i className="fas fa-box mr-2"></i>Products
             </TabsTrigger>
             <TabsTrigger value="add-product" data-testid="tab-add-product">
               <i className="fas fa-plus mr-2"></i>Add Product
+            </TabsTrigger>
+            <TabsTrigger value="bulk-import" data-testid="tab-bulk-import">
+              <i className="fas fa-file-excel mr-2"></i>Bulk Import
             </TabsTrigger>
             <TabsTrigger value="categories" data-testid="tab-categories">
               <i className="fas fa-folder mr-2"></i>Categories
@@ -300,6 +304,10 @@ export default function Admin() {
                 onEditComplete={handleEditComplete}
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="bulk-import" className="space-y-6">
+            <BulkImport />
           </TabsContent>
 
           <TabsContent value="categories" className="space-y-6">
