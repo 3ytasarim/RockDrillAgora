@@ -170,7 +170,7 @@ export default function SpareParts() {
                 <div className="mb-6">
                   <h4 className="font-semibold text-foreground mb-3">Brand Compatibility</h4>
                   <div className="space-y-2">
-                    {["Atlas Copco", "Epiroc", "Furukawa", "Montabert", "CAT", "Junjin"].map((brand) => (
+                    {["Atlas Copco - Epiroc", "Sandvik", "Furukawa"].map((brand) => (
                       <div key={brand} className="flex items-center space-x-2">
                         <Checkbox
                           id={`brand-${brand}`}

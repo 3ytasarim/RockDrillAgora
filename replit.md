@@ -1,6 +1,6 @@
 # Overview
 
-This project is a full-stack catalog website for industrial spare parts, specifically hydraulic rock drill and drill rig components. It enables users to browse, search, and filter parts from various industrial equipment brands (e.g., Atlas Copco, Epiroc). The application includes a "Request Quote" system and an administrative panel for managing products and categories. The technology stack comprises React with TypeScript for the frontend, Express.js with TypeScript for the backend, and PostgreSQL with Drizzle ORM for the database.
+This project is a full-stack catalog website for industrial spare parts, specifically hydraulic rock drill and drill rig components. It enables users to browse, search, and filter parts from various industrial equipment brands (Atlas Copco - Epiroc, Sandvik, Furukawa). The application includes a "Request Quote" system and an administrative panel for managing products and categories. The technology stack comprises React with TypeScript for the frontend, Express.js with TypeScript for the backend, and PostgreSQL with Drizzle ORM for the database.
 
 # User Preferences
 
