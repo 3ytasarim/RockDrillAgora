@@ -324,8 +324,7 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Atlas Copco">Atlas Copco</SelectItem>
-                    <SelectItem value="Epiroc">Epiroc</SelectItem>
+                    <SelectItem value="Atlas Copco - Epiroc">Atlas Copco - Epiroc</SelectItem>
                     <SelectItem value="Sandvik">Sandvik</SelectItem>
                     <SelectItem value="Furukawa">Furukawa</SelectItem>
                   </SelectContent>

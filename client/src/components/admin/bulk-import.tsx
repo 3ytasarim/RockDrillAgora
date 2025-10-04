@@ -88,7 +88,7 @@ export default function BulkImport() {
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
               <div>
-                <strong>Brand</strong> - Product brand (Atlas Copco, Epiroc, Sandvik, Furukawa)
+                <strong>Brand</strong> - Product brand (Atlas Copco - Epiroc, Sandvik, Furukawa)
               </div>
             </div>
             <div className="flex items-start gap-2">
