@@ -35,9 +35,13 @@ interface ProductFormProps {
 
 export default function ProductForm({ categories, editProduct, onEditComplete }: ProductFormProps) {
   const { toast } = useToast();
-  const [imagePreview, setImagePreview] = useState<string>("");
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
-  const [publicImagePath, setPublicImagePath] = useState<string>("");
+  const [coverImagePreview, setCoverImagePreview] = useState<string>("");
+  const [uploadedCoverImageUrl, setUploadedCoverImageUrl] = useState<string>("");
+  const [publicCoverImagePath, setPublicCoverImagePath] = useState<string>("");
+  
+  const [additionalImagesPreview, setAdditionalImagesPreview] = useState<string[]>([]);
+  const [uploadedAdditionalImagesUrls, setUploadedAdditionalImagesUrls] = useState<string[]>([]);
+  const [publicAdditionalImagesPaths, setPublicAdditionalImagesPaths] = useState<string[]>([]);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -64,10 +68,15 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
         isFeatured: editProduct.isFeatured || false,
       });
       if (editProduct.imageUrl) {
-        setImagePreview(editProduct.imageUrl);
+        setCoverImagePreview(editProduct.imageUrl);
       }
-      setUploadedImageUrl("");
-      setPublicImagePath("");
+      if (editProduct.imageUrls && editProduct.imageUrls.length > 0) {
+        setAdditionalImagesPreview(editProduct.imageUrls);
+      }
+      setUploadedCoverImageUrl("");
+      setPublicCoverImagePath("");
+      setUploadedAdditionalImagesUrls([]);
+      setPublicAdditionalImagesPaths([]);
     } else {
       form.reset({
         name: "",
@@ -78,9 +87,12 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
         stockStatus: "in_stock",
         isFeatured: false,
       });
-      setImagePreview("");
-      setUploadedImageUrl("");
-      setPublicImagePath("");
+      setCoverImagePreview("");
+      setUploadedCoverImageUrl("");
+      setPublicCoverImagePath("");
+      setAdditionalImagesPreview([]);
+      setUploadedAdditionalImagesUrls([]);
+      setPublicAdditionalImagesPaths([]);
     }
   }, [editProduct, form]);
 
@@ -113,8 +125,8 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
         description: "Failed to update product image: " + error.message,
         variant: "destructive",
       });
-      setUploadedImageUrl("");
-      setPublicImagePath("");
+      setUploadedCoverImageUrl("");
+      setPublicCoverImagePath("");
     },
   });
 
@@ -142,10 +154,10 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
         description: "Product updated successfully!",
       });
       
-      if (uploadedImageUrl) {
+      if (uploadedCoverImageUrl) {
         updateProductImageMutation.mutate({
           productId: product.id,
-          imageURL: uploadedImageUrl,
+          imageURL: uploadedCoverImageUrl,
         });
       } else if (shouldRemoveImage) {
         updateProductImageMutation.mutate({
@@ -155,9 +167,12 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
       }
       
       form.reset();
-      setImagePreview("");
-      setUploadedImageUrl("");
-      setPublicImagePath("");
+      setCoverImagePreview("");
+      setUploadedCoverImageUrl("");
+      setPublicCoverImagePath("");
+      setAdditionalImagesPreview([]);
+      setUploadedAdditionalImagesUrls([]);
+      setPublicAdditionalImagesPaths([]);
       if (onEditComplete) {
         onEditComplete();
       }
@@ -195,17 +210,20 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
         description: "Product created successfully!",
       });
       
-      if (uploadedImageUrl) {
+      if (uploadedCoverImageUrl) {
         updateProductImageMutation.mutate({
           productId: product.id,
-          imageURL: uploadedImageUrl,
+          imageURL: uploadedCoverImageUrl,
         });
       }
       
       form.reset();
-      setImagePreview("");
-      setUploadedImageUrl("");
-      setPublicImagePath("");
+      setCoverImagePreview("");
+      setUploadedCoverImageUrl("");
+      setPublicCoverImagePath("");
+      setAdditionalImagesPreview([]);
+      setUploadedAdditionalImagesUrls([]);
+      setPublicAdditionalImagesPaths([]);
     },
     onError: (error: Error) => {
       toast({
@@ -218,7 +236,7 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
 
   const onSubmit = (data: ProductFormData) => {
     if (editProduct) {
-      const shouldRemoveImage = imagePreview === "" && !!editProduct.imageUrl;
+      const shouldRemoveImage = coverImagePreview === "" && !!editProduct.imageUrl;
       updateProductMutation.mutate({ 
         id: editProduct.id, 
         data,
@@ -229,27 +247,58 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
     }
   };
 
-  const handleGetUploadParameters = useCallback(async () => {
+  const handleGetCoverImageUploadParameters = useCallback(async () => {
     const response = await fetch("/api/products/image-upload", {
       method: "POST",
     });
     const { uploadURL, publicPath } = await response.json();
-    setPublicImagePath(publicPath);
-    setImagePreview(publicPath);
+    setPublicCoverImagePath(publicPath);
+    setCoverImagePreview(publicPath);
     return {
       method: "PUT" as const,
       url: uploadURL,
     };
   }, []);
 
-  const handleUploadComplete = useCallback((result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+  const handleCoverImageUploadComplete = useCallback((result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadURL = result.successful[0].uploadURL as string;
-      setUploadedImageUrl(uploadURL);
+      setUploadedCoverImageUrl(uploadURL);
       
       toast({
-        title: "Image uploaded",
-        description: "Image uploaded successfully. Click Save to complete product creation.",
+        title: "Cover image uploaded",
+        description: "Cover image uploaded successfully. Click Save to complete product creation.",
+      });
+    }
+  }, [toast]);
+
+  const handleGetAdditionalImagesUploadParameters = useCallback(async () => {
+    const response = await fetch("/api/products/image-upload", {
+      method: "POST",
+    });
+    const { uploadURL, publicPath } = await response.json();
+    return {
+      method: "PUT" as const,
+      url: uploadURL,
+    };
+  }, []);
+
+  const handleAdditionalImagesUploadComplete = useCallback((result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const newImages: string[] = [];
+      const newPaths: string[] = [];
+      
+      result.successful.forEach((file) => {
+        const uploadURL = file.uploadURL as string;
+        newImages.push(uploadURL);
+      });
+      
+      setUploadedAdditionalImagesUrls((prev) => [...prev, ...newImages]);
+      setAdditionalImagesPreview((prev) => [...prev, ...newImages]);
+      
+      toast({
+        title: "Images uploaded",
+        description: `${result.successful.length} additional image(s) uploaded successfully.`,
       });
     }
   }, [toast]);
@@ -278,7 +327,7 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-testid="category-select">
                       <SelectValue placeholder="Select Category" />
@@ -317,7 +366,7 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Brand Compatibility</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-testid="brand-select">
                       <SelectValue placeholder="Select Brand" />
@@ -340,7 +389,7 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Stock Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-testid="stock-status-select">
                       <SelectValue placeholder="In Stock" />
@@ -377,43 +426,102 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
           )}
         />
 
-        <div>
-          <label className="block text-sm font-semibold text-foreground mb-2">Product Image</label>
-          <div className="border-2 border-dashed border-border rounded-md p-8 text-center">
-            {imagePreview ? (
-              <div className="space-y-4">
-                <img src={imagePreview} alt="Preview" className="max-w-xs mx-auto rounded" />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setImagePreview("");
-                    setUploadedImageUrl("");
-                    setPublicImagePath("");
-                  }}
-                >
-                  Remove Image
-                </Button>
-              </div>
-            ) : (
-              <>
-                <i className="fas fa-cloud-upload-alt text-5xl text-muted-foreground mb-3"></i>
-                <p className="text-muted-foreground mb-2">Upload product image</p>
-                <ObjectUploader
-                  maxNumberOfFiles={1}
-                  maxFileSize={5242880}
-                  onGetUploadParameters={handleGetUploadParameters}
-                  onComplete={handleUploadComplete}
-                  buttonClassName="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                >
-                  <Upload size={16} className="mr-2" />
-                  Browse Files
-                </ObjectUploader>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Supported formats: JPG, PNG, WebP (Max 5MB)
-                </p>
-              </>
-            )}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-foreground mb-2">Cover Image</label>
+            <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
+              {coverImagePreview ? (
+                <div className="space-y-4">
+                  <img src={coverImagePreview} alt="Cover Preview" className="max-w-full h-48 mx-auto rounded object-cover" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setCoverImagePreview("");
+                      setUploadedCoverImageUrl("");
+                      setPublicCoverImagePath("");
+                    }}
+                  >
+                    Remove Cover Image
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <i className="fas fa-image text-4xl text-muted-foreground mb-3"></i>
+                  <p className="text-muted-foreground mb-2 text-sm">Upload cover image</p>
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={5242880}
+                    onGetUploadParameters={handleGetCoverImageUploadParameters}
+                    onComplete={handleCoverImageUploadComplete}
+                    buttonClassName="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  >
+                    <Upload size={16} className="mr-2" />
+                    Browse Files
+                  </ObjectUploader>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    JPG, PNG, WebP (Max 5MB)
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-foreground mb-2">Additional Images</label>
+            <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
+              {additionalImagesPreview.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    {additionalImagesPreview.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        <img src={img} alt={`Additional ${idx + 1}`} className="w-full h-24 object-cover rounded" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6"
+                          onClick={() => {
+                            setAdditionalImagesPreview(prev => prev.filter((_, i) => i !== idx));
+                            setUploadedAdditionalImagesUrls(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <ObjectUploader
+                    maxNumberOfFiles={5}
+                    maxFileSize={5242880}
+                    onGetUploadParameters={handleGetAdditionalImagesUploadParameters}
+                    onComplete={handleAdditionalImagesUploadComplete}
+                    buttonClassName="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  >
+                    <Upload size={16} className="mr-2" />
+                    Add More Images
+                  </ObjectUploader>
+                </div>
+              ) : (
+                <>
+                  <i className="fas fa-images text-4xl text-muted-foreground mb-3"></i>
+                  <p className="text-muted-foreground mb-2 text-sm">Upload additional images</p>
+                  <ObjectUploader
+                    maxNumberOfFiles={5}
+                    maxFileSize={5242880}
+                    onGetUploadParameters={handleGetAdditionalImagesUploadParameters}
+                    onComplete={handleAdditionalImagesUploadComplete}
+                    buttonClassName="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  >
+                    <Upload size={16} className="mr-2" />
+                    Browse Files
+                  </ObjectUploader>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Up to 5 images (Max 5MB each)
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -447,7 +555,12 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
             variant="outline"
             onClick={() => {
               form.reset();
-              setImagePreview("");
+              setCoverImagePreview("");
+              setUploadedCoverImageUrl("");
+              setPublicCoverImagePath("");
+              setAdditionalImagesPreview([]);
+              setUploadedAdditionalImagesUrls([]);
+              setPublicAdditionalImagesPaths([]);
             }}
             className="font-semibold"
             data-testid="reset-form-btn"

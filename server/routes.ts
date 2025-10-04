@@ -65,6 +65,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/products/:id", async (req, res) => {
     try {
       const validatedProduct = insertProductSchema.partial().parse(req.body);
+      
+      if (validatedProduct.categoryId === "") {
+        validatedProduct.categoryId = undefined;
+      }
+      if (validatedProduct.brandCompatibility === "") {
+        validatedProduct.brandCompatibility = undefined;
+      }
+      
       const product = await storage.updateProduct(req.params.id, validatedProduct);
       res.json(product);
     } catch (error) {
