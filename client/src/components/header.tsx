@@ -62,26 +62,43 @@ export default function Header() {
               </Link>
               
               {/* Spare Parts Dropdown */}
-              <div className="dropdown relative">
+              <div className="dropdown-wrapper relative group">
                 <Link href="/spare-parts" data-testid="nav-spare-parts" className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/spare-parts" ? "text-primary" : ""}`}>
                   <Cog size={16} />
                   Spare Parts
                   <ChevronDown size={12} />
                 </Link>
-                <div className="dropdown-menu absolute hidden bg-white shadow-lg rounded-md mt-2 py-2 w-64 border border-border">
-                  <Link href="/spare-parts" data-testid="dropdown-all-parts" className="block px-4 py-2 hover:bg-muted transition-colors">
+                <div className="dropdown-menu absolute hidden group-hover:block hover:block bg-white shadow-xl rounded-md mt-2 py-2 w-72 border border-border z-50">
+                  <Link href="/spare-parts" data-testid="dropdown-all-parts" className="block px-4 py-2.5 hover:bg-muted transition-colors font-semibold border-b border-border">
                     <i className="fas fa-tools mr-2 text-primary"></i>All Spare Parts
                   </Link>
-                  <Link href="/spare-parts?category=rock-drills" data-testid="dropdown-rock-drills" className="block px-4 py-2 hover:bg-muted transition-colors">
+                  
+                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    By Brand
+                  </div>
+                  <Link href="/spare-parts?brand=Atlas Copco - Epiroc" data-testid="dropdown-brand-atlas-epiroc" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
+                    <i className="fas fa-industry mr-2 text-primary"></i>Atlas Copco - Epiroc
+                  </Link>
+                  <Link href="/spare-parts?brand=Sandvik" data-testid="dropdown-brand-sandvik" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
+                    <i className="fas fa-industry mr-2 text-primary"></i>Sandvik
+                  </Link>
+                  <Link href="/spare-parts?brand=Furukawa" data-testid="dropdown-brand-furukawa" className="block px-4 py-2 hover:bg-muted transition-colors pl-6 border-b border-border">
+                    <i className="fas fa-industry mr-2 text-primary"></i>Furukawa
+                  </Link>
+                  
+                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    By Category
+                  </div>
+                  <Link href="/spare-parts?category=rock-drills" data-testid="dropdown-rock-drills" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
                     <i className="fas fa-hammer mr-2 text-primary"></i>Rock Drills (Drifters)
                   </Link>
-                  <Link href="/spare-parts?category=rotation-units" data-testid="dropdown-rotation-units" className="block px-4 py-2 hover:bg-muted transition-colors">
+                  <Link href="/spare-parts?category=rotation-units" data-testid="dropdown-rotation-units" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
                     <i className="fas fa-sync-alt mr-2 text-primary"></i>Rotation Units (DHR)
                   </Link>
-                  <Link href="/spare-parts?category=seal-kits" data-testid="dropdown-seal-kits" className="block px-4 py-2 hover:bg-muted transition-colors">
+                  <Link href="/spare-parts?category=seal-kits" data-testid="dropdown-seal-kits" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
                     <i className="fas fa-shield-alt mr-2 text-primary"></i>Seal Kits & Diaphragms
                   </Link>
-                  <Link href="/spare-parts?category=pumps-motors" data-testid="dropdown-pumps-motors" className="block px-4 py-2 hover:bg-muted transition-colors">
+                  <Link href="/spare-parts?category=pumps-motors" data-testid="dropdown-pumps-motors" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
                     <i className="fas fa-tachometer-alt mr-2 text-primary"></i>Pumps & Motors
                   </Link>
                 </div>

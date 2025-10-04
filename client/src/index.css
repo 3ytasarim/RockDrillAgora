@@ -67,7 +67,9 @@
 }
 
 @layer components {
-  .dropdown:hover .dropdown-menu {
+  /* Dropdown with delay for better UX */
+  .dropdown-wrapper:hover .dropdown-menu,
+  .dropdown-menu:hover {
     @apply block;
   }
 
