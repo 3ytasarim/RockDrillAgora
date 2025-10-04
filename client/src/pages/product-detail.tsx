@@ -220,25 +220,13 @@ export default function ProductDetail() {
               transition={{ delay: 0.4 }}
               className="bg-white rounded-2xl p-6 shadow-lg space-y-4"
             >
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="bg-primary/10 p-2 rounded-lg">
-                    <Package className="text-primary" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Delkom Code</p>
-                    <p className="font-bold text-lg">{product.delkomCode}</p>
-                  </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-lg">
+                  <Package className="text-primary" size={20} />
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="bg-accent/10 p-2 rounded-lg">
-                    <FileText className="text-accent" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Reference Code</p>
-                    <p className="font-bold text-lg">{product.referenceCode}</p>
-                  </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Production Code</p>
+                  <p className="font-bold text-lg">{product.delkomCode}</p>
                 </div>
               </div>
 
