@@ -305,7 +305,6 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
     });
     const data = await response.json();
     setPublicCoverImagePath(data.publicPath);
-    setCoverImagePreview(data.publicPath);
     return {
       method: "PUT" as const,
       url: data.uploadURL,
@@ -322,18 +321,21 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
         description: result.failed[0].error || "Failed to upload cover image",
         variant: "destructive",
       });
+      setCoverImagePreview("");
+      setPublicCoverImagePath("");
       return;
     }
     if (result.successful && result.successful.length > 0) {
       const uploadURL = result.successful[0].uploadURL as string;
       setUploadedCoverImageUrl(uploadURL);
+      setCoverImagePreview(publicCoverImagePath);
       
       toast({
         title: "Cover image uploaded",
         description: "Cover image uploaded successfully. Click Save to complete product creation.",
       });
     }
-  }, [toast]);
+  }, [toast, publicCoverImagePath]);
 
   const additionalImagePublicPaths = useCallback(async () => {
     const promises = [];
