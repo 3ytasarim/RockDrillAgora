@@ -133,7 +133,7 @@ export default function ProductDetail() {
                         <img
                           src={image}
                           alt={`${product.name} - Image ${index + 1}`}
-                          className="w-full h-96 object-contain bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl"
+                          className="w-full h-96 object-cover bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl"
                         />
                       </motion.div>
                     ))}
@@ -175,7 +175,7 @@ export default function ProductDetail() {
                     <img
                       src={image}
                       alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-20 object-contain bg-slate-50"
+                      className="w-full h-20 object-cover bg-slate-50"
                     />
                   </motion.button>
                 ))}
