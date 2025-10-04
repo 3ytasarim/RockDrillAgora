@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import Uppy from "@uppy/core";
+import Uppy, { type UppyFile } from "@uppy/core";
 import { DashboardModal } from "@uppy/react";
 import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
   maxFileSize?: number;
-  onGetUploadParameters: () => Promise<{
+  onGetUploadParameters: (file: File) => Promise<{
     method: "PUT";
     url: string;
+    headers?: Record<string, string>;
   }>;
   onComplete?: (
     result: UploadResult<Record<string, unknown>, Record<string, unknown>>
@@ -41,7 +42,10 @@ export function ObjectUploader({
       autoProceed: false,
     }).use(AwsS3, {
       shouldUseMultipart: false,
-      getUploadParameters: onGetUploadParameters,
+      getUploadParameters: async (uppyFile: UppyFile<Record<string, unknown>, Record<string, unknown>>) => {
+        const file = uppyFile.data as File;
+        return await onGetUploadParameters(file);
+      },
     });
 
     uppyRef.current = uppy;

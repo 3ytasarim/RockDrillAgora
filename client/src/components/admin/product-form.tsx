@@ -299,22 +299,39 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
     }
   };
 
-  const handleGetCoverImageUploadParameters = useCallback(async () => {
+  const handleGetCoverImageUploadParameters = useCallback(async (file: File) => {
+    console.log('[Cover Upload] Getting upload parameters for file:', file.name);
     const response = await fetch("/api/products/image-upload", {
       method: "POST",
     });
-    const { uploadURL, publicPath } = await response.json();
-    setPublicCoverImagePath(publicPath);
-    setCoverImagePreview(publicPath);
+    const data = await response.json();
+    console.log('[Cover Upload] Response:', data);
+    setPublicCoverImagePath(data.publicPath);
+    setCoverImagePreview(data.publicPath);
+    console.log('[Cover Upload] Returning upload params:', { method: 'PUT', url: data.uploadURL });
     return {
       method: "PUT" as const,
-      url: uploadURL,
+      url: data.uploadURL,
+      headers: {
+        "Content-Type": file.type || "application/octet-stream",
+      },
     };
   }, []);
 
   const handleCoverImageUploadComplete = useCallback((result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    console.log('[Cover Upload] Upload complete result:', result);
+    if (result.failed && result.failed.length > 0) {
+      console.error('[Cover Upload] Upload failed:', result.failed);
+      toast({
+        title: "Upload failed",
+        description: result.failed[0].error || "Failed to upload cover image",
+        variant: "destructive",
+      });
+      return;
+    }
     if (result.successful && result.successful.length > 0) {
       const uploadURL = result.successful[0].uploadURL as string;
+      console.log('[Cover Upload] Upload successful, uploadURL:', uploadURL);
       setUploadedCoverImageUrl(uploadURL);
       
       toast({
@@ -336,15 +353,20 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
     return promises;
   }, []);
 
-  const handleGetAdditionalImagesUploadParameters = useCallback(async () => {
+  const handleGetAdditionalImagesUploadParameters = useCallback(async (file: File) => {
+    console.log('[Additional Upload] Getting upload parameters for file:', file.name);
     const response = await fetch("/api/products/image-upload", {
       method: "POST",
     });
-    const { uploadURL, publicPath } = await response.json();
-    setPublicAdditionalImagesPaths((prev) => [...prev, publicPath]);
+    const data = await response.json();
+    console.log('[Additional Upload] Response:', data);
+    setPublicAdditionalImagesPaths((prev) => [...prev, data.publicPath]);
     return {
       method: "PUT" as const,
-      url: uploadURL,
+      url: data.uploadURL,
+      headers: {
+        "Content-Type": file.type || "application/octet-stream",
+      },
     };
   }, []);
 
