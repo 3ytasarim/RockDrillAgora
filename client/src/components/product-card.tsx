@@ -30,7 +30,6 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         </h3>
         <div className="text-sm text-muted-foreground mb-3">
           <div>Product Number: <span className="font-semibold" data-testid={`product-number-${product.id}`}>{product.delkomCode}</span></div>
-          <div>Ref No: <span className="font-semibold" data-testid={`ref-code-${product.id}`}>{product.referenceCode}</span></div>
           {product.brandCompatibility && (
             <div>Brand: <span className="font-semibold" data-testid={`brand-${product.id}`}>{product.brandCompatibility}</span></div>
           )}
@@ -47,7 +46,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             <ShoppingCart size={16} className="mr-2" />
             Request Quote
           </Button>
-          <Link href={`/product/${product.id}`}>
+          <Link href={`/product/${product.delkomCode}`}>
             <Button 
               className="w-full bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold"
               data-testid={`go-to-product-${product.id}`}

@@ -48,6 +48,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/products/by-code/:code", async (req, res) => {
+    try {
+      const product = await storage.getProductByCode(req.params.code);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      res.json(product);
+    } catch (error) {
+      console.error('Error fetching product by code:', error);
+      res.status(500).json({ error: "Failed to fetch product" });
+    }
+  });
+
   app.post("/api/products", async (req, res) => {
     try {
       const validatedProduct = insertProductSchema.parse(req.body);

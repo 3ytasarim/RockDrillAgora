@@ -16,9 +16,9 @@ export default function ProductDetail() {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
   const { data: product, isLoading } = useQuery<ProductWithCategory>({
-    queryKey: ["/api/products", id],
+    queryKey: ["/api/products/by-code", id],
     queryFn: async () => {
-      const response = await fetch(`/api/products/${id}`);
+      const response = await fetch(`/api/products/by-code/${id}`);
       if (!response.ok) throw new Error("Product not found");
       return response.json();
     },

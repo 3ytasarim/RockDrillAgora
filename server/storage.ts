@@ -5,6 +5,7 @@ import { eq, like, or, desc, asc } from "drizzle-orm";
 export interface IStorage {
   // Products
   getProduct(id: string): Promise<ProductWithCategory | undefined>;
+  getProductByCode(code: string): Promise<ProductWithCategory | undefined>;
   getAllProducts(): Promise<ProductWithCategory[]>;
   searchProducts(query: string): Promise<ProductWithCategory[]>;
   getProductsByCategory(categoryId: string): Promise<ProductWithCategory[]>;
@@ -30,6 +31,21 @@ export class DatabaseStorage implements IStorage {
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .where(eq(products.id, id));
+    
+    if (!product) return undefined;
+    
+    return {
+      ...product.products,
+      category: product.categories,
+    };
+  }
+
+  async getProductByCode(code: string): Promise<ProductWithCategory | undefined> {
+    const [product] = await db
+      .select()
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(eq(products.delkomCode, code));
     
     if (!product) return undefined;
     
