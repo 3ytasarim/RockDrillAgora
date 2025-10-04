@@ -43,9 +43,32 @@ export function ObjectUploader({
     }).use(AwsS3, {
       shouldUseMultipart: false,
       getUploadParameters: async (uppyFile: UppyFile<Record<string, unknown>, Record<string, unknown>>) => {
-        const file = uppyFile.data as File;
-        return await onGetUploadParameters(file);
+        try {
+          const file = uppyFile.data as File;
+          console.log('🔵 [Upload] Getting parameters for:', file.name);
+          const params = await onGetUploadParameters(file);
+          console.log('🟢 [Upload] Got URL:', params.url.substring(0, 80) + '...');
+          console.log('🟢 [Upload] Method:', params.method, 'Headers:', params.headers);
+          return params;
+        } catch (error) {
+          console.error('🔴 [Upload] Error getting parameters:', error);
+          throw error;
+        }
       },
+    });
+
+    uppy.on('upload', () => {
+      console.log('🔵 [Upload] Starting upload...');
+    });
+
+    uppy.on('upload-success', (file, response) => {
+      console.log('🟢 [Upload] SUCCESS! File:', file?.name);
+      console.log('🟢 [Upload] Response:', response);
+    });
+
+    uppy.on('upload-error', (file, error) => {
+      console.error('🔴 [Upload] FAILED! File:', file?.name);
+      console.error('🔴 [Upload] Error:', error);
     });
 
     uppyRef.current = uppy;
