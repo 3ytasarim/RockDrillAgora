@@ -25,6 +25,9 @@ import atlasCopcoBrandLogo from "@assets/ref_atlas_copco_1759492041454.jpg";
 import epirocBrandLogo from "@assets/ref_epiroc_1759492041454.jpg";
 import sandvikBrandLogo from "@assets/sandvik-500x350-1_1759492041454.webp";
 import furukawaBrandLogo from "@assets/frukawa_logo_1759492041453.png";
+import atlasCopcoBrandImage from "@assets/stock_images/industrial_mining_dr_b27f97cf.jpg";
+import sandvikBrandImage from "@assets/stock_images/sandvik_mining_equip_895e605e.jpg";
+import furukawaBrandImage from "@assets/stock_images/furukawa_rock_drill__c1b19cb8.jpg";
 
 const heroSlides = [
   {
@@ -309,8 +312,107 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Product Categories */}
+      {/* Product Brands */}
       <section className="py-16 bg-background">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-foreground mb-4">Product Brands</h2>
+            <p className="text-xl text-muted-foreground">Browse our extensive range of rock drill spare parts</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="bg-card rounded-lg shadow-lg overflow-hidden border border-border hover:shadow-2xl transition-all cursor-pointer"
+              onClick={() => window.location.href = "/spare-parts?brand=Atlas Copco - Epiroc"}
+              data-testid="brand-card-atlas-epiroc"
+            >
+              <img 
+                src={atlasCopcoBrandImage} 
+                alt="Atlas Copco - Epiroc" 
+                className="w-full h-56 object-cover"
+                loading="lazy"
+              />
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-foreground mb-3">Atlas Copco - Epiroc</h3>
+                <p className="text-muted-foreground mb-4">
+                  Premium spare parts for Atlas Copco and Epiroc rock drilling equipment. Original and alternative parts for all models.
+                </p>
+                <div className="flex items-center justify-end">
+                  <span className="text-primary font-semibold">
+                    View Products <i className="fas fa-arrow-right ml-1"></i>
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="bg-card rounded-lg shadow-lg overflow-hidden border border-border hover:shadow-2xl transition-all cursor-pointer"
+              onClick={() => window.location.href = "/spare-parts?brand=Sandvik"}
+              data-testid="brand-card-sandvik"
+            >
+              <img 
+                src={sandvikBrandImage} 
+                alt="Sandvik" 
+                className="w-full h-56 object-cover"
+                loading="lazy"
+              />
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-foreground mb-3">Sandvik</h3>
+                <p className="text-muted-foreground mb-4">
+                  High-quality spare parts for Sandvik mining and rock excavation equipment. Complete range of drilling components.
+                </p>
+                <div className="flex items-center justify-end">
+                  <span className="text-primary font-semibold">
+                    View Products <i className="fas fa-arrow-right ml-1"></i>
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="bg-card rounded-lg shadow-lg overflow-hidden border border-border hover:shadow-2xl transition-all cursor-pointer"
+              onClick={() => window.location.href = "/spare-parts?brand=Furukawa"}
+              data-testid="brand-card-furukawa"
+            >
+              <img 
+                src={furukawaBrandImage} 
+                alt="Furukawa" 
+                className="w-full h-56 object-cover"
+                loading="lazy"
+              />
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-foreground mb-3">Furukawa</h3>
+                <p className="text-muted-foreground mb-4">
+                  Reliable spare parts for Furukawa hydraulic rock drills and breakers. Durable components for heavy-duty applications.
+                </p>
+                <div className="flex items-center justify-end">
+                  <span className="text-primary font-semibold">
+                    View Products <i className="fas fa-arrow-right ml-1"></i>
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Product Categories */}
+      <section className="py-16 bg-muted">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-foreground mb-4">Product Categories</h2>
