@@ -164,155 +164,11 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
 
           {/* Search inputs */}
           <div className="grid md:grid-cols-2 gap-4 mb-6">
-            {/* Product Name Input with Autocomplete */}
+            {/* Product Code Input with Autocomplete */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.4 }}
-              className="relative group"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl blur transition-all duration-300 ${focusedInput === 'name' ? 'opacity-100' : 'opacity-0'}`}></div>
-              <div className="relative flex items-center">
-                <div className={`absolute left-4 transition-all duration-300 z-10 ${focusedInput === 'name' ? 'text-primary scale-110' : 'text-muted-foreground'}`}>
-                  <Package size={20} />
-                </div>
-                <Input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Product Name (e.g., COP MD20 Piston)"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setFocusedInput('name')}
-                  onKeyDown={handleKeyPress}
-                  className="pl-12 pr-12 py-6 bg-white/80 border-2 border-slate-200 rounded-xl focus:border-primary focus:bg-white transition-all duration-300 text-base font-medium hover:border-primary/50"
-                  data-testid="search-input-name"
-                  autoComplete="off"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={handleClearSearch}
-                    className="absolute right-4 text-muted-foreground hover:text-primary transition-colors z-10"
-                    data-testid="clear-search-btn"
-                  >
-                    <X size={20} />
-                  </button>
-                )}
-              </div>
-
-              {/* Autocomplete Dropdown */}
-              <AnimatePresence>
-                {showDropdown && (
-                  <motion.div
-                    ref={dropdownRef}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-2xl border-2 border-slate-200 z-50 overflow-hidden"
-                    data-testid="autocomplete-dropdown"
-                  >
-                    {filteredProducts.length > 0 ? (
-                      <>
-                        <div className="max-h-[400px] overflow-y-auto">
-                          {filteredProducts.map((product) => (
-                            <div
-                              key={product.id}
-                              className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
-                              data-testid={`product-suggestion-${product.id}`}
-                            >
-                              {/* Product Image */}
-                              <button
-                                onClick={() => handleProductClick(product.name)}
-                                className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
-                              >
-                                {product.imageUrls && product.imageUrls.length > 0 ? (
-                                  <img
-                                    src={product.imageUrls[0]}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : product.imageUrl ? (
-                                  <img
-                                    src={product.imageUrl}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <Package size={24} className="text-slate-400" />
-                                  </div>
-                                )}
-                              </button>
-                              
-                              {/* Product Info */}
-                              <div className="flex-1 min-w-0">
-                                <button
-                                  onClick={() => handleProductClick(product.name)}
-                                  className="text-left w-full mb-2"
-                                >
-                                  <h4 className="font-bold text-slate-900 truncate hover:text-primary transition-colors">
-                                    {product.name}
-                                  </h4>
-                                  <p className="text-sm text-slate-600">
-                                    {product.delkomCode && (
-                                      <span className="inline-block">
-                                        SKU: {product.delkomCode}
-                                      </span>
-                                    )}
-                                    {product.referenceCode && product.delkomCode && (
-                                      <span className="mx-2">•</span>
-                                    )}
-                                    {product.referenceCode && (
-                                      <span className="inline-block">
-                                        Ref: {product.referenceCode}
-                                      </span>
-                                    )}
-                                  </p>
-                                </button>
-                                
-                                {/* Go to Product Button */}
-                                <Link href={`/product/${product.id}`}>
-                                  <div
-                                    className="inline-block bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer"
-                                    data-testid={`go-to-product-${product.id}`}
-                                  >
-                                    Go to Product
-                                  </div>
-                                </Link>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* See All Products Link */}
-                        <Link href={`/spare-parts?search=${encodeURIComponent(searchQuery)}`}>
-                          <div 
-                            className="p-4 bg-slate-50 hover:bg-slate-100 transition-colors border-t-2 border-slate-200 text-center"
-                            data-testid="see-all-products-link"
-                          >
-                            <p className="text-sm text-slate-600 font-medium">
-                              SEE ALL PRODUCTS... ({allProducts.length})
-                            </p>
-                          </div>
-                        </Link>
-                      </>
-                    ) : (
-                      <div className="p-8 text-center" data-testid="no-results-message">
-                        <Package size={48} className="mx-auto text-slate-300 mb-3" />
-                        <p className="text-slate-600 font-medium">No products found</p>
-                        <p className="text-sm text-slate-400 mt-1">Try a different search term</p>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            {/* Product Code Input with Autocomplete */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
               className="relative group"
             >
               <div className={`absolute inset-0 bg-gradient-to-r from-accent/20 to-primary/20 rounded-xl blur transition-all duration-300 ${focusedInput === 'code' ? 'opacity-100' : 'opacity-0'}`}></div>
@@ -445,6 +301,150 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                         <Hash size={48} className="mx-auto text-slate-300 mb-3" />
                         <p className="text-slate-600 font-medium">No products found</p>
                         <p className="text-sm text-slate-400 mt-1">Try a different part number</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Product Name Input with Autocomplete */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              className="relative group"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl blur transition-all duration-300 ${focusedInput === 'name' ? 'opacity-100' : 'opacity-0'}`}></div>
+              <div className="relative flex items-center">
+                <div className={`absolute left-4 transition-all duration-300 z-10 ${focusedInput === 'name' ? 'text-primary scale-110' : 'text-muted-foreground'}`}>
+                  <Package size={20} />
+                </div>
+                <Input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Product Name (e.g., COP MD20 Piston)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setFocusedInput('name')}
+                  onKeyDown={handleKeyPress}
+                  className="pl-12 pr-12 py-6 bg-white/80 border-2 border-slate-200 rounded-xl focus:border-primary focus:bg-white transition-all duration-300 text-base font-medium hover:border-primary/50"
+                  data-testid="search-input-name"
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-4 text-muted-foreground hover:text-primary transition-colors z-10"
+                    data-testid="clear-search-btn"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+              </div>
+
+              {/* Autocomplete Dropdown */}
+              <AnimatePresence>
+                {showDropdown && (
+                  <motion.div
+                    ref={dropdownRef}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-2xl border-2 border-slate-200 z-50 overflow-hidden"
+                    data-testid="autocomplete-dropdown"
+                  >
+                    {filteredProducts.length > 0 ? (
+                      <>
+                        <div className="max-h-[400px] overflow-y-auto">
+                          {filteredProducts.map((product) => (
+                            <div
+                              key={product.id}
+                              className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
+                              data-testid={`product-suggestion-${product.id}`}
+                            >
+                              {/* Product Image */}
+                              <button
+                                onClick={() => handleProductClick(product.name)}
+                                className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                              >
+                                {product.imageUrls && product.imageUrls.length > 0 ? (
+                                  <img
+                                    src={product.imageUrls[0]}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : product.imageUrl ? (
+                                  <img
+                                    src={product.imageUrl}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Package size={24} className="text-slate-400" />
+                                  </div>
+                                )}
+                              </button>
+                              
+                              {/* Product Info */}
+                              <div className="flex-1 min-w-0">
+                                <button
+                                  onClick={() => handleProductClick(product.name)}
+                                  className="text-left w-full mb-2"
+                                >
+                                  <h4 className="font-bold text-slate-900 truncate hover:text-primary transition-colors">
+                                    {product.name}
+                                  </h4>
+                                  <p className="text-sm text-slate-600">
+                                    {product.delkomCode && (
+                                      <span className="inline-block">
+                                        SKU: {product.delkomCode}
+                                      </span>
+                                    )}
+                                    {product.referenceCode && product.delkomCode && (
+                                      <span className="mx-2">•</span>
+                                    )}
+                                    {product.referenceCode && (
+                                      <span className="inline-block">
+                                        Ref: {product.referenceCode}
+                                      </span>
+                                    )}
+                                  </p>
+                                </button>
+                                
+                                {/* Go to Product Button */}
+                                <Link href={`/product/${product.id}`}>
+                                  <div
+                                    className="inline-block bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer"
+                                    data-testid={`go-to-product-${product.id}`}
+                                  >
+                                    Go to Product
+                                  </div>
+                                </Link>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* See All Products Link */}
+                        <Link href={`/spare-parts?search=${encodeURIComponent(searchQuery)}`}>
+                          <div 
+                            className="p-4 bg-slate-50 hover:bg-slate-100 transition-colors border-t-2 border-slate-200 text-center"
+                            data-testid="see-all-products-link"
+                          >
+                            <p className="text-sm text-slate-600 font-medium">
+                              SEE ALL PRODUCTS... ({allProducts.length})
+                            </p>
+                          </div>
+                        </Link>
+                      </>
+                    ) : (
+                      <div className="p-8 text-center" data-testid="no-results-message">
+                        <Package size={48} className="mx-auto text-slate-300 mb-3" />
+                        <p className="text-slate-600 font-medium">No products found</p>
+                        <p className="text-sm text-slate-400 mt-1">Try a different search term</p>
                       </div>
                     )}
                   </motion.div>
