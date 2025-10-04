@@ -54,6 +54,18 @@ export default function SpareParts() {
     refetch();
   };
 
+  // Get unique brands from products
+  const availableBrands = Array.from(new Set(
+    products
+      .map(p => p.brandCompatibility)
+      .filter((brand): brand is string => !!brand)
+  )).sort();
+
+  // Get categories that have products
+  const categoriesWithProducts = categories.filter(cat => 
+    products.some(p => p.categoryId === cat.id)
+  );
+
   const filteredProducts = products.filter(product => {
     // Category filter
     if (selectedCategories.length > 0 && !selectedCategories.includes(product.categoryId || "")) {
@@ -151,18 +163,22 @@ export default function SpareParts() {
                 <div className="mb-6">
                   <h4 className="font-semibold text-foreground mb-3">Category</h4>
                   <div className="space-y-2">
-                    {categories.map((category) => (
-                      <div key={category.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`category-${category.id}`}
-                          checked={selectedCategories.includes(category.id)}
-                          onCheckedChange={(checked) => handleCategoryChange(category.id, checked as boolean)}
-                        />
-                        <label htmlFor={`category-${category.id}`} className="text-sm cursor-pointer">
-                          {category.name}
-                        </label>
-                      </div>
-                    ))}
+                    {categoriesWithProducts.length > 0 ? (
+                      categoriesWithProducts.map((category) => (
+                        <div key={category.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`category-${category.id}`}
+                            checked={selectedCategories.includes(category.id)}
+                            onCheckedChange={(checked) => handleCategoryChange(category.id, checked as boolean)}
+                          />
+                          <label htmlFor={`category-${category.id}`} className="text-sm cursor-pointer">
+                            {category.name}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No categories available</p>
+                    )}
                   </div>
                 </div>
 
@@ -170,18 +186,22 @@ export default function SpareParts() {
                 <div className="mb-6">
                   <h4 className="font-semibold text-foreground mb-3">Brand Compatibility</h4>
                   <div className="space-y-2">
-                    {["Atlas Copco - Epiroc", "Sandvik", "Furukawa"].map((brand) => (
-                      <div key={brand} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`brand-${brand}`}
-                          checked={brandFilter.includes(brand)}
-                          onCheckedChange={(checked) => handleBrandChange(brand, checked as boolean)}
-                        />
-                        <label htmlFor={`brand-${brand}`} className="text-sm cursor-pointer">
-                          {brand}
-                        </label>
-                      </div>
-                    ))}
+                    {availableBrands.length > 0 ? (
+                      availableBrands.map((brand) => (
+                        <div key={brand} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`brand-${brand}`}
+                            checked={brandFilter.includes(brand)}
+                            onCheckedChange={(checked) => handleBrandChange(brand, checked as boolean)}
+                          />
+                          <label htmlFor={`brand-${brand}`} className="text-sm cursor-pointer">
+                            {brand}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No brands available</p>
+                    )}
                   </div>
                 </div>
 
