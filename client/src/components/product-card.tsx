@@ -46,7 +46,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             <ShoppingCart size={16} className="mr-2" />
             Request Quote
           </Button>
-          <Link href={`/product/${product.delkomCode}`}>
+          <Link href={`/product/${product.delkomCode.replace(/\s+/g, '')}`}>
             <Button 
               className="w-full bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold"
               data-testid={`go-to-product-${product.id}`}

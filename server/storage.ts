@@ -41,11 +41,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProductByCode(code: string): Promise<ProductWithCategory | undefined> {
-    const [product] = await db
+    // First try exact match
+    let [product] = await db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .where(eq(products.delkomCode, code));
+    
+    // If not found, try matching by removing all spaces from both sides
+    if (!product) {
+      const allProducts = await db
+        .select()
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id));
+      
+      // Compare codes with spaces removed
+      const normalizedInputCode = code.replace(/\s+/g, '');
+      const matchedProduct = allProducts.find(p => 
+        p.products.delkomCode.replace(/\s+/g, '') === normalizedInputCode
+      );
+      
+      if (matchedProduct) {
+        product = matchedProduct;
+      }
+    }
     
     if (!product) return undefined;
     
