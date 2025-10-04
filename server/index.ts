@@ -9,6 +9,21 @@ declare module 'http' {
     rawBody: unknown
   }
 }
+
+// Redirect replit.app domain to custom domain for SEO
+app.use((req, res, next) => {
+  const host = req.get('host') || '';
+  const protocol = req.get('x-forwarded-proto') || req.protocol;
+  
+  // If request is coming from replit.app, redirect to custom domain
+  if (host.includes('replit.app')) {
+    const newUrl = `https://agorarockdrill.shop${req.originalUrl}`;
+    return res.redirect(301, newUrl);
+  }
+  
+  next();
+});
+
 app.use(express.json({
   verify: (req, _res, buf) => {
     req.rawBody = buf;
