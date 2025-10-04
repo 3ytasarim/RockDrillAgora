@@ -234,69 +234,77 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center"
-            >
-              <img 
-                src={atlasCopcoBrandLogo} 
-                alt="Atlas Copco" 
-                className="max-h-32 max-w-full w-auto object-contain"
-                data-testid="brand-logo-atlas-copco"
-              />
-            </motion.div>
+            <Link href="/spare-parts?brand=Atlas Copco - Epiroc">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer"
+              >
+                <img 
+                  src={atlasCopcoBrandLogo} 
+                  alt="Atlas Copco" 
+                  className="max-h-32 max-w-full w-auto object-contain"
+                  data-testid="brand-logo-atlas-copco"
+                />
+              </motion.div>
+            </Link>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center"
-            >
-              <img 
-                src={epirocBrandLogo} 
-                alt="Epiroc" 
-                className="max-h-32 max-w-full w-auto object-contain"
-                data-testid="brand-logo-epiroc"
-              />
-            </motion.div>
+            <Link href="/spare-parts?brand=Atlas Copco - Epiroc">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer"
+              >
+                <img 
+                  src={epirocBrandLogo} 
+                  alt="Epiroc" 
+                  className="max-h-32 max-w-full w-auto object-contain"
+                  data-testid="brand-logo-epiroc"
+                />
+              </motion.div>
+            </Link>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center"
-            >
-              <img 
-                src={sandvikBrandLogo} 
-                alt="Sandvik" 
-                className="max-h-32 max-w-full w-auto object-contain"
-                data-testid="brand-logo-sandvik"
-              />
-            </motion.div>
+            <Link href="/spare-parts?brand=Sandvik">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer"
+              >
+                <img 
+                  src={sandvikBrandLogo} 
+                  alt="Sandvik" 
+                  className="max-h-32 max-w-full w-auto object-contain"
+                  data-testid="brand-logo-sandvik"
+                />
+              </motion.div>
+            </Link>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center"
-            >
-              <img 
-                src={furukawaBrandLogo} 
-                alt="Furukawa" 
-                className="max-h-32 max-w-full w-auto object-contain"
-                data-testid="brand-logo-furukawa"
-              />
-            </motion.div>
+            <Link href="/spare-parts?brand=Furukawa">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer"
+              >
+                <img 
+                  src={furukawaBrandLogo} 
+                  alt="Furukawa" 
+                  className="max-h-32 max-w-full w-auto object-contain"
+                  data-testid="brand-logo-furukawa"
+                />
+              </motion.div>
+            </Link>
           </div>
         </div>
       </section>

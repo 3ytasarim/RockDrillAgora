@@ -41,6 +41,16 @@ export default function SpareParts() {
     },
   });
 
+  // Set brand filter from URL after products are loaded
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const brand = params.get("brand");
+    
+    if (brand && products.length > 0 && brandFilter.length === 0) {
+      setBrandFilter([brand]);
+    }
+  }, [products, brandFilter]);
+
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
     queryFn: async () => {
@@ -55,11 +65,18 @@ export default function SpareParts() {
   };
 
   // Get unique brands from products
-  const availableBrands = Array.from(new Set(
+  const productsBasedBrands = Array.from(new Set(
     products
       .map(p => p.brandCompatibility)
       .filter((brand): brand is string => !!brand)
-  )).sort();
+  ));
+  
+  // Include brand from URL if not in products yet
+  const urlBrand = new URLSearchParams(window.location.search).get("brand");
+  const availableBrands = Array.from(new Set([
+    ...productsBasedBrands,
+    ...(urlBrand ? [urlBrand] : [])
+  ])).sort();
 
   // Get categories that have products
   const categoriesWithProducts = categories.filter(cat => 
