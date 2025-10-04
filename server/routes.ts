@@ -51,6 +51,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/products", async (req, res) => {
     try {
       const validatedProduct = insertProductSchema.parse(req.body);
+      
+      if (validatedProduct.categoryId === "") {
+        validatedProduct.categoryId = undefined;
+      }
+      if (validatedProduct.brandCompatibility === "") {
+        validatedProduct.brandCompatibility = undefined;
+      }
+      
       const product = await storage.createProduct(validatedProduct);
       res.status(201).json(product);
     } catch (error) {
@@ -245,6 +253,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating product image:', error);
       res.status(500).json({ error: "Failed to update product image" });
+    }
+  });
+
+  app.put("/api/products/:id/images", async (req, res) => {
+    try {
+      if (!req.body.imageURLs || !Array.isArray(req.body.imageURLs)) {
+        return res.status(400).json({ error: "imageURLs array is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const imagePaths = req.body.imageURLs.map((imageURL: string) => {
+        let imagePath = objectStorageService.normalizeProductImagePath(imageURL);
+        if (!imagePath.startsWith("/public-objects/")) {
+          imagePath = `/public-objects/${imagePath}`;
+        }
+        return imagePath;
+      });
+      
+      await storage.updateProduct(req.params.id, { imageUrls: imagePaths });
+      
+      res.json({ imagePaths });
+    } catch (error) {
+      console.error('Error updating product images:', error);
+      res.status(500).json({ error: "Failed to update product images" });
     }
   });
 

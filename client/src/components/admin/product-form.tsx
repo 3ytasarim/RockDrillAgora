@@ -130,6 +130,40 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
     },
   });
 
+  const updateProductImagesMutation = useMutation({
+    mutationFn: async ({ productId, imageURLs }: { productId: string; imageURLs: string[] }) => {
+      const response = await fetch(`/api/products/${productId}/images`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageURLs }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update product images");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({
+        title: "Success",
+        description: "Additional images updated successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update product images: " + error.message,
+        variant: "destructive",
+      });
+      setUploadedAdditionalImagesUrls([]);
+      setPublicAdditionalImagesPaths([]);
+    },
+  });
+
   const updateProductMutation = useMutation({
     mutationFn: async ({ id, data, shouldRemoveImage }: { id: string; data: ProductFormData; shouldRemoveImage?: boolean }) => {
       const response = await fetch(`/api/products/${id}`, {
@@ -163,6 +197,17 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
         updateProductImageMutation.mutate({
           productId: product.id,
           imageURL: "",
+        });
+      }
+      
+      if (uploadedAdditionalImagesUrls.length > 0) {
+        const allAdditionalImages = [
+          ...(editProduct?.imageUrls || []),
+          ...uploadedAdditionalImagesUrls
+        ];
+        updateProductImagesMutation.mutate({
+          productId: product.id,
+          imageURLs: allAdditionalImages,
         });
       }
       
@@ -214,6 +259,13 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
         updateProductImageMutation.mutate({
           productId: product.id,
           imageURL: uploadedCoverImageUrl,
+        });
+      }
+      
+      if (uploadedAdditionalImagesUrls.length > 0) {
+        updateProductImagesMutation.mutate({
+          productId: product.id,
+          imageURLs: uploadedAdditionalImagesUrls,
         });
       }
       
@@ -272,11 +324,24 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
     }
   }, [toast]);
 
+  const additionalImagePublicPaths = useCallback(async () => {
+    const promises = [];
+    for (let i = 0; i < 5; i++) {
+      promises.push(
+        fetch("/api/products/image-upload", {
+          method: "POST",
+        }).then(res => res.json())
+      );
+    }
+    return promises;
+  }, []);
+
   const handleGetAdditionalImagesUploadParameters = useCallback(async () => {
     const response = await fetch("/api/products/image-upload", {
       method: "POST",
     });
     const { uploadURL, publicPath } = await response.json();
+    setPublicAdditionalImagesPaths((prev) => [...prev, publicPath]);
     return {
       method: "PUT" as const,
       url: uploadURL,
@@ -286,7 +351,6 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
   const handleAdditionalImagesUploadComplete = useCallback((result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const newImages: string[] = [];
-      const newPaths: string[] = [];
       
       result.successful.forEach((file) => {
         const uploadURL = file.uploadURL as string;
@@ -294,14 +358,14 @@ export default function ProductForm({ categories, editProduct, onEditComplete }:
       });
       
       setUploadedAdditionalImagesUrls((prev) => [...prev, ...newImages]);
-      setAdditionalImagesPreview((prev) => [...prev, ...newImages]);
+      setAdditionalImagesPreview((prev) => [...prev, ...publicAdditionalImagesPaths.slice(prev.length, prev.length + newImages.length)]);
       
       toast({
         title: "Images uploaded",
         description: `${result.successful.length} additional image(s) uploaded successfully.`,
       });
     }
-  }, [toast]);
+  }, [toast, publicAdditionalImagesPaths]);
 
   return (
     <Form {...form}>
