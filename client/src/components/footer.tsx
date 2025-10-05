@@ -2,7 +2,7 @@ import logoImage from "@assets/AgoraRockDrillLogo_1759477799213.png";
 
 export default function Footer() {
   return (
-    <footer className="bg-foreground text-background py-12">
+    <footer className="bg-foreground text-background py-12 pb-24 md:pb-12">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
