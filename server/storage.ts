@@ -1,5 +1,5 @@
 import { products, categories, type Product, type InsertProduct, type Category, type InsertCategory, type ProductWithCategory } from "@shared/schema";
-import { db } from "./db";
+import { getDb } from "./db";
 import { eq, like, or, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
@@ -24,9 +24,13 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private get db() {
+    return getDb();
+  }
+
   // Products
   async getProduct(id: string): Promise<ProductWithCategory | undefined> {
-    const [product] = await db
+    const [product] = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -42,7 +46,7 @@ export class DatabaseStorage implements IStorage {
 
   async getProductByCode(code: string): Promise<ProductWithCategory | undefined> {
     // First try exact match
-    let [product] = await db
+    let [product] = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -50,7 +54,7 @@ export class DatabaseStorage implements IStorage {
     
     // If not found, try matching by removing all spaces from both sides
     if (!product) {
-      const allProducts = await db
+      const allProducts = await this.db
         .select()
         .from(products)
         .leftJoin(categories, eq(products.categoryId, categories.id));
@@ -75,7 +79,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllProducts(): Promise<ProductWithCategory[]> {
-    const results = await db
+    const results = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -88,7 +92,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchProducts(query: string): Promise<ProductWithCategory[]> {
-    const results = await db
+    const results = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -107,7 +111,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProductsByCategory(categoryId: string): Promise<ProductWithCategory[]> {
-    const results = await db
+    const results = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -121,7 +125,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFeaturedProducts(): Promise<ProductWithCategory[]> {
-    const results = await db
+    const results = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -136,7 +140,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDiscountedProducts(): Promise<ProductWithCategory[]> {
-    const results = await db
+    const results = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -151,7 +155,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
-    const [newProduct] = await db
+    const [newProduct] = await this.db
       .insert(products)
       .values({
         ...product,
@@ -166,7 +170,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product> {
-    const [updatedProduct] = await db
+    const [updatedProduct] = await this.db
       .update(products)
       .set({
         ...product,
@@ -179,21 +183,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProduct(id: string): Promise<void> {
-    await db.delete(products).where(eq(products.id, id));
+    await this.db.delete(products).where(eq(products.id, id));
   }
 
   // Categories
   async getCategory(id: string): Promise<Category | undefined> {
-    const [category] = await db.select().from(categories).where(eq(categories.id, id));
+    const [category] = await this.db.select().from(categories).where(eq(categories.id, id));
     return category || undefined;
   }
 
   async getAllCategories(): Promise<Category[]> {
-    return await db.select().from(categories).orderBy(asc(categories.name));
+    return await this.db.select().from(categories).orderBy(asc(categories.name));
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
-    const [newCategory] = await db
+    const [newCategory] = await this.db
       .insert(categories)
       .values(category)
       .returning();
@@ -202,7 +206,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category> {
-    const [updatedCategory] = await db
+    const [updatedCategory] = await this.db
       .update(categories)
       .set(category)
       .where(eq(categories.id, id))
@@ -212,7 +216,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCategory(id: string): Promise<void> {
-    const productsInCategory = await db
+    const productsInCategory = await this.db
       .select()
       .from(products)
       .where(eq(products.categoryId, id));
@@ -223,7 +227,7 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    await db.delete(categories).where(eq(categories.id, id));
+    await this.db.delete(categories).where(eq(categories.id, id));
   }
 }
 
