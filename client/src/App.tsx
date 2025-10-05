@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import FloatingSocial from "@/components/floating-social";
 import Home from "@/pages/home";
 import SpareParts from "@/pages/spare-parts";
 import ProductDetail from "@/pages/product-detail";
@@ -31,6 +32,7 @@ function Router() {
             </Switch>
           </main>
           <Footer />
+          <FloatingSocial />
         </div>
       </Route>
     </Switch>
