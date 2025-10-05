@@ -45,7 +45,7 @@ export class ObjectStorageService {
     );
     if (paths.length === 0) {
       throw new Error(
-        "PUBLIC_OBJECT_SEARCH_PATHS not set."
+        "PUBLIC_OBJECT_SEARCH_PATHS environment variable is not set. Please configure object storage in deployment settings."
       );
     }
     return paths;
