@@ -81,6 +81,18 @@ export default function Footer() {
           <p className="text-center text-background/60 text-sm max-w-4xl mx-auto">
             Sandvik, Furukawa, Epiroc, Atlas Copco are registered trademarks of equipment manufacturers. AGORA Rock Drill A.Ş. does not represent any of these trademarks.
           </p>
+          <div className="text-center pt-4">
+            <a 
+              href="https://www.3ytasarim.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-block text-base hover:scale-105 transition-transform duration-300"
+              data-testid="footer-designer-link"
+            >
+              <span className="text-background/70">Design By | </span>
+              <span className="text-red-500 font-semibold animate-pulse">3Y Tasarım Web & Yazılım Ajansı</span>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
