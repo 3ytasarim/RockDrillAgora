@@ -297,6 +297,42 @@ export default function SpareParts() {
                   </Button>
                 </div>
               )}
+
+              {/* Product Code List by Brand */}
+              {sortedProducts.length > 0 && (
+                <div className="mt-12 space-y-8">
+                  {availableBrands
+                    .filter(brand => sortedProducts.some(p => p.brandCompatibility === brand))
+                    .map((brand) => {
+                      const brandProducts = sortedProducts.filter(p => p.brandCompatibility === brand);
+                      const productList = brandProducts
+                        .map(p => `${p.delkomCode}, ${p.name}`)
+                        .join(", ");
+                      const brandId = brand.toLowerCase().replace(/\s+/g, '-');
+                      
+                      return (
+                        <div 
+                          key={brand} 
+                          className="bg-white rounded-lg shadow-md p-6 border border-border"
+                          data-testid={`brand-product-list-${brandId}`}
+                        >
+                          <h3 
+                            className="text-lg font-bold text-foreground mb-4"
+                            data-testid={`brand-title-${brandId}`}
+                          >
+                            {brand}
+                          </h3>
+                          <div 
+                            className="text-sm text-muted-foreground leading-relaxed"
+                            data-testid={`product-codes-${brandId}`}
+                          >
+                            <span className="font-semibold text-foreground">#</span> {productList}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
             </div>
           </div>
         </div>
