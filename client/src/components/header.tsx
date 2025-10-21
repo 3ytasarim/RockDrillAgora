@@ -63,23 +63,21 @@ export default function Header() {
               
               {/* Spare Parts Dropdown */}
               <div className="dropdown-wrapper relative group">
-                <div className="relative pb-2">
-                  <Link 
-                    href="/spare-parts" 
-                    data-testid="nav-spare-parts" 
-                    className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/spare-parts" ? "text-primary" : ""}`}
-                  >
-                    <Cog size={16} />
-                    Spare Parts
-                    <ChevronDown 
-                      size={12} 
-                      className="transition-transform duration-200 group-hover:rotate-180" 
-                    />
-                  </Link>
-                  
-                  {/* Hover Bridge - invisible area that keeps dropdown open */}
-                  <div className="absolute inset-x-0 bottom-0 h-2" />
-                </div>
+                <Link 
+                  href="/spare-parts" 
+                  data-testid="nav-spare-parts" 
+                  className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/spare-parts" ? "text-primary" : ""}`}
+                >
+                  <Cog size={16} />
+                  Spare Parts
+                  <ChevronDown 
+                    size={12} 
+                    className="transition-transform duration-200 group-hover:rotate-180" 
+                  />
+                </Link>
+                
+                {/* Hover Bridge - invisible area that keeps dropdown open */}
+                <div className="absolute inset-x-0 top-full h-2 -mt-2" />
                 
                 <div className="dropdown-menu absolute left-0 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 ease-in-out bg-white dark:bg-gray-900 shadow-2xl rounded-lg py-3 w-80 border border-border z-50 top-full">
                   <Link 
