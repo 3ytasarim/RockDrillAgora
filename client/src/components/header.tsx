@@ -63,43 +63,96 @@ export default function Header() {
               
               {/* Spare Parts Dropdown */}
               <div className="dropdown-wrapper relative group">
-                <Link href="/spare-parts" data-testid="nav-spare-parts" className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/spare-parts" ? "text-primary" : ""}`}>
-                  <Cog size={16} />
-                  Spare Parts
-                  <ChevronDown size={12} />
-                </Link>
-                <div className="dropdown-menu absolute hidden group-hover:block hover:block bg-white shadow-xl rounded-md mt-2 py-2 w-72 border border-border z-50">
-                  <Link href="/spare-parts" data-testid="dropdown-all-parts" className="block px-4 py-2.5 hover:bg-muted transition-colors font-semibold border-b border-border">
-                    <i className="fas fa-tools mr-2 text-primary"></i>All Spare Parts
+                <div className="relative pb-2">
+                  <Link 
+                    href="/spare-parts" 
+                    data-testid="nav-spare-parts" 
+                    className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/spare-parts" ? "text-primary" : ""}`}
+                  >
+                    <Cog size={16} />
+                    Spare Parts
+                    <ChevronDown 
+                      size={12} 
+                      className="transition-transform duration-200 group-hover:rotate-180" 
+                    />
                   </Link>
                   
-                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {/* Hover Bridge - invisible area that keeps dropdown open */}
+                  <div className="absolute inset-x-0 bottom-0 h-2" />
+                </div>
+                
+                <div className="dropdown-menu absolute left-0 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 ease-in-out bg-white dark:bg-gray-900 shadow-2xl rounded-lg py-3 w-80 border border-border z-50 top-full">
+                  <Link 
+                    href="/spare-parts" 
+                    data-testid="dropdown-all-parts" 
+                    className="flex items-center px-5 py-3 hover:bg-primary/10 transition-all duration-150 font-semibold border-b border-border group/item"
+                  >
+                    <i className="fas fa-tools mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">All Spare Parts</span>
+                  </Link>
+                  
+                  <div className="px-5 pt-3 pb-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                     By Brand
                   </div>
-                  <Link href="/spare-parts?brand=Atlas Copco - Epiroc" data-testid="dropdown-brand-atlas-epiroc" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
-                    <i className="fas fa-industry mr-2 text-primary"></i>Atlas Copco - Epiroc
+                  <Link 
+                    href="/spare-parts?brand=Atlas Copco - Epiroc" 
+                    data-testid="dropdown-brand-atlas-epiroc" 
+                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
+                  >
+                    <i className="fas fa-industry mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Atlas Copco - Epiroc</span>
                   </Link>
-                  <Link href="/spare-parts?brand=Sandvik" data-testid="dropdown-brand-sandvik" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
-                    <i className="fas fa-industry mr-2 text-primary"></i>Sandvik
+                  <Link 
+                    href="/spare-parts?brand=Sandvik" 
+                    data-testid="dropdown-brand-sandvik" 
+                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
+                  >
+                    <i className="fas fa-industry mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Sandvik</span>
                   </Link>
-                  <Link href="/spare-parts?brand=Furukawa" data-testid="dropdown-brand-furukawa" className="block px-4 py-2 hover:bg-muted transition-colors pl-6 border-b border-border">
-                    <i className="fas fa-industry mr-2 text-primary"></i>Furukawa
+                  <Link 
+                    href="/spare-parts?brand=Furukawa" 
+                    data-testid="dropdown-brand-furukawa" 
+                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 border-b border-border group/item"
+                  >
+                    <i className="fas fa-industry mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Furukawa</span>
                   </Link>
                   
-                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <div className="px-5 pt-3 pb-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                     By Category
                   </div>
-                  <Link href="/spare-parts?category=rock-drills" data-testid="dropdown-rock-drills" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
-                    <i className="fas fa-hammer mr-2 text-primary"></i>Rock Drills (Drifters)
+                  <Link 
+                    href="/spare-parts?category=rock-drills" 
+                    data-testid="dropdown-rock-drills" 
+                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
+                  >
+                    <i className="fas fa-hammer mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Rock Drills (Drifters)</span>
                   </Link>
-                  <Link href="/spare-parts?category=rotation-units" data-testid="dropdown-rotation-units" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
-                    <i className="fas fa-sync-alt mr-2 text-primary"></i>Rotation Units (DHR)
+                  <Link 
+                    href="/spare-parts?category=rotation-units" 
+                    data-testid="dropdown-rotation-units" 
+                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
+                  >
+                    <i className="fas fa-sync-alt mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Rotation Units (DHR)</span>
                   </Link>
-                  <Link href="/spare-parts?category=seal-kits" data-testid="dropdown-seal-kits" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
-                    <i className="fas fa-shield-alt mr-2 text-primary"></i>Seal Kits & Diaphragms
+                  <Link 
+                    href="/spare-parts?category=seal-kits" 
+                    data-testid="dropdown-seal-kits" 
+                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
+                  >
+                    <i className="fas fa-shield-alt mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Seal Kits & Diaphragms</span>
                   </Link>
-                  <Link href="/spare-parts?category=pumps-motors" data-testid="dropdown-pumps-motors" className="block px-4 py-2 hover:bg-muted transition-colors pl-6">
-                    <i className="fas fa-tachometer-alt mr-2 text-primary"></i>Pumps & Motors
+                  <Link 
+                    href="/spare-parts?category=pumps-motors" 
+                    data-testid="dropdown-pumps-motors" 
+                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
+                  >
+                    <i className="fas fa-tachometer-alt mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Pumps & Motors</span>
                   </Link>
                 </div>
               </div>
