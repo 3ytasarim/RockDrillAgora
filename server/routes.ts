@@ -308,6 +308,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sitemap.xml
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const products = await storage.getAllProducts();
+      const baseUrl = "https://agorarockdrill.shop";
+      
+      // Helper function to create URL-friendly slug
+      const createSlug = (text: string): string => {
+        return text
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w-]+/g, '')
+          .replace(/--+/g, '-')
+          .trim();
+      };
+
+      // Start XML
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+      // Add static pages
+      const staticPages = [
+        { url: '/', priority: '1.0', changefreq: 'daily' },
+        { url: '/spare-parts', priority: '0.9', changefreq: 'daily' },
+        { url: '/contact', priority: '0.8', changefreq: 'monthly' },
+      ];
+
+      staticPages.forEach(page => {
+        xml += '  <url>\n';
+        xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
+        xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
+        xml += `    <priority>${page.priority}</priority>\n`;
+        xml += '  </url>\n';
+      });
+
+      // Add product pages
+      products.forEach(product => {
+        // Extract brand from brandCompatibility (e.g., "Atlas Copco - Epiroc" -> "atlas-copco-epiroc")
+        let brandSlug = 'spare-parts';
+        if (product.brandCompatibility) {
+          // Take first brand if multiple brands exist
+          const firstBrand = product.brandCompatibility.split(',')[0].trim();
+          brandSlug = createSlug(firstBrand);
+        }
+        
+        // Create URL: /brand/product-code
+        const productUrl = `/brand/${brandSlug}/${product.delkomCode}`;
+        
+        // Safely handle date conversion
+        let lastModDate = new Date().toISOString().split('T')[0];
+        if (product.updatedAt) {
+          try {
+            const dateObj = product.updatedAt instanceof Date 
+              ? product.updatedAt 
+              : new Date(product.updatedAt);
+            lastModDate = dateObj.toISOString().split('T')[0];
+          } catch (e) {
+            // Use current date as fallback
+          }
+        }
+        
+        xml += '  <url>\n';
+        xml += `    <loc>${baseUrl}${productUrl}</loc>\n`;
+        xml += `    <lastmod>${lastModDate}</lastmod>\n`;
+        xml += `    <changefreq>weekly</changefreq>\n`;
+        xml += `    <priority>0.7</priority>\n`;
+        xml += '  </url>\n';
+      });
+
+      // Close XML
+      xml += '</urlset>';
+
+      res.header('Content-Type', 'application/xml');
+      res.send(xml);
+    } catch (error) {
+      console.error('Error generating sitemap:', error);
+      res.status(500).json({ error: "Failed to generate sitemap" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

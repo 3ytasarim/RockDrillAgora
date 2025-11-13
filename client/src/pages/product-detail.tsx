@@ -10,19 +10,37 @@ import type { ProductWithCategory } from "@shared/schema";
 import RequestQuoteModal from "@/components/request-quote-modal";
 
 export default function ProductDetail() {
-  const { id } = useParams();
+  const params = useParams();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
-  const { data: product, isLoading } = useQuery<ProductWithCategory>({
-    queryKey: ["/api/products/by-code", id],
+  // Support both URL formats: /product/:id and /brand/:brand/:code
+  const productCode = params.code || params.id;
+  const brandSlug = params.brand;
+
+  // If no product code, show 404
+  if (!productCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
+          <Link href="/spare-parts">
+            <Button>Back to Products</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const { data: product, isLoading, error } = useQuery<ProductWithCategory>({
+    queryKey: ["/api/products/by-code", productCode],
     queryFn: async () => {
-      const response = await fetch(`/api/products/by-code/${id}`);
+      const response = await fetch(`/api/products/by-code/${productCode}`);
       if (!response.ok) throw new Error("Product not found");
       return response.json();
     },
-    enabled: !!id,
+    enabled: !!productCode,
   });
 
   // Use product imageUrls array, fallback to imageUrl or placeholder
