@@ -2,6 +2,15 @@
 
 This project is a full-stack catalog website for industrial spare parts, specifically hydraulic rock drill and drill rig components. It enables users to browse, search, and filter parts from various industrial equipment brands (Atlas Copco - Epiroc, Sandvik, Furukawa). The application includes a "Request Quote" system and an administrative panel for managing products and categories. The technology stack comprises React with TypeScript for the frontend, Express.js with TypeScript for the backend, and PostgreSQL with Drizzle ORM for the database.
 
+## Recent Updates (Nov 13, 2025)
+
+**Performance Optimizations:**
+- Implemented native lazy loading (`loading="lazy"`) for all images across the application
+- Hero slider and product detail first images use eager loading for faster perceived performance
+- Limited featured products API response to 12 items (was loading all products)
+- Removed legacy `referenceCode` field from codebase (now uses `delkomCode` only)
+- All optimizations maintain backward compatibility with no breaking changes
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -10,7 +19,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Frontend
 
-The frontend is a React SPA built with TypeScript and Vite. It uses Wouter for lightweight routing and TanStack Query for server state management. UI components are built with Radix UI primitives and styled using shadcn/ui and Tailwind CSS, supporting dynamic theming. A key feature is a real-time autocomplete search bar with a responsive dropdown, filtering by product name, Delkom code, or Reference code, and featuring Framer Motion animations for smooth interactions.
+The frontend is a React SPA built with TypeScript and Vite. It uses Wouter for lightweight routing and TanStack Query for server state management. UI components are built with Radix UI primitives and styled using shadcn/ui and Tailwind CSS, supporting dynamic theming. A key feature is a real-time autocomplete search bar with a responsive dropdown, filtering by product name and Delkom code, and featuring Framer Motion animations for smooth interactions. Images are optimized with native lazy loading for improved performance.
 
 ## Backend
 
@@ -18,7 +27,7 @@ The backend is an Express.js REST API with all endpoints prefixed by `/api`. It 
 
 ## Database Design
 
-The system uses PostgreSQL with Drizzle ORM, connected via Neon's serverless driver. The schema includes `categories` (id, name, description, icon) and `products` (id, name, description, delkomCode, referenceCode, pricing, imageUrls, categoryId, brandCompatibility, stockStatus, feature flags). Products have a many-to-one relationship with categories. Zod schemas generated from Drizzle definitions are used for validation.
+The system uses PostgreSQL with Drizzle ORM, connected via Neon's serverless driver. The schema includes `categories` (id, name, description, icon) and `products` (id, name, description, delkomCode, pricing, imageUrls, categoryId, brandCompatibility, stockStatus, feature flags). Products have a many-to-one relationship with categories. Zod schemas generated from Drizzle definitions are used for validation.
 
 ## API Design
 
