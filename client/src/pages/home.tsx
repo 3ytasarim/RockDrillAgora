@@ -170,6 +170,7 @@ export default function Home() {
                             src={slide.image}
                             alt={slide.title}
                             className="w-full h-[500px] object-cover"
+                            loading={index === 0 ? "eager" : "lazy"}
                           />
                         </div>
                       </div>
@@ -251,6 +252,7 @@ export default function Home() {
                   alt="Atlas Copco" 
                   className="max-h-32 max-w-full w-auto object-contain"
                   data-testid="brand-logo-atlas-copco"
+                  loading="lazy"
                 />
               </motion.div>
             </Link>
@@ -269,6 +271,7 @@ export default function Home() {
                   alt="Epiroc" 
                   className="max-h-32 max-w-full w-auto object-contain"
                   data-testid="brand-logo-epiroc"
+                  loading="lazy"
                 />
               </motion.div>
             </Link>
@@ -287,6 +290,7 @@ export default function Home() {
                   alt="Sandvik" 
                   className="max-h-32 max-w-full w-auto object-contain"
                   data-testid="brand-logo-sandvik"
+                  loading="lazy"
                 />
               </motion.div>
             </Link>
@@ -305,6 +309,7 @@ export default function Home() {
                   alt="Furukawa" 
                   className="max-h-32 max-w-full w-auto object-contain"
                   data-testid="brand-logo-furukawa"
+                  loading="lazy"
                 />
               </motion.div>
             </Link>
@@ -575,6 +580,7 @@ export default function Home() {
                       src={tunnelDrillImage1} 
                       alt="Tunnel drilling operations" 
                       className="w-full h-24 object-cover"
+                      loading="lazy"
                     />
                   </motion.div>
                   <motion.div 
@@ -585,6 +591,7 @@ export default function Home() {
                       src={tunnelDrillImage2} 
                       alt="Underground drilling equipment" 
                       className="w-full h-24 object-cover"
+                      loading="lazy"
                     />
                   </motion.div>
                   <motion.div 
@@ -595,6 +602,7 @@ export default function Home() {
                       src={tunnelDrillImage3} 
                       alt="Professional drilling machinery" 
                       className="w-full h-24 object-cover"
+                      loading="lazy"
                     />
                   </motion.div>
                 </motion.div>
@@ -607,6 +615,7 @@ export default function Home() {
                   src={agoraHeadOfficeImage} 
                   alt="AGORA Rock Drill Head Office - Ankara, Turkey" 
                   className="absolute inset-0 w-full h-full object-cover z-[5]"
+                  loading="lazy"
                 />
 
                 {/* Left Curtain - Orange */}

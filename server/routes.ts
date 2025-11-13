@@ -21,7 +21,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (category) {
         products = await storage.getProductsByCategory(category as string);
       } else if (featured === 'true') {
-        products = await storage.getFeaturedProducts();
+        const allFeatured = await storage.getFeaturedProducts();
+        // Limit featured products to 12 for performance
+        products = allFeatured.slice(0, 12);
       } else if (discounted === 'true') {
         products = await storage.getDiscountedProducts();
       } else {

@@ -33,8 +33,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
       const query = searchQuery.toLowerCase();
       return (
         product.name.toLowerCase().includes(query) ||
-        (product.delkomCode?.toLowerCase().includes(query) ?? false) ||
-        (product.referenceCode?.toLowerCase().includes(query) ?? false)
+        (product.delkomCode?.toLowerCase().includes(query) ?? false)
       );
     })
     .slice(0, 5);
@@ -43,8 +42,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
     .filter(product => {
       const query = searchCode.toLowerCase();
       return (
-        (product.delkomCode?.toLowerCase().includes(query) ?? false) ||
-        (product.referenceCode?.toLowerCase().includes(query) ?? false)
+        (product.delkomCode?.toLowerCase().includes(query) ?? false)
       );
     })
     .slice(0, 5);
@@ -222,7 +220,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                             >
                               {/* Product Image */}
                               <button
-                                onClick={() => handleCodeProductClick(product.delkomCode || product.referenceCode || "")}
+                                onClick={() => handleCodeProductClick(product.delkomCode || "")}
                                 className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
                               >
                                 {product.imageUrls && product.imageUrls.length > 0 ? (
@@ -230,12 +228,14 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                     src={product.imageUrls[0]}
                                     alt={product.name}
                                     className="w-full h-full object-cover"
+                                    loading="lazy"
                                   />
                                 ) : product.imageUrl ? (
                                   <img
                                     src={product.imageUrl}
                                     alt={product.name}
                                     className="w-full h-full object-cover"
+                                    loading="lazy"
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">
@@ -247,7 +247,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                               {/* Product Info */}
                               <div className="flex-1 min-w-0">
                                 <button
-                                  onClick={() => handleCodeProductClick(product.delkomCode || product.referenceCode || "")}
+                                  onClick={() => handleCodeProductClick(product.delkomCode || "")}
                                   className="text-left w-full mb-2"
                                 >
                                   <h4 className="font-bold text-slate-900 truncate hover:text-accent transition-colors">
@@ -257,14 +257,6 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                     {product.delkomCode && (
                                       <span className="inline-block">
                                         SKU: {product.delkomCode}
-                                      </span>
-                                    )}
-                                    {product.referenceCode && product.delkomCode && (
-                                      <span className="mx-2">•</span>
-                                    )}
-                                    {product.referenceCode && (
-                                      <span className="inline-block">
-                                        Ref: {product.referenceCode}
                                       </span>
                                     )}
                                   </p>
@@ -374,12 +366,14 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                     src={product.imageUrls[0]}
                                     alt={product.name}
                                     className="w-full h-full object-cover"
+                                    loading="lazy"
                                   />
                                 ) : product.imageUrl ? (
                                   <img
                                     src={product.imageUrl}
                                     alt={product.name}
                                     className="w-full h-full object-cover"
+                                    loading="lazy"
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">
@@ -401,14 +395,6 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                     {product.delkomCode && (
                                       <span className="inline-block">
                                         SKU: {product.delkomCode}
-                                      </span>
-                                    )}
-                                    {product.referenceCode && product.delkomCode && (
-                                      <span className="mx-2">•</span>
-                                    )}
-                                    {product.referenceCode && (
-                                      <span className="inline-block">
-                                        Ref: {product.referenceCode}
                                       </span>
                                     )}
                                   </p>
