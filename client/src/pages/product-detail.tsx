@@ -10,9 +10,25 @@ import type { ProductWithCategory } from "@shared/schema";
 import RequestQuoteModal from "@/components/request-quote-modal";
 import { Helmet } from "react-helmet";
 
+function createSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .trim();
+}
+
 function ProductSchema({ product }: { product: ProductWithCategory }) {
   const baseUrl = "https://agorarockdrill.shop";
   const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/api/placeholder/600/600`;
+  
+  // Create brand slug matching sitemap logic
+  let brandSlug = 'spare-parts';
+  if (product.brandCompatibility) {
+    const firstBrand = product.brandCompatibility.split(',')[0].trim();
+    brandSlug = createSlug(firstBrand);
+  }
   
   const schema = {
     "@context": "https://schema.org",
@@ -41,6 +57,8 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
     }
   };
 
+  const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(product.delkomCode || '')}`;
+
   return (
     <Helmet>
       <title>{product.name} - {product.delkomCode} | Agora Rock Drill</title>
@@ -50,7 +68,7 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
       <meta property="og:image" content={productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`} />
       <meta property="og:type" content="product" />
       <meta name="robots" content="index, follow" />
-      <link rel="canonical" href={`${baseUrl}/brand/${(product.brandCompatibility || 'spare-parts').toLowerCase().replace(/\s+/g, '-')}/${encodeURIComponent(product.delkomCode || '')}`} />
+      <link rel="canonical" href={canonicalUrl} />
       <script type="application/ld+json">
         {JSON.stringify(schema)}
       </script>
