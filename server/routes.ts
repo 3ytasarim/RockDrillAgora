@@ -310,6 +310,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // robots.txt
+  app.get("/robots.txt", (req, res) => {
+    const robotsTxt = `User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://agorarockdrill.shop/sitemap.xml
+`;
+    res.header('Content-Type', 'text/plain');
+    res.send(robotsTxt);
+  });
+
   // Sitemap.xml
   app.get("/sitemap.xml", async (req, res) => {
     try {
@@ -324,6 +337,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .replace(/[^\w-]+/g, '')
           .replace(/--+/g, '-')
           .trim();
+      };
+
+      // Helper function to encode URL path properly
+      const encodeUrlPath = (path: string): string => {
+        return path.split('/').map(segment => encodeURIComponent(segment)).join('/');
       };
 
       // Start XML
@@ -345,8 +363,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xml += '  </url>\n';
       });
 
-      // Add product pages
+      // Add product pages with properly encoded URLs
       products.forEach(product => {
+        if (!product.delkomCode) return; // Skip products without delkomCode
+        
         // Extract brand from brandCompatibility (e.g., "Atlas Copco - Epiroc" -> "atlas-copco-epiroc")
         let brandSlug = 'spare-parts';
         if (product.brandCompatibility) {
@@ -355,8 +375,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           brandSlug = createSlug(firstBrand);
         }
         
-        // Create URL: /brand/product-code
-        const productUrl = `/brand/${brandSlug}/${product.delkomCode}`;
+        // Create URL with encoded product code (handles spaces and special chars)
+        const encodedCode = encodeURIComponent(product.delkomCode);
+        const productUrl = `/brand/${brandSlug}/${encodedCode}`;
         
         // Safely handle date conversion
         let lastModDate = new Date().toISOString().split('T')[0];

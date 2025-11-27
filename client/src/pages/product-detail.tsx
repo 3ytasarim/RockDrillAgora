@@ -8,6 +8,55 @@ import { Separator } from "@/components/ui/separator";
 import useEmblaCarousel from "embla-carousel-react";
 import type { ProductWithCategory } from "@shared/schema";
 import RequestQuoteModal from "@/components/request-quote-modal";
+import { Helmet } from "react-helmet";
+
+function ProductSchema({ product }: { product: ProductWithCategory }) {
+  const baseUrl = "https://agorarockdrill.shop";
+  const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/api/placeholder/600/600`;
+  
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "description": product.description || `${product.name} - Rock drill spare part`,
+    "sku": product.delkomCode,
+    "mpn": product.delkomCode,
+    "brand": {
+      "@type": "Brand",
+      "name": product.brandCompatibility || "Rock Drill Parts"
+    },
+    "image": productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`,
+    "category": product.category?.name || "Spare Parts",
+    "offers": {
+      "@type": "Offer",
+      "availability": product.stockStatus === "out_of_stock" 
+        ? "https://schema.org/OutOfStock" 
+        : "https://schema.org/InStock",
+      "priceCurrency": "USD",
+      "price": product.finalPrice || "0",
+      "seller": {
+        "@type": "Organization",
+        "name": "Agora Rock Drill"
+      }
+    }
+  };
+
+  return (
+    <Helmet>
+      <title>{product.name} - {product.delkomCode} | Agora Rock Drill</title>
+      <meta name="description" content={`${product.name} (${product.delkomCode}) - ${product.brandCompatibility || 'Rock drill'} spare part. ${product.description || 'High quality replacement part for rock drilling equipment.'}`} />
+      <meta property="og:title" content={`${product.name} - ${product.delkomCode}`} />
+      <meta property="og:description" content={product.description || `Rock drill spare part - ${product.delkomCode}`} />
+      <meta property="og:image" content={productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`} />
+      <meta property="og:type" content="product" />
+      <meta name="robots" content="index, follow" />
+      <link rel="canonical" href={`${baseUrl}/brand/${(product.brandCompatibility || 'spare-parts').toLowerCase().replace(/\s+/g, '-')}/${encodeURIComponent(product.delkomCode || '')}`} />
+      <script type="application/ld+json">
+        {JSON.stringify(schema)}
+      </script>
+    </Helmet>
+  );
+}
 
 export default function ProductDetail() {
   const params = useParams();
@@ -105,6 +154,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <ProductSchema product={product} />
       <RequestQuoteModal open={quoteModalOpen} onOpenChange={setQuoteModalOpen} />
       
       {/* Breadcrumb */}
