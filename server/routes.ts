@@ -31,6 +31,9 @@ function generateProductHtml(
     brandCompatibility?: string | null;
     imageUrls?: string[] | null;
     imageUrl?: string | null;
+    finalPrice?: string | null;
+    originalPrice?: string | null;
+    stockStatus?: string | null;
   }
 ): string {
   const baseUrl = "https://agorarockdrill.shop";
@@ -55,7 +58,12 @@ function generateProductHtml(
   }
   const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(product.delkomCode || '')}`;
   
-  // Create JSON-LD structured data
+  // Determine availability based on stock status
+  const availabilityUrl = product.stockStatus === 'out_of_stock' 
+    ? "https://schema.org/OutOfStock" 
+    : "https://schema.org/InStock";
+  
+  // Create JSON-LD structured data (no price - B2B "Request a Quote" model)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -74,8 +82,8 @@ function generateProductHtml(
     },
     "offers": {
       "@type": "Offer",
-      "availability": "https://schema.org/InStock",
-      "priceCurrency": "USD",
+      "url": canonicalUrl,
+      "availability": availabilityUrl,
       "seller": {
         "@type": "Organization",
         "name": "Agora Rock Drill"
