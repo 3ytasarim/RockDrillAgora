@@ -587,8 +587,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/robots.txt", (req, res) => {
     const robotsTxt = `User-agent: *
 Allow: /
+Allow: /api/products
+Allow: /api/products/
+Allow: /api/categories
+Allow: /api/categories/
 Disallow: /admin
-Disallow: /api/
+Disallow: /api/upload
+Disallow: /api/presigned-url
 
 Sitemap: https://agorarockdrill.shop/sitemap.xml
 `;
