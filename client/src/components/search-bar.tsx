@@ -263,7 +263,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                 </button>
                                 
                                 {/* Go to Product Button */}
-                                <Link href={`/product/${product.id}`}>
+                                <Link href={`/product/${product.delkomCode?.replace(/\s+/g, '') || product.id}`}>
                                   <div
                                     className="inline-block bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer"
                                     data-testid={`go-to-product-code-${product.id}`}
@@ -401,7 +401,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                 </button>
                                 
                                 {/* Go to Product Button */}
-                                <Link href={`/product/${product.id}`}>
+                                <Link href={`/product/${product.delkomCode?.replace(/\s+/g, '') || product.id}`}>
                                   <div
                                     className="inline-block bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer"
                                     data-testid={`go-to-product-${product.id}`}
