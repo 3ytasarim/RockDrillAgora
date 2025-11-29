@@ -6,8 +6,178 @@ import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 import multer from "multer";
 import * as XLSX from "xlsx";
+import fs from "fs";
+import path from "path";
 
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Helper function to create URL-friendly slug
+function createSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .trim();
+}
+
+// Helper function to generate dynamic HTML with SEO meta tags
+function generateProductHtml(
+  templateHtml: string,
+  product: {
+    name: string;
+    description?: string | null;
+    delkomCode?: string | null;
+    brandCompatibility?: string | null;
+    imageUrls?: string[] | null;
+    imageUrl?: string | null;
+  }
+): string {
+  const baseUrl = "https://agorarockdrill.shop";
+  
+  // Create SEO-friendly title
+  const title = `${product.name}${product.delkomCode ? ` - ${product.delkomCode}` : ''} | Agora Rock Drill`;
+  
+  // Create description
+  const description = product.description 
+    ? product.description.slice(0, 160) 
+    : `${product.name} - High quality rock drill spare part${product.brandCompatibility ? ` compatible with ${product.brandCompatibility}` : ''}. Professional spare parts from Agora Rock Drill.`;
+  
+  // Get product image
+  const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/og-image.jpg`;
+  const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
+  
+  // Create canonical URL
+  let brandSlug = 'spare-parts';
+  if (product.brandCompatibility) {
+    const firstBrand = product.brandCompatibility.split(',')[0].trim();
+    brandSlug = createSlug(firstBrand);
+  }
+  const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(product.delkomCode || '')}`;
+  
+  // Create JSON-LD structured data
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "description": description,
+    "sku": product.delkomCode || "",
+    "mpn": product.delkomCode || "",
+    "image": fullImageUrl,
+    "brand": {
+      "@type": "Brand",
+      "name": product.brandCompatibility || "Agora Rock Drill"
+    },
+    "manufacturer": {
+      "@type": "Organization",
+      "name": "Agora Rock Drill"
+    },
+    "offers": {
+      "@type": "Offer",
+      "availability": "https://schema.org/InStock",
+      "priceCurrency": "USD",
+      "seller": {
+        "@type": "Organization",
+        "name": "Agora Rock Drill"
+      }
+    }
+  };
+  
+  // Create visible content for Googlebot (noscript fallback)
+  const noscriptContent = `
+    <noscript>
+      <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+        <h1>${product.name}</h1>
+        <p><strong>Product Code:</strong> ${product.delkomCode || 'N/A'}</p>
+        <p><strong>Brand:</strong> ${product.brandCompatibility || 'Universal'}</p>
+        <p>${description}</p>
+        <img src="${fullImageUrl}" alt="${product.name}" style="max-width: 100%; height: auto;" />
+        <p><a href="${baseUrl}">Visit Agora Rock Drill</a> for more spare parts.</p>
+      </div>
+    </noscript>
+  `;
+  
+  // Replace meta tags in template
+  let html = templateHtml;
+  
+  // Replace title
+  html = html.replace(
+    /<title>.*?<\/title>/,
+    `<title>${title}</title>`
+  );
+  
+  // Replace meta title
+  html = html.replace(
+    /<meta name="title" content=".*?" \/>/,
+    `<meta name="title" content="${title}" />`
+  );
+  
+  // Replace meta description
+  html = html.replace(
+    /<meta name="description" content=".*?" \/>/,
+    `<meta name="description" content="${description}" />`
+  );
+  
+  // Replace canonical URL
+  html = html.replace(
+    /<link rel="canonical" href=".*?" \/>/,
+    `<link rel="canonical" href="${canonicalUrl}" />`
+  );
+  
+  // Replace OG tags
+  html = html.replace(
+    /<meta property="og:title" content=".*?" \/>/,
+    `<meta property="og:title" content="${title}" />`
+  );
+  html = html.replace(
+    /<meta property="og:description" content=".*?" \/>/,
+    `<meta property="og:description" content="${description}" />`
+  );
+  html = html.replace(
+    /<meta property="og:url" content=".*?" \/>/,
+    `<meta property="og:url" content="${canonicalUrl}" />`
+  );
+  html = html.replace(
+    /<meta property="og:image" content=".*?" \/>/,
+    `<meta property="og:image" content="${fullImageUrl}" />`
+  );
+  html = html.replace(
+    /<meta property="og:type" content=".*?" \/>/,
+    `<meta property="og:type" content="product" />`
+  );
+  
+  // Replace Twitter tags
+  html = html.replace(
+    /<meta name="twitter:title" content=".*?" \/>/,
+    `<meta name="twitter:title" content="${title}" />`
+  );
+  html = html.replace(
+    /<meta name="twitter:description" content=".*?" \/>/,
+    `<meta name="twitter:description" content="${description}" />`
+  );
+  html = html.replace(
+    /<meta name="twitter:url" content=".*?" \/>/,
+    `<meta name="twitter:url" content="${canonicalUrl}" />`
+  );
+  html = html.replace(
+    /<meta name="twitter:image" content=".*?" \/>/,
+    `<meta name="twitter:image" content="${fullImageUrl}" />`
+  );
+  
+  // Add JSON-LD structured data before </head>
+  html = html.replace(
+    '</head>',
+    `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>\n</head>`
+  );
+  
+  // Add noscript content after <div id="root"></div>
+  html = html.replace(
+    '<div id="root"></div>',
+    `<div id="root"></div>${noscriptContent}`
+  );
+  
+  return html;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Products API
@@ -307,6 +477,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error searching for public object:", error);
       return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // SEO: Dynamic HTML for product pages (Server-Side Rendering for meta tags)
+  // This route intercepts product page requests and injects SEO meta tags before serving
+  app.get("/brand/:brand/:code", async (req, res, next) => {
+    try {
+      const productCode = decodeURIComponent(req.params.code);
+      const product = await storage.getProductByCode(productCode);
+      
+      if (!product) {
+        // If product not found, let the SPA handle 404
+        return next();
+      }
+      
+      // Determine which HTML template to use based on environment
+      let templatePath: string;
+      const isProduction = process.env.NODE_ENV === 'production' || 
+                          (req.app.get("env") !== "development");
+      
+      if (isProduction) {
+        // Production: use built index.html
+        templatePath = path.resolve(import.meta.dirname, "public", "index.html");
+      } else {
+        // Development: use source index.html
+        templatePath = path.resolve(import.meta.dirname, "..", "client", "index.html");
+      }
+      
+      // Check if template exists
+      if (!fs.existsSync(templatePath)) {
+        console.log(`Template not found at ${templatePath}, falling back to SPA`);
+        return next();
+      }
+      
+      // Read template and generate dynamic HTML
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+      const dynamicHtml = generateProductHtml(template, product);
+      
+      res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
+    } catch (error) {
+      console.error("Error generating dynamic product page:", error);
+      next();
+    }
+  });
+
+  // SEO: Dynamic HTML for product pages accessed by ID
+  app.get("/product/:id", async (req, res, next) => {
+    try {
+      const product = await storage.getProduct(req.params.id);
+      
+      if (!product) {
+        return next();
+      }
+      
+      // Determine which HTML template to use
+      let templatePath: string;
+      const isProduction = process.env.NODE_ENV === 'production' || 
+                          (req.app.get("env") !== "development");
+      
+      if (isProduction) {
+        templatePath = path.resolve(import.meta.dirname, "public", "index.html");
+      } else {
+        templatePath = path.resolve(import.meta.dirname, "..", "client", "index.html");
+      }
+      
+      if (!fs.existsSync(templatePath)) {
+        return next();
+      }
+      
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+      const dynamicHtml = generateProductHtml(template, product);
+      
+      res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
+    } catch (error) {
+      console.error("Error generating dynamic product page:", error);
+      next();
     }
   });
 
