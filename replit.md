@@ -2,9 +2,16 @@
 
 This project is a full-stack catalog website for industrial spare parts, specifically hydraulic rock drill and drill rig components. It enables users to browse, search, and filter parts from various industrial equipment brands (Atlas Copco - Epiroc, Sandvik, Furukawa). The application includes a "Request Quote" system and an administrative panel for managing products and categories. The technology stack comprises React with TypeScript for the frontend, Express.js with TypeScript for the backend, and PostgreSQL with Drizzle ORM for the database.
 
-## Recent Updates (Nov 27, 2025)
+## Recent Updates (Nov 29, 2025)
 
-**SEO Improvements:**
+**Server-Side Rendering for SEO (Soft 404 Fix):**
+- Implemented server-side HTML generation for product pages (`/brand/:brand/:code` and `/product/:id`)
+- Dynamic meta tags injected before serving HTML (title, description, canonical, Open Graph, Twitter)
+- Added `<noscript>` fallback with visible product content for search engine crawlers
+- JSON-LD Schema.org Product data generated server-side
+- Fixes Google Search Console "Soft 404" error for SPA pages
+
+**SEO Improvements (Nov 27, 2025):**
 - Added `/robots.txt` endpoint with sitemap directive for search engine crawlers
 - Enhanced `/sitemap.xml` with properly URL-encoded product links
 - Implemented Schema.org Product JSON-LD structured data on all product pages
