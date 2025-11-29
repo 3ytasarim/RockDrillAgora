@@ -522,10 +522,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // SEO: Dynamic HTML for product pages accessed by ID
-  app.get("/product/:id", async (req, res, next) => {
+  // SEO: Dynamic HTML for product pages accessed by ID or product code
+  app.get("/product/:idOrCode", async (req, res, next) => {
     try {
-      const product = await storage.getProduct(req.params.id);
+      const idOrCode = decodeURIComponent(req.params.idOrCode);
+      
+      // Try to find product by code first (most common for production URLs)
+      let product = await storage.getProductByCode(idOrCode);
+      
+      // If not found by code, try by UUID
+      if (!product) {
+        product = await storage.getProduct(idOrCode);
+      }
       
       if (!product) {
         return next();
