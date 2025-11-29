@@ -83,18 +83,37 @@ function generateProductHtml(
     }
   };
   
-  // Create visible content for Googlebot (noscript fallback)
-  const noscriptContent = `
-    <noscript>
-      <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
-        <h1>${product.name}</h1>
-        <p><strong>Product Code:</strong> ${product.delkomCode || 'N/A'}</p>
-        <p><strong>Brand:</strong> ${product.brandCompatibility || 'Universal'}</p>
-        <p>${description}</p>
-        <img src="${fullImageUrl}" alt="${product.name}" style="max-width: 100%; height: auto;" />
-        <p><a href="${baseUrl}">Visit Agora Rock Drill</a> for more spare parts.</p>
+  // Create visible SSR content for Googlebot (inside #root, will be replaced by React)
+  const ssrContent = `
+    <div id="ssr-product-content" style="padding: 40px 20px; max-width: 1200px; margin: 0 auto; font-family: system-ui, -apple-system, sans-serif;">
+      <nav style="margin-bottom: 20px; font-size: 14px; color: #666;">
+        <a href="${baseUrl}" style="color: #2563eb; text-decoration: none;">Home</a> &gt; 
+        <a href="${baseUrl}/spare-parts" style="color: #2563eb; text-decoration: none;">Spare Parts</a> &gt; 
+        <span>${product.name}</span>
+      </nav>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;">
+        <div>
+          <img src="${fullImageUrl}" alt="${product.name}" style="width: 100%; max-width: 500px; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+        </div>
+        <div>
+          <h1 style="font-size: 32px; font-weight: 700; margin: 0 0 16px 0; color: #1a1a1a;">${product.name}</h1>
+          <p style="font-size: 18px; color: #4a5568; margin-bottom: 24px;">${description}</p>
+          <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0;"><strong style="color: #2d3748;">Product Code:</strong> <span style="color: #1a1a1a; font-family: monospace; font-size: 16px;">${product.delkomCode || 'N/A'}</span></p>
+            <p style="margin: 0;"><strong style="color: #2d3748;">Brand Compatibility:</strong> <span style="color: #1a1a1a;">${product.brandCompatibility || 'Universal'}</span></p>
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <span style="background: #e6fffa; color: #047857; padding: 8px 16px; border-radius: 6px; font-size: 14px;">✓ In Stock</span>
+            <span style="background: #eff6ff; color: #1d4ed8; padding: 8px 16px; border-radius: 6px; font-size: 14px;">Worldwide Shipping</span>
+          </div>
+          <a href="${baseUrl}/contact" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">Request a Quote</a>
+        </div>
       </div>
-    </noscript>
+      <div style="margin-top: 48px; padding-top: 32px; border-top: 1px solid #e2e8f0;">
+        <h2 style="font-size: 24px; margin-bottom: 16px; color: #1a1a1a;">About This Product</h2>
+        <p style="color: #4a5568; line-height: 1.7;">${product.name} is a high-quality rock drill spare part available from Agora Rock Drill. ${product.brandCompatibility ? `Compatible with ${product.brandCompatibility} equipment.` : ''} We offer professional spare parts for hydraulic rock drills and drill rigs with worldwide shipping and quality guarantee.</p>
+      </div>
+    </div>
   `;
   
   // Replace meta tags in template
@@ -170,10 +189,10 @@ function generateProductHtml(
     `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>\n</head>`
   );
   
-  // Add noscript content after <div id="root"></div>
+  // Add SSR content inside <div id="root"> - React will hydrate over this
   html = html.replace(
     '<div id="root"></div>',
-    `<div id="root"></div>${noscriptContent}`
+    `<div id="root">${ssrContent}</div>`
   );
   
   return html;
