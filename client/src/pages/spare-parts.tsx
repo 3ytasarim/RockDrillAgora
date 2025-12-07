@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import RequestQuoteModal from "@/components/request-quote-modal";
 import type { ProductWithCategory, Category } from "@shared/schema";
 
 export default function SpareParts() {
+  const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
@@ -20,14 +22,14 @@ export default function SpareParts() {
     setQuoteModalOpen(true);
   };
 
-  // Get search params from URL
+  // Get search params from URL - update on every location change
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const search = params.get("search") || params.get("code");
     if (search) {
       setSearchQuery(search);
     }
-  }, []);
+  }, [location]);
 
   const { data: products = [], isLoading, refetch } = useQuery<ProductWithCategory[]>({
     queryKey: ["/api/products", "search", searchQuery, selectedCategories, sortBy],
@@ -41,15 +43,23 @@ export default function SpareParts() {
     },
   });
 
-  // Set brand filter from URL after products are loaded
+  // Set brand filter from URL - update on every location change
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const brand = params.get("brand");
     
-    if (brand && products.length > 0 && brandFilter.length === 0) {
-      setBrandFilter([brand]);
+    if (brand) {
+      // Only update if different from current filter
+      if (brandFilter.length !== 1 || brandFilter[0] !== brand) {
+        setBrandFilter([brand]);
+      }
+    } else {
+      // Clear brand filter if no brand in URL
+      if (brandFilter.length > 0) {
+        setBrandFilter([]);
+      }
     }
-  }, [products, brandFilter]);
+  }, [location]);
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],

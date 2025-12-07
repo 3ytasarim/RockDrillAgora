@@ -500,7 +500,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!file) {
         return res.status(404).json({ error: "File not found" });
       }
-      objectStorageService.downloadObject(file, res);
+      
+      // Check if client accepts WebP and file is an image
+      const acceptsWebP = req.headers.accept?.includes('image/webp');
+      const isImage = /\.(jpg|jpeg|png|gif)$/i.test(filePath);
+      
+      if (acceptsWebP && isImage) {
+        // Convert to WebP for better performance
+        try {
+          const sharp = (await import('sharp')).default;
+          const chunks: Buffer[] = [];
+          const stream = await objectStorageService.getObjectStream(file);
+          
+          stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+          stream.on('end', async () => {
+            try {
+              const buffer = Buffer.concat(chunks);
+              const webpBuffer = await sharp(buffer)
+                .webp({ quality: 80 })
+                .toBuffer();
+              
+              res.set('Content-Type', 'image/webp');
+              res.set('Cache-Control', 'public, max-age=31536000, immutable');
+              res.send(webpBuffer);
+            } catch (conversionError) {
+              console.error('WebP conversion failed, serving original:', conversionError);
+              objectStorageService.downloadObject(file, res);
+            }
+          });
+          stream.on('error', () => {
+            objectStorageService.downloadObject(file, res);
+          });
+        } catch (sharpError) {
+          console.error('Sharp import failed:', sharpError);
+          objectStorageService.downloadObject(file, res);
+        }
+      } else {
+        // Serve original with caching
+        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+        objectStorageService.downloadObject(file, res);
+      }
     } catch (error) {
       console.error("Error searching for public object:", error);
       return res.status(500).json({ error: "Internal server error" });

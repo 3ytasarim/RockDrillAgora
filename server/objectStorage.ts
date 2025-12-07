@@ -94,6 +94,10 @@ export class ObjectStorageService {
     }
   }
 
+  getObjectStream(file: File) {
+    return file.createReadStream();
+  }
+
   async getProductImageUploadURL(): Promise<string> {
     const publicSearchPaths = this.getPublicObjectSearchPaths();
     if (publicSearchPaths.length === 0) {
