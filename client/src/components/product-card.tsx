@@ -18,7 +18,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           </span>
         )}
         <img 
-          src={product.imageUrl || "/api/placeholder/300/300"} 
+          src={product.imageUrl ? `${product.imageUrl}?w=400` : "/api/placeholder/300/300"} 
           alt={product.name} 
           className="w-full h-48 object-contain p-4 bg-white"
           loading="lazy"

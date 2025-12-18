@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Filter, Search } from "lucide-react";
+import { Filter, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,142 +10,150 @@ import ProductCard from "@/components/product-card";
 import RequestQuoteModal from "@/components/request-quote-modal";
 import type { ProductWithCategory, Category } from "@shared/schema";
 
+interface PaginatedResult {
+  data: ProductWithCategory[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+const ITEMS_PER_PAGE = 24;
+
+const AVAILABLE_BRANDS = [
+  "Atlas Copco - Epiroc",
+  "Sandvik",
+  "Furukawa"
+];
+
 export default function SpareParts() {
   const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [brandFilter, setBrandFilter] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState("featured");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [brandFilter, setBrandFilter] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
   const handleRequestQuote = () => {
     setQuoteModalOpen(true);
   };
 
-  // Get search params from URL - update on every location change
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Get search/brand params from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const search = params.get("search") || params.get("code");
+    const brand = params.get("brand");
+    
     if (search) {
       setSearchQuery(search);
+      setDebouncedSearch(search);
     }
+    if (brand) {
+      setBrandFilter(brand);
+    } else {
+      setBrandFilter("");
+    }
+    setCurrentPage(1);
   }, [location]);
 
-  const { data: products = [], isLoading, refetch } = useQuery<ProductWithCategory[]>({
-    queryKey: ["/api/products", "search", searchQuery, selectedCategories, sortBy],
+  // Fetch paginated products
+  const { data: paginatedResult, isLoading } = useQuery<PaginatedResult>({
+    queryKey: ["/api/products/paginated", debouncedSearch, brandFilter, selectedCategory, currentPage],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (searchQuery) params.set("search", searchQuery);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (brandFilter) params.set("brand", brandFilter);
+      if (selectedCategory) params.set("category", selectedCategory);
+      params.set("page", currentPage.toString());
+      params.set("limit", ITEMS_PER_PAGE.toString());
       
-      const response = await fetch(`/api/products?${params.toString()}`);
+      const response = await fetch(`/api/products/paginated?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch products");
       return response.json();
     },
+    staleTime: 60000,
   });
-
-  // Set brand filter from URL - update on every location change
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const brand = params.get("brand");
-    
-    if (brand) {
-      // Only update if different from current filter
-      if (brandFilter.length !== 1 || brandFilter[0] !== brand) {
-        setBrandFilter([brand]);
-      }
-    } else {
-      // Clear brand filter if no brand in URL
-      if (brandFilter.length > 0) {
-        setBrandFilter([]);
-      }
-    }
-  }, [location]);
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
-    queryFn: async () => {
-      const response = await fetch("/api/categories");
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      return response.json();
-    },
+    staleTime: 300000,
   });
 
-  const handleSearch = () => {
-    refetch();
+  const products = paginatedResult?.data || [];
+  const totalPages = paginatedResult?.totalPages || 1;
+  const totalProducts = paginatedResult?.total || 0;
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setDebouncedSearch(searchQuery);
+    setCurrentPage(1);
   };
 
-  // Get unique brands from products
-  const productsBasedBrands = Array.from(new Set(
-    products
-      .map(p => p.brandCompatibility)
-      .filter((brand): brand is string => !!brand)
-  ));
-  
-  // Include brand from URL if not in products yet
-  const urlBrand = new URLSearchParams(window.location.search).get("brand");
-  const availableBrands = Array.from(new Set([
-    ...productsBasedBrands,
-    ...(urlBrand ? [urlBrand] : [])
-  ])).sort();
-
-  // Get categories that have products
-  const categoriesWithProducts = categories.filter(cat => 
-    products.some(p => p.categoryId === cat.id)
-  );
-
-  const filteredProducts = products.filter(product => {
-    // Category filter
-    if (selectedCategories.length > 0 && !selectedCategories.includes(product.categoryId || "")) {
-      return false;
-    }
-
-    // Brand filter
-    if (brandFilter.length > 0 && product.brandCompatibility) {
-      const hasMatchingBrand = brandFilter.some(brand => 
-        product.brandCompatibility?.toLowerCase().includes(brand.toLowerCase())
-      );
-      if (!hasMatchingBrand) return false;
-    }
-
-    return true;
-  });
-
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case "newest":
-        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-      case "a-z":
-        return a.name.localeCompare(b.name);
-      default:
-        return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
-    }
-  });
-
-  const handleCategoryChange = (categoryId: string, checked: boolean) => {
-    setSelectedCategories(prev => 
-      checked 
-        ? [...prev, categoryId]
-        : prev.filter(id => id !== categoryId)
-    );
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(prev => prev === categoryId ? "" : categoryId);
+    setCurrentPage(1);
   };
 
-  const handleBrandChange = (brand: string, checked: boolean) => {
-    setBrandFilter(prev => 
-      checked 
-        ? [...prev, brand]
-        : prev.filter(b => b !== brand)
-    );
+  const handleBrandChange = (brand: string) => {
+    setBrandFilter(prev => prev === brand ? "" : brand);
+    setCurrentPage(1);
   };
 
   const resetFilters = () => {
-    setSelectedCategories([]);
-    setBrandFilter([]);
+    setSelectedCategory("");
+    setBrandFilter("");
     setSearchQuery("");
+    setDebouncedSearch("");
+    setCurrentPage(1);
+  };
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push("...");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push("...");
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+    return pages;
   };
 
   return (
     <div>
-      {/* Header */}
       <section className="industrial-gradient text-primary-foreground py-16">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-5xl font-bold mb-4">Rock Drill Spare Parts</h1>
@@ -153,32 +161,29 @@ export default function SpareParts() {
         </div>
       </section>
 
-      {/* Search Bar */}
       <section className="py-8 bg-muted">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-4 items-center">
+          <form onSubmit={handleSearch} className="flex gap-4 items-center">
             <div className="flex-1 flex gap-2">
               <Input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search products by name or code..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
                 data-testid="products-search-input"
               />
-              <Button onClick={handleSearch} data-testid="products-search-btn">
+              <Button type="submit" data-testid="products-search-btn">
                 <Search size={16} />
               </Button>
             </div>
-          </div>
+          </form>
         </div>
       </section>
 
-      {/* Main Content */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
-            {/* Filters Sidebar */}
             <div className="md:col-span-1">
               <div className="bg-card rounded-lg shadow-md p-6 border border-border sticky top-24">
                 <h3 className="text-xl font-bold text-foreground mb-4">
@@ -186,17 +191,16 @@ export default function SpareParts() {
                   Filters
                 </h3>
                 
-                {/* Category Filter */}
                 <div className="mb-6">
                   <h4 className="font-semibold text-foreground mb-3">Category</h4>
                   <div className="space-y-2">
-                    {categoriesWithProducts.length > 0 ? (
-                      categoriesWithProducts.map((category) => (
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
                         <div key={category.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={`category-${category.id}`}
-                            checked={selectedCategories.includes(category.id)}
-                            onCheckedChange={(checked) => handleCategoryChange(category.id, checked as boolean)}
+                            checked={selectedCategory === category.id}
+                            onCheckedChange={() => handleCategoryChange(category.id)}
                           />
                           <label htmlFor={`category-${category.id}`} className="text-sm cursor-pointer">
                             {category.name}
@@ -209,26 +213,21 @@ export default function SpareParts() {
                   </div>
                 </div>
 
-                {/* Brand Filter */}
                 <div className="mb-6">
                   <h4 className="font-semibold text-foreground mb-3">Brand Compatibility</h4>
                   <div className="space-y-2">
-                    {availableBrands.length > 0 ? (
-                      availableBrands.map((brand) => (
-                        <div key={brand} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`brand-${brand}`}
-                            checked={brandFilter.includes(brand)}
-                            onCheckedChange={(checked) => handleBrandChange(brand, checked as boolean)}
-                          />
-                          <label htmlFor={`brand-${brand}`} className="text-sm cursor-pointer">
-                            {brand}
-                          </label>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No brands available</p>
-                    )}
+                    {AVAILABLE_BRANDS.map((brand) => (
+                      <div key={brand} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`brand-${brand}`}
+                          checked={brandFilter === brand}
+                          onCheckedChange={() => handleBrandChange(brand)}
+                        />
+                        <label htmlFor={`brand-${brand}`} className="text-sm cursor-pointer">
+                          {brand}
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -238,27 +237,21 @@ export default function SpareParts() {
                   className="w-full"
                   data-testid="reset-filters-btn"
                 >
-                  <i className="fas fa-redo mr-2"></i>Reset Filters
+                  Reset Filters
                 </Button>
               </div>
             </div>
 
-            {/* Products Grid */}
             <div className="md:col-span-3">
               <div className="flex justify-between items-center mb-6">
                 <div className="text-muted-foreground">
-                  Showing <span className="font-semibold text-foreground" data-testid="product-count">{sortedProducts.length}</span> products
+                  Showing <span className="font-semibold text-foreground" data-testid="product-count">
+                    {products.length}
+                  </span> of <span className="font-semibold text-foreground">{totalProducts}</span> products
+                  {totalPages > 1 && (
+                    <span className="ml-2">(Page {currentPage} of {totalPages})</span>
+                  )}
                 </div>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48" data-testid="sort-select">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="featured">Sort by: Featured</SelectItem>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="a-z">A-Z</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               {isLoading ? (
@@ -272,31 +265,55 @@ export default function SpareParts() {
                     </div>
                   ))}
                 </div>
-              ) : sortedProducts.length > 0 ? (
+              ) : products.length > 0 ? (
                 <>
                   <div className="grid md:grid-cols-3 gap-6">
-                    {sortedProducts.map((product) => (
+                    {products.map((product) => (
                       <ProductCard key={product.id} product={product} onAddToCart={handleRequestQuote} />
                     ))}
                   </div>
 
-                  {/* Pagination placeholder */}
-                  <div className="flex justify-center items-center gap-2 mt-8">
-                    <Button variant="outline" size="sm">
-                      <i className="fas fa-chevron-left"></i>
-                    </Button>
-                    <Button size="sm">1</Button>
-                    <Button variant="outline" size="sm">2</Button>
-                    <Button variant="outline" size="sm">3</Button>
-                    <Button variant="outline" size="sm">
-                      <i className="fas fa-chevron-right"></i>
-                    </Button>
-                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-8">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft size={16} />
+                      </Button>
+                      
+                      {getPageNumbers().map((page, idx) => (
+                        typeof page === 'number' ? (
+                          <Button 
+                            key={idx}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => goToPage(page)}
+                          >
+                            {page}
+                          </Button>
+                        ) : (
+                          <span key={idx} className="px-2 text-muted-foreground">...</span>
+                        )
+                      ))}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight size={16} />
+                      </Button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="text-center py-12">
                   <div className="text-6xl text-muted-foreground mb-4">
-                    <i className="fas fa-search"></i>
+                    <Search size={64} className="mx-auto" />
                   </div>
                   <h3 className="text-2xl font-bold text-foreground mb-2">No Products Found</h3>
                   <p className="text-muted-foreground mb-4">
@@ -305,42 +322,6 @@ export default function SpareParts() {
                   <Button onClick={resetFilters} data-testid="clear-filters-btn">
                     Clear All Filters
                   </Button>
-                </div>
-              )}
-
-              {/* Product Code List by Brand */}
-              {sortedProducts.length > 0 && (
-                <div className="mt-12 space-y-8">
-                  {availableBrands
-                    .filter(brand => sortedProducts.some(p => p.brandCompatibility === brand))
-                    .map((brand) => {
-                      const brandProducts = sortedProducts.filter(p => p.brandCompatibility === brand);
-                      const productList = brandProducts
-                        .map(p => `${p.delkomCode}, ${p.name}`)
-                        .join(", ");
-                      const brandId = brand.toLowerCase().replace(/\s+/g, '-');
-                      
-                      return (
-                        <div 
-                          key={brand} 
-                          className="bg-white rounded-lg shadow-md p-6 border border-border"
-                          data-testid={`brand-product-list-${brandId}`}
-                        >
-                          <h3 
-                            className="text-lg font-bold text-foreground mb-4"
-                            data-testid={`brand-title-${brandId}`}
-                          >
-                            {brand}
-                          </h3>
-                          <div 
-                            className="text-sm text-muted-foreground leading-relaxed"
-                            data-testid={`product-codes-${brandId}`}
-                          >
-                            <span className="font-semibold text-foreground">#</span> {productList}
-                          </div>
-                        </div>
-                      );
-                    })}
                 </div>
               )}
             </div>

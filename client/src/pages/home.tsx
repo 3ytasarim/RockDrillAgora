@@ -94,12 +94,13 @@ export default function Home() {
   });
 
   const { data: allProducts = [], isLoading: productsLoading } = useQuery<ProductWithCategory[]>({
-    queryKey: ["/api/products"],
+    queryKey: ["/api/products", "featured"],
     queryFn: async () => {
-      const response = await fetch("/api/products");
+      const response = await fetch("/api/products?featured=true");
       if (!response.ok) throw new Error("Failed to fetch products");
       return response.json();
     },
+    staleTime: 300000,
   });
 
   const handleSearch = (query: string, code: string) => {

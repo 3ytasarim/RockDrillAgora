@@ -1,15 +1,32 @@
 import { products, categories, type Product, type InsertProduct, type Category, type InsertCategory, type ProductWithCategory } from "@shared/schema";
 import { getDb } from "./db";
-import { eq, like, or, desc, asc } from "drizzle-orm";
+import { eq, like, or, desc, asc, sql, ilike } from "drizzle-orm";
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ProductFilters {
+  search?: string;
+  brand?: string;
+  categoryId?: string;
+  page?: number;
+  limit?: number;
+}
 
 export interface IStorage {
   // Products
   getProduct(id: string): Promise<ProductWithCategory | undefined>;
   getProductByCode(code: string): Promise<ProductWithCategory | undefined>;
   getAllProducts(): Promise<ProductWithCategory[]>;
+  getProductsPaginated(filters: ProductFilters): Promise<PaginatedResult<ProductWithCategory>>;
   searchProducts(query: string): Promise<ProductWithCategory[]>;
   getProductsByCategory(categoryId: string): Promise<ProductWithCategory[]>;
-  getFeaturedProducts(): Promise<ProductWithCategory[]>;
+  getFeaturedProducts(limit?: number): Promise<ProductWithCategory[]>;
   getDiscountedProducts(): Promise<ProductWithCategory[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product>;
@@ -91,6 +108,89 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
+  async getProductsPaginated(filters: ProductFilters): Promise<PaginatedResult<ProductWithCategory>> {
+    const page = filters.page || 1;
+    const limit = Math.min(filters.limit || 24, 100); // Max 100 per page
+    const offset = (page - 1) * limit;
+
+    // Build where conditions
+    const conditions: any[] = [];
+    
+    if (filters.search) {
+      conditions.push(
+        or(
+          ilike(products.name, `%${filters.search}%`),
+          ilike(products.delkomCode, `%${filters.search}%`)
+        )
+      );
+    }
+    
+    if (filters.brand) {
+      conditions.push(ilike(products.brandCompatibility, `%${filters.brand}%`));
+    }
+    
+    if (filters.categoryId) {
+      conditions.push(eq(products.categoryId, filters.categoryId));
+    }
+
+    // Get total count
+    const countQuery = this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(products);
+    
+    if (conditions.length > 0) {
+      const whereClause = conditions.length === 1 ? conditions[0] : sql`${conditions[0]} AND ${conditions.slice(1).reduce((acc, c) => sql`${acc} AND ${c}`, sql`TRUE`)}`;
+      // For count, we need to apply conditions differently
+    }
+    
+    // Simple approach: apply conditions one by one
+    let baseQuery = this.db
+      .select()
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id));
+    
+    // Apply filters using raw SQL for flexibility
+    let whereSQL = sql`TRUE`;
+    if (filters.search) {
+      whereSQL = sql`${whereSQL} AND (${products.name} ILIKE ${`%${filters.search}%`} OR ${products.delkomCode} ILIKE ${`%${filters.search}%`})`;
+    }
+    if (filters.brand) {
+      whereSQL = sql`${whereSQL} AND ${products.brandCompatibility} ILIKE ${`%${filters.brand}%`}`;
+    }
+    if (filters.categoryId) {
+      whereSQL = sql`${whereSQL} AND ${products.categoryId} = ${filters.categoryId}`;
+    }
+
+    // Get total count with filters
+    const [countResult] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(products)
+      .where(whereSQL);
+    
+    const total = countResult?.count || 0;
+
+    // Get paginated results
+    const results = await this.db
+      .select()
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(whereSQL)
+      .orderBy(desc(products.isFeatured), desc(products.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      data: results.map(result => ({
+        ...result.products,
+        category: result.categories,
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
   async searchProducts(query: string): Promise<ProductWithCategory[]> {
     const results = await this.db
       .select()
@@ -124,14 +224,14 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getFeaturedProducts(): Promise<ProductWithCategory[]> {
+  async getFeaturedProducts(limit: number = 12): Promise<ProductWithCategory[]> {
     const results = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .where(eq(products.isFeatured, true))
       .orderBy(desc(products.createdAt))
-      .limit(8);
+      .limit(limit);
     
     return results.map(result => ({
       ...result.products,

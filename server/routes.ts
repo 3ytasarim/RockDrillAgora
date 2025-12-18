@@ -234,6 +234,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Paginated products endpoint for better performance
+  app.get("/api/products/paginated", async (req, res) => {
+    try {
+      const { search, brand, category, page, limit } = req.query;
+      
+      const result = await storage.getProductsPaginated({
+        search: search as string,
+        brand: brand as string,
+        categoryId: category as string,
+        page: page ? parseInt(page as string) : 1,
+        limit: limit ? parseInt(limit as string) : 24,
+      });
+      
+      // Add cache headers for better performance
+      res.set('Cache-Control', 'public, max-age=60');
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching paginated products:', error);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
   app.get("/api/products/:id", async (req, res) => {
     try {
       const product = await storage.getProduct(req.params.id);
@@ -495,6 +517,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
     const objectStorageService = new ObjectStorageService();
+    
+    // Get optional width parameter for resizing (thumbnail optimization)
+    const width = req.query.w ? parseInt(req.query.w as string) : null;
+    const maxWidth = width ? Math.min(width, 1200) : null; // Max 1200px
+    
     try {
       const file = await objectStorageService.searchPublicObject(filePath);
       if (!file) {
@@ -505,26 +532,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const acceptsWebP = req.headers.accept?.includes('image/webp');
       const isImage = /\.(jpg|jpeg|png|gif)$/i.test(filePath);
       
-      if (acceptsWebP && isImage) {
-        // Convert to WebP for better performance
+      if (isImage && (acceptsWebP || maxWidth)) {
+        // Convert to WebP and/or resize for better performance
         try {
           const sharp = (await import('sharp')).default;
           const chunks: Buffer[] = [];
-          const stream = await objectStorageService.getObjectStream(file);
+          const stream = objectStorageService.getObjectStream(file);
           
           stream.on('data', (chunk: Buffer) => chunks.push(chunk));
           stream.on('end', async () => {
             try {
               const buffer = Buffer.concat(chunks);
-              const webpBuffer = await sharp(buffer)
-                .webp({ quality: 80 })
-                .toBuffer();
+              let pipeline = sharp(buffer);
               
-              res.set('Content-Type', 'image/webp');
+              // Resize if width specified
+              if (maxWidth) {
+                pipeline = pipeline.resize(maxWidth, null, { 
+                  withoutEnlargement: true,
+                  fit: 'inside'
+                });
+              }
+              
+              // Convert to WebP if supported
+              if (acceptsWebP) {
+                pipeline = pipeline.webp({ quality: 80 });
+                res.set('Content-Type', 'image/webp');
+              } else {
+                pipeline = pipeline.jpeg({ quality: 85 });
+                res.set('Content-Type', 'image/jpeg');
+              }
+              
+              const optimizedBuffer = await pipeline.toBuffer();
               res.set('Cache-Control', 'public, max-age=31536000, immutable');
-              res.send(webpBuffer);
+              res.send(optimizedBuffer);
             } catch (conversionError) {
-              console.error('WebP conversion failed, serving original:', conversionError);
+              console.error('Image optimization failed, serving original:', conversionError);
               objectStorageService.downloadObject(file, res);
             }
           });
