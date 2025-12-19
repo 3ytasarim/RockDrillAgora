@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
+import { sendQuoteRequestEmail } from "./email";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import fs from "fs";
@@ -775,6 +776,36 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
     } catch (error) {
       console.error('Error generating sitemap:', error);
       res.status(500).json({ error: "Failed to generate sitemap" });
+    }
+  });
+
+  // Quote request email endpoint
+  const quoteRequestSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    company: z.string().optional(),
+    email: z.string().email("Valid email is required"),
+    phone: z.string().optional(),
+    message: z.string().min(1, "Message is required"),
+    productName: z.string().optional(),
+    productCode: z.string().optional(),
+  });
+
+  app.post("/api/quote-request", async (req, res) => {
+    try {
+      const validatedData = quoteRequestSchema.parse(req.body);
+      
+      await sendQuoteRequestEmail(validatedData);
+      
+      res.json({ success: true, message: "Quote request sent successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: "Validation error", 
+          details: error.errors 
+        });
+      }
+      console.error('Error sending quote request email:', error);
+      res.status(500).json({ error: "Failed to send quote request" });
     }
   });
 

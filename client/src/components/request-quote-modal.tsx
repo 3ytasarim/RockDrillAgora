@@ -70,19 +70,43 @@ export default function RequestQuoteModal({ open, onOpenChange }: RequestQuoteMo
   const onSubmit = async (data: RequestFormData) => {
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    console.log("Request submitted:", data);
-    
-    toast({
-      title: "Request Sent Successfully! 🎉",
-      description: "We'll contact you within 24 hours.",
-    });
-    
-    form.reset();
-    onOpenChange(false);
-    setIsSubmitting(false);
+    try {
+      const response = await fetch("/api/quote-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.name,
+          company: data.company,
+          email: data.email,
+          phone: data.phone,
+          message: `Subject: ${data.subject}\nCity: ${data.city || 'Not specified'}\n\n${data.message}`,
+          productName: data.product,
+          productCode: data.product,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send request");
+      }
+      
+      toast({
+        title: "Request Sent Successfully!",
+        description: "We'll contact you within 24 hours.",
+      });
+      
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send your request. Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
