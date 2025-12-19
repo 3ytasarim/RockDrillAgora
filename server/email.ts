@@ -38,8 +38,8 @@ export async function sendQuoteRequestEmail(data: QuoteRequestData): Promise<voi
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 30px 40px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">AGORA ROCK DRILL</h1>
-              <p style="color: #f59e0b; margin: 10px 0 0 0; font-size: 16px; font-weight: 600;">New Quote Request</p>
+              <img src="https://agorarockdrill.shop/assets/AgoraRockDrillLogo_1766156134401.png" alt="Agora Rock Drill" style="max-width: 280px; height: auto; margin-bottom: 15px;" />
+              <p style="color: #f59e0b; margin: 10px 0 0 0; font-size: 18px; font-weight: 600;">New Quote Request</p>
             </td>
           </tr>
           
