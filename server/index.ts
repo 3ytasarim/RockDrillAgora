@@ -101,13 +101,11 @@ app.use((req, res, next) => {
     // It is the only port that is not firewalled.
     const port = parseInt(process.env.PORT || '5000', 10);
     
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
+    log(`Starting server on port ${port}...`);
+    
+    server.listen(port, "0.0.0.0", () => {
       log(`✓ Server successfully started on port ${port}`);
-      log(`Environment: ${app.get("env") || process.env.NODE_ENV || 'development'}`);
+      log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 
     server.on('error', (error: NodeJS.ErrnoException) => {
