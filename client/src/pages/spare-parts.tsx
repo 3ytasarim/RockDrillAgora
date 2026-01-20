@@ -1,7 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Filter, Search, ChevronLeft, ChevronRight } from "lucide-react";
+
+// Custom hook to track URL search params changes
+function useSearchParams() {
+  const [searchParams, setSearchParams] = useState(() => new URLSearchParams(window.location.search));
+  
+  useEffect(() => {
+    const handleUrlChange = () => {
+      setSearchParams(new URLSearchParams(window.location.search));
+    };
+    
+    // Listen for popstate (browser back/forward)
+    window.addEventListener("popstate", handleUrlChange);
+    
+    // Create observer for pushState/replaceState
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    
+    history.pushState = function(...args) {
+      originalPushState.apply(history, args);
+      handleUrlChange();
+    };
+    
+    history.replaceState = function(...args) {
+      originalReplaceState.apply(history, args);
+      handleUrlChange();
+    };
+    
+    return () => {
+      window.removeEventListener("popstate", handleUrlChange);
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+    };
+  }, []);
+  
+  return searchParams;
+}
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -48,15 +84,20 @@ export default function SpareParts() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Get search/brand params from URL
+  // Use custom hook to track URL params
+  const urlParams = useSearchParams();
+
+  // Get search/brand params from URL - now properly reacts to URL changes
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const search = params.get("search") || params.get("code");
-    const brand = params.get("brand");
+    const search = urlParams.get("search") || urlParams.get("code");
+    const brand = urlParams.get("brand");
     
     if (search) {
       setSearchQuery(search);
       setDebouncedSearch(search);
+    } else {
+      setSearchQuery("");
+      setDebouncedSearch("");
     }
     if (brand) {
       setBrandFilter(brand);
@@ -64,7 +105,7 @@ export default function SpareParts() {
       setBrandFilter("");
     }
     setCurrentPage(1);
-  }, [location]);
+  }, [urlParams]);
 
   // Fetch paginated products
   const { data: paginatedResult, isLoading } = useQuery<PaginatedResult>({
