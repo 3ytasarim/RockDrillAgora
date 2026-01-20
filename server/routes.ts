@@ -691,11 +691,12 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
     res.send(robotsTxt);
   });
 
-  // Sitemap.xml
+  // Sitemap.xml - Enhanced with image sitemap and brand pages
   app.get("/sitemap.xml", async (req, res) => {
     try {
       const products = await storage.getAllProducts();
       const baseUrl = "https://agorarockdrill.shop";
+      const today = new Date().toISOString().split('T')[0];
       
       // Helper function to create URL-friendly slug
       const createSlug = (text: string): string => {
@@ -707,14 +708,19 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
           .trim();
       };
 
-      // Helper function to encode URL path properly
-      const encodeUrlPath = (path: string): string => {
-        return path.split('/').map(segment => encodeURIComponent(segment)).join('/');
+      // Helper to escape XML special characters
+      const escapeXml = (text: string): string => {
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&apos;');
       };
 
-      // Start XML
+      // Start XML with image namespace
       let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
 
       // Add static pages
       const staticPages = [
@@ -726,29 +732,45 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
       staticPages.forEach(page => {
         xml += '  <url>\n';
         xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
+        xml += `    <lastmod>${today}</lastmod>\n`;
         xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
         xml += `    <priority>${page.priority}</priority>\n`;
         xml += '  </url>\n';
       });
 
-      // Add product pages with properly encoded URLs
+      // Add brand filter pages
+      const brandPages = [
+        { brand: 'Atlas Copco - Epiroc', slug: 'Atlas%20Copco%20-%20Epiroc' },
+        { brand: 'Sandvik', slug: 'Sandvik' },
+        { brand: 'Furukawa', slug: 'Furukawa' },
+      ];
+
+      brandPages.forEach(brandPage => {
+        xml += '  <url>\n';
+        xml += `    <loc>${baseUrl}/spare-parts?brand=${brandPage.slug}</loc>\n`;
+        xml += `    <lastmod>${today}</lastmod>\n`;
+        xml += `    <changefreq>daily</changefreq>\n`;
+        xml += `    <priority>0.85</priority>\n`;
+        xml += '  </url>\n';
+      });
+
+      // Add product pages with images
       products.forEach(product => {
-        if (!product.delkomCode) return; // Skip products without delkomCode
+        if (!product.delkomCode) return;
         
-        // Extract brand from brandCompatibility (e.g., "Atlas Copco - Epiroc" -> "atlas-copco-epiroc")
+        // Extract brand slug
         let brandSlug = 'spare-parts';
         if (product.brandCompatibility) {
-          // Take first brand if multiple brands exist
           const firstBrand = product.brandCompatibility.split(',')[0].trim();
           brandSlug = createSlug(firstBrand);
         }
         
-        // Create URL with encoded product code (handles spaces and special chars)
+        // Create URL with encoded product code
         const encodedCode = encodeURIComponent(product.delkomCode);
         const productUrl = `/brand/${brandSlug}/${encodedCode}`;
         
-        // Safely handle date conversion
-        let lastModDate = new Date().toISOString().split('T')[0];
+        // Get lastmod date
+        let lastModDate = today;
         if (product.updatedAt) {
           try {
             const dateObj = product.updatedAt instanceof Date 
@@ -756,7 +778,7 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
               : new Date(product.updatedAt);
             lastModDate = dateObj.toISOString().split('T')[0];
           } catch (e) {
-            // Use current date as fallback
+            // Use today as fallback
           }
         }
         
@@ -765,6 +787,21 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
         xml += `    <lastmod>${lastModDate}</lastmod>\n`;
         xml += `    <changefreq>weekly</changefreq>\n`;
         xml += `    <priority>0.7</priority>\n`;
+        
+        // Add product images to sitemap
+        if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
+          product.imageUrls.forEach((imageUrl: string) => {
+            if (imageUrl) {
+              const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${baseUrl}${imageUrl}`;
+              xml += '    <image:image>\n';
+              xml += `      <image:loc>${escapeXml(fullImageUrl)}</image:loc>\n`;
+              xml += `      <image:title>${escapeXml(product.name || 'Product Image')}</image:title>\n`;
+              xml += `      <image:caption>${escapeXml(product.name + ' - ' + (product.delkomCode || ''))}</image:caption>\n`;
+              xml += '    </image:image>\n';
+            }
+          });
+        }
+        
         xml += '  </url>\n';
       });
 
