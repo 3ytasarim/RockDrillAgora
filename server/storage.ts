@@ -169,13 +169,21 @@ export class DatabaseStorage implements IStorage {
     
     const total = countResult?.count || 0;
 
+    // Brand priority ordering: Atlas Copco/Epiroc first, Sandvik second, Furukawa last
+    const brandPriority = sql`CASE 
+      WHEN ${products.brandCompatibility} ILIKE '%Atlas Copco%' OR ${products.brandCompatibility} ILIKE '%Epiroc%' THEN 1
+      WHEN ${products.brandCompatibility} ILIKE '%Sandvik%' THEN 2
+      WHEN ${products.brandCompatibility} ILIKE '%Furukawa%' THEN 3
+      ELSE 4
+    END`;
+
     // Get paginated results
     const results = await this.db
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .where(whereSQL)
-      .orderBy(desc(products.isFeatured), desc(products.createdAt))
+      .orderBy(asc(brandPriority), desc(products.isFeatured), desc(products.createdAt))
       .limit(limit)
       .offset(offset);
 
