@@ -85,6 +85,9 @@ function generateProductHtml(
       "@type": "Offer",
       "url": canonicalUrl,
       "availability": availabilityUrl,
+      "price": "0",
+      "priceCurrency": "USD",
+      "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       "seller": {
         "@type": "Organization",
         "name": "Agora Rock Drill"
