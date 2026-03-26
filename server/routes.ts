@@ -22,6 +22,31 @@ function createSlug(text: string): string {
     .trim();
 }
 
+// Generate formatted code variants for SEO (spaced and dashed)
+function getCodeVariants(code: string, brand: string): { spaced: string; dashed: string } | null {
+  if (!code) return null;
+  const raw = code.replace(/[-\s]/g, '');
+  if (!/^\d+$/.test(raw)) return null;
+
+  const brandLower = brand.toLowerCase();
+  const isEpiroc = brandLower.includes('epiroc') || brandLower.includes('atlas copco') || brandLower.includes('atlas-copco');
+  const isSandvik = brandLower.includes('sandvik');
+
+  if (isEpiroc && raw.length === 10) {
+    return { spaced: `${raw.slice(0,4)} ${raw.slice(4,8)} ${raw.slice(8,10)}`, dashed: `${raw.slice(0,4)}-${raw.slice(4,8)}-${raw.slice(8,10)}` };
+  }
+  if (isSandvik && raw.length === 8) {
+    return { spaced: `${raw.slice(0,3)} ${raw.slice(3,6)} ${raw.slice(6,8)}`, dashed: `${raw.slice(0,3)}-${raw.slice(3,6)}-${raw.slice(6,8)}` };
+  }
+  if (raw.length === 10) {
+    return { spaced: `${raw.slice(0,4)} ${raw.slice(4,8)} ${raw.slice(8,10)}`, dashed: `${raw.slice(0,4)}-${raw.slice(4,8)}-${raw.slice(8,10)}` };
+  }
+  if (raw.length === 8) {
+    return { spaced: `${raw.slice(0,3)} ${raw.slice(3,6)} ${raw.slice(6,8)}`, dashed: `${raw.slice(0,3)}-${raw.slice(3,6)}-${raw.slice(6,8)}` };
+  }
+  return null;
+}
+
 // Helper function to generate dynamic HTML with SEO meta tags
 function generateProductHtml(
   templateHtml: string,
@@ -111,7 +136,13 @@ function generateProductHtml(
           <h1 style="font-size: 32px; font-weight: 700; margin: 0 0 16px 0; color: #1a1a1a;">${product.name}</h1>
           <p style="font-size: 18px; color: #4a5568; margin-bottom: 24px;">${description}</p>
           <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
-            <p style="margin: 0 0 12px 0;"><strong style="color: #2d3748;">Product Code:</strong> <span style="color: #1a1a1a; font-family: monospace; font-size: 16px;">${product.delkomCode || 'N/A'}</span></p>
+            <p style="margin: 0 0 8px 0;"><strong style="color: #2d3748;">Product Code:</strong> <span style="color: #1a1a1a; font-family: monospace; font-size: 16px;">${product.delkomCode || 'N/A'}</span></p>
+            ${(() => {
+              const variants = getCodeVariants(product.delkomCode || '', product.brandCompatibility || '');
+              if (!variants) return '';
+              return `<p style="margin: 0 0 4px 0; font-family: monospace; font-size: 15px; color: #4a5568;">${variants.spaced}</p>
+            <p style="margin: 0 0 12px 0; font-family: monospace; font-size: 15px; color: #4a5568;">${variants.dashed}</p>`;
+            })()}
             <p style="margin: 0;"><strong style="color: #2d3748;">Brand Compatibility:</strong> <span style="color: #1a1a1a;">${product.brandCompatibility || 'Universal'}</span></p>
           </div>
           <div style="display: flex; gap: 12px; margin-bottom: 24px;">

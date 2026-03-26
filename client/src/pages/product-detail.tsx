@@ -19,6 +19,54 @@ function createSlug(text: string): string {
     .trim();
 }
 
+// Returns alternative code formats for SEO and searchability
+function getCodeVariants(code: string, brand: string): { spaced: string; dashed: string } | null {
+  if (!code) return null;
+
+  // Strip existing dashes and spaces to get raw digits
+  const raw = code.replace(/[-\s]/g, '');
+
+  // Only format purely numeric codes
+  if (!/^\d+$/.test(raw)) return null;
+
+  const brandLower = brand.toLowerCase();
+  const isEpiroc = brandLower.includes('epiroc') || brandLower.includes('atlas copco') || brandLower.includes('atlas-copco');
+  const isSandvik = brandLower.includes('sandvik');
+
+  if (isEpiroc && raw.length === 10) {
+    // Epiroc / Atlas Copco: 4-4-2 format
+    const a = raw.slice(0, 4);
+    const b = raw.slice(4, 8);
+    const c = raw.slice(8, 10);
+    return { spaced: `${a} ${b} ${c}`, dashed: `${a}-${b}-${c}` };
+  }
+
+  if (isSandvik && raw.length === 8) {
+    // Sandvik: 3-3-2 format
+    const a = raw.slice(0, 3);
+    const b = raw.slice(3, 6);
+    const c = raw.slice(6, 8);
+    return { spaced: `${a} ${b} ${c}`, dashed: `${a}-${b}-${c}` };
+  }
+
+  // Fallback: try to detect by length for any brand
+  if (raw.length === 10) {
+    const a = raw.slice(0, 4);
+    const b = raw.slice(4, 8);
+    const c = raw.slice(8, 10);
+    return { spaced: `${a} ${b} ${c}`, dashed: `${a}-${b}-${c}` };
+  }
+
+  if (raw.length === 8) {
+    const a = raw.slice(0, 3);
+    const b = raw.slice(3, 6);
+    const c = raw.slice(6, 8);
+    return { spaced: `${a} ${b} ${c}`, dashed: `${a}-${b}-${c}` };
+  }
+
+  return null;
+}
+
 function ProductSchema({ product }: { product: ProductWithCategory }) {
   const baseUrl = "https://agorarockdrill.shop";
   const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/api/placeholder/600/600`;
@@ -363,12 +411,31 @@ export default function ProductDetail() {
               className="bg-white rounded-2xl p-6 shadow-lg space-y-4"
             >
               <div className="flex items-start gap-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
+                <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
                   <Package className="text-primary" size={20} />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Production Code</p>
-                  <p className="font-bold text-lg">{product.delkomCode}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground mb-2">Product Code</p>
+                  {(() => {
+                    const variants = getCodeVariants(product.delkomCode || '', product.brandCompatibility || '');
+                    return (
+                      <div className="space-y-1">
+                        <p className="font-bold text-lg font-mono tracking-wider text-foreground" data-testid="product-code-raw">
+                          {product.delkomCode}
+                        </p>
+                        {variants && (
+                          <>
+                            <p className="font-semibold text-base font-mono text-muted-foreground tracking-widest" data-testid="product-code-spaced">
+                              {variants.spaced}
+                            </p>
+                            <p className="font-semibold text-base font-mono text-muted-foreground tracking-wider" data-testid="product-code-dashed">
+                              {variants.dashed}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
