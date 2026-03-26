@@ -1,0 +1,79 @@
+You are a senior technical SEO engineer and full-stack developer.
+
+Analyze and fix my entire website to ensure all pages (especially 1700+ product pages) are properly indexed by Google.
+
+Website: https://agorarockdrill.shop
+
+CRITICAL GOAL:
+Fix all technical SEO, on-page SEO, and indexing issues so Google can crawl, understand, and index all product pages.
+
+STEP BY STEP IMPLEMENTATION:
+
+1) INDEXING & CRAWLING FIXES
+- Check robots.txt → allow all important pages
+- Ensure no "noindex" tags exist on product pages
+- Ensure canonical tags are correct (self-referencing)
+- Fix duplicate URLs or parameter issues
+- Ensure all pages return 200 status (no soft 404)
+- Add proper pagination handling if needed
+
+2) SITEMAP OPTIMIZATION
+- Split sitemap into multiple files (max 500 URLs each)
+- Create sitemap index file
+- Include only canonical, indexable URLs
+- Add <lastmod> tags dynamically
+- Ensure all URLs are clean and SEO-friendly
+
+3) PRODUCT PAGE SEO (VERY IMPORTANT)
+For each product page automatically:
+- Generate unique SEO title (include product code + keyword)
+- Generate unique meta description (NOT duplicated)
+- Add structured H1, H2 hierarchy
+- Add minimum 300+ words unique description (AI-generated if needed)
+- Add FAQ schema content per product
+- Avoid duplicate/thin content across products
+
+4) STRUCTURED DATA (CRITICAL)
+Add JSON-LD schema:
+- Product schema
+- Breadcrumb schema
+- Organization schema
+- Website schema
+
+5) INTERNAL LINKING
+- Add related products section
+- Add category → product linking
+- Ensure every product is reachable within 3 clicks
+
+6) PAGE SPEED & TECHNICAL
+- Optimize images (lazy load, WebP)
+- Minify CSS/JS
+- Ensure mobile-first responsive design
+- Improve Core Web Vitals
+
+7) GOOGLE SEARCH CONSOLE READY
+- Ensure sitemap is accessible: /sitemap.xml
+- Add proper HTML title & meta tags globally
+- Fix crawl errors
+- Add Open Graph + Twitter tags
+
+8) CONTENT STRATEGY
+- Create category pages with SEO content (500+ words)
+- Avoid empty/thin category pages
+
+9) TRUST SIGNALS (IMPORTANT FOR INDEXING)
+- Add About Us page
+- Add Contact page with real info
+- Add Privacy Policy & Terms pages
+
+10) OUTPUT
+- Show all fixes applied
+- Show updated sitemap structure
+- Show example optimized product page
+- Show technical SEO checklist completed
+
+IMPORTANT RULES:
+- Do NOT skip any step
+- Do NOT leave duplicate content
+- Ensure everything is production-ready
+- Focus on getting pages indexed fast
