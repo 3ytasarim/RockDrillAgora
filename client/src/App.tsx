@@ -11,6 +11,9 @@ import Home from "@/pages/home";
 import SpareParts from "@/pages/spare-parts";
 import ProductDetail from "@/pages/product-detail";
 import Contact from "@/pages/contact";
+import About from "@/pages/about";
+import Privacy from "@/pages/privacy";
+import Terms from "@/pages/terms";
 import AdminLogin from "@/pages/admin-login";
 import Admin from "@/pages/admin";
 
@@ -26,6 +29,9 @@ function Router() {
               <Route path="/" component={Home} />
               <Route path="/spare-parts" component={SpareParts} />
               <Route path="/contact" component={Contact} />
+              <Route path="/about" component={About} />
+              <Route path="/privacy" component={Privacy} />
+              <Route path="/terms" component={Terms} />
               <Route path="/admin" component={Admin} />
               <Route path="/product/:id" component={ProductDetail} />
               <Route path="/brand/:brand/:code" component={ProductDetail} />

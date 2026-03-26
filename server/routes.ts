@@ -680,11 +680,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/robots.txt", (req, res) => {
     const robotsTxt = `User-agent: *
 Allow: /
-Allow: /api/products
-Allow: /api/products/
-Allow: /api/categories
-Allow: /api/categories/
 Disallow: /admin
+Disallow: /agoraadminpanel
 Disallow: /api/upload
 Disallow: /api/presigned-url
 
@@ -694,127 +691,161 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
     res.send(robotsTxt);
   });
 
-  // Sitemap.xml - Enhanced with image sitemap and brand pages
+  // Shared sitemap helper functions
+  const sitemapCreateSlug = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]+/g, '')
+      .replace(/--+/g, '-')
+      .trim();
+  };
+
+  const sitemapEscapeXml = (text: string): string => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  };
+
+  // Sitemap index - points to sub-sitemaps
   app.get("/sitemap.xml", async (req, res) => {
     try {
       const products = await storage.getAllProducts();
       const baseUrl = "https://agorarockdrill.shop";
       const today = new Date().toISOString().split('T')[0];
-      
-      // Helper function to create URL-friendly slug
-      const createSlug = (text: string): string => {
-        return text
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^\w-]+/g, '')
-          .replace(/--+/g, '-')
-          .trim();
-      };
+      const CHUNK_SIZE = 500;
+      const productChunks = Math.ceil(products.filter(p => p.delkomCode).length / CHUNK_SIZE);
 
-      // Helper to escape XML special characters
-      const escapeXml = (text: string): string => {
-        return text
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&apos;');
-      };
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+      xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
-      // Start XML with image namespace
+      // Static pages sitemap
+      xml += '  <sitemap>\n';
+      xml += `    <loc>${baseUrl}/sitemap-static.xml</loc>\n`;
+      xml += `    <lastmod>${today}</lastmod>\n`;
+      xml += '  </sitemap>\n';
+
+      // Product sitemaps (500 per file)
+      for (let i = 0; i < productChunks; i++) {
+        xml += '  <sitemap>\n';
+        xml += `    <loc>${baseUrl}/sitemap-products-${i + 1}.xml</loc>\n`;
+        xml += `    <lastmod>${today}</lastmod>\n`;
+        xml += '  </sitemap>\n';
+      }
+
+      xml += '</sitemapindex>';
+      res.header('Content-Type', 'application/xml');
+      res.send(xml);
+    } catch (error) {
+      console.error('Error generating sitemap index:', error);
+      res.status(500).json({ error: "Failed to generate sitemap" });
+    }
+  });
+
+  // Static pages sitemap
+  app.get("/sitemap-static.xml", (req, res) => {
+    const baseUrl = "https://agorarockdrill.shop";
+    const today = new Date().toISOString().split('T')[0];
+
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+    const staticPages = [
+      { url: '/', priority: '1.0', changefreq: 'daily' },
+      { url: '/spare-parts', priority: '0.9', changefreq: 'daily' },
+      { url: '/about', priority: '0.8', changefreq: 'monthly' },
+      { url: '/contact', priority: '0.8', changefreq: 'monthly' },
+      { url: '/privacy', priority: '0.5', changefreq: 'yearly' },
+      { url: '/terms', priority: '0.5', changefreq: 'yearly' },
+      { url: '/spare-parts?brand=Atlas%20Copco%20-%20Epiroc', priority: '0.85', changefreq: 'daily' },
+      { url: '/spare-parts?brand=Sandvik', priority: '0.85', changefreq: 'daily' },
+      { url: '/spare-parts?brand=Furukawa', priority: '0.85', changefreq: 'daily' },
+    ];
+
+    staticPages.forEach(page => {
+      xml += '  <url>\n';
+      xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
+      xml += `    <lastmod>${today}</lastmod>\n`;
+      xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
+      xml += `    <priority>${page.priority}</priority>\n`;
+      xml += '  </url>\n';
+    });
+
+    xml += '</urlset>';
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+  });
+
+  // Product sitemaps - paginated at 500 per file
+  app.get("/sitemap-products-:page.xml", async (req, res) => {
+    try {
+      const page = parseInt(req.params.page) || 1;
+      const CHUNK_SIZE = 500;
+      const baseUrl = "https://agorarockdrill.shop";
+      const today = new Date().toISOString().split('T')[0];
+
+      const allProducts = await storage.getAllProducts();
+      const validProducts = allProducts.filter(p => p.delkomCode);
+      const start = (page - 1) * CHUNK_SIZE;
+      const chunk = validProducts.slice(start, start + CHUNK_SIZE);
+
+      if (chunk.length === 0) {
+        return res.status(404).send('Sitemap page not found');
+      }
+
       let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
       xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
 
-      // Add static pages
-      const staticPages = [
-        { url: '/', priority: '1.0', changefreq: 'daily' },
-        { url: '/spare-parts', priority: '0.9', changefreq: 'daily' },
-        { url: '/contact', priority: '0.8', changefreq: 'monthly' },
-      ];
-
-      staticPages.forEach(page => {
-        xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
-        xml += `    <lastmod>${today}</lastmod>\n`;
-        xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
-        xml += `    <priority>${page.priority}</priority>\n`;
-        xml += '  </url>\n';
-      });
-
-      // Add brand filter pages
-      const brandPages = [
-        { brand: 'Atlas Copco - Epiroc', slug: 'Atlas%20Copco%20-%20Epiroc' },
-        { brand: 'Sandvik', slug: 'Sandvik' },
-        { brand: 'Furukawa', slug: 'Furukawa' },
-      ];
-
-      brandPages.forEach(brandPage => {
-        xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}/spare-parts?brand=${brandPage.slug}</loc>\n`;
-        xml += `    <lastmod>${today}</lastmod>\n`;
-        xml += `    <changefreq>daily</changefreq>\n`;
-        xml += `    <priority>0.85</priority>\n`;
-        xml += '  </url>\n';
-      });
-
-      // Add product pages with images
-      products.forEach(product => {
-        if (!product.delkomCode) return;
-        
-        // Extract brand slug
+      chunk.forEach(product => {
         let brandSlug = 'spare-parts';
         if (product.brandCompatibility) {
           const firstBrand = product.brandCompatibility.split(',')[0].trim();
-          brandSlug = createSlug(firstBrand);
+          brandSlug = sitemapCreateSlug(firstBrand);
         }
-        
-        // Create URL with encoded product code
-        const encodedCode = encodeURIComponent(product.delkomCode);
+
+        const encodedCode = encodeURIComponent(product.delkomCode!);
         const productUrl = `/brand/${brandSlug}/${encodedCode}`;
-        
-        // Get lastmod date
+
         let lastModDate = today;
         if (product.updatedAt) {
           try {
-            const dateObj = product.updatedAt instanceof Date 
-              ? product.updatedAt 
+            const dateObj = product.updatedAt instanceof Date
+              ? product.updatedAt
               : new Date(product.updatedAt);
             lastModDate = dateObj.toISOString().split('T')[0];
-          } catch (e) {
-            // Use today as fallback
-          }
+          } catch (e) { /* use today */ }
         }
-        
+
         xml += '  <url>\n';
         xml += `    <loc>${baseUrl}${productUrl}</loc>\n`;
         xml += `    <lastmod>${lastModDate}</lastmod>\n`;
         xml += `    <changefreq>weekly</changefreq>\n`;
         xml += `    <priority>0.7</priority>\n`;
-        
-        // Add product images to sitemap
+
         if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
           product.imageUrls.forEach((imageUrl: string) => {
             if (imageUrl) {
               const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${baseUrl}${imageUrl}`;
               xml += '    <image:image>\n';
-              xml += `      <image:loc>${escapeXml(fullImageUrl)}</image:loc>\n`;
-              xml += `      <image:title>${escapeXml(product.name || 'Product Image')}</image:title>\n`;
-              xml += `      <image:caption>${escapeXml(product.name + ' - ' + (product.delkomCode || ''))}</image:caption>\n`;
+              xml += `      <image:loc>${sitemapEscapeXml(fullImageUrl)}</image:loc>\n`;
+              xml += `      <image:title>${sitemapEscapeXml(product.name || 'Product Image')}</image:title>\n`;
+              xml += `      <image:caption>${sitemapEscapeXml(product.name + ' - ' + (product.delkomCode || ''))}</image:caption>\n`;
               xml += '    </image:image>\n';
             }
           });
         }
-        
+
         xml += '  </url>\n';
       });
 
-      // Close XML
       xml += '</urlset>';
-
       res.header('Content-Type', 'application/xml');
       res.send(xml);
     } catch (error) {
-      console.error('Error generating sitemap:', error);
+      console.error('Error generating product sitemap:', error);
       res.status(500).json({ error: "Failed to generate sitemap" });
     }
   });

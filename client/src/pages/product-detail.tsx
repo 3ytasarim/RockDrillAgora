@@ -30,7 +30,10 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
     brandSlug = createSlug(firstBrand);
   }
   
-  const schema = {
+  const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(product.delkomCode || '')}`;
+  const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
+
+  const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": product.name,
@@ -41,15 +44,17 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
       "@type": "Brand",
       "name": product.brandCompatibility || "Rock Drill Parts"
     },
-    "image": productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`,
+    "image": fullImageUrl,
     "category": product.category?.name || "Spare Parts",
     "offers": {
       "@type": "Offer",
+      "url": canonicalUrl,
       "availability": product.stockStatus === "out_of_stock" 
         ? "https://schema.org/OutOfStock" 
         : "https://schema.org/InStock",
       "priceCurrency": "USD",
       "price": product.finalPrice || "0",
+      "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       "seller": {
         "@type": "Organization",
         "name": "Agora Rock Drill"
@@ -57,7 +62,40 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
     }
   };
 
-  const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(product.delkomCode || '')}`;
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Spare Parts",
+        "item": `${baseUrl}/spare-parts`
+      },
+      ...(product.category ? [{
+        "@type": "ListItem",
+        "position": 3,
+        "name": product.category.name,
+        "item": `${baseUrl}/spare-parts?category=${product.categoryId}`
+      }, {
+        "@type": "ListItem",
+        "position": 4,
+        "name": product.name,
+        "item": canonicalUrl
+      }] : [{
+        "@type": "ListItem",
+        "position": 3,
+        "name": product.name,
+        "item": canonicalUrl
+      }])
+    ]
+  };
 
   return (
     <Helmet>
@@ -65,12 +103,16 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
       <meta name="description" content={`${product.name} (${product.delkomCode}) - ${product.brandCompatibility || 'Rock drill'} spare part. ${product.description || 'High quality replacement part for rock drilling equipment.'}`} />
       <meta property="og:title" content={`${product.name} - ${product.delkomCode}`} />
       <meta property="og:description" content={product.description || `Rock drill spare part - ${product.delkomCode}`} />
-      <meta property="og:image" content={productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`} />
+      <meta property="og:image" content={fullImageUrl} />
       <meta property="og:type" content="product" />
+      <meta property="og:url" content={canonicalUrl} />
       <meta name="robots" content="index, follow" />
       <link rel="canonical" href={canonicalUrl} />
       <script type="application/ld+json">
-        {JSON.stringify(schema)}
+        {JSON.stringify(productSchema)}
+      </script>
+      <script type="application/ld+json">
+        {JSON.stringify(breadcrumbSchema)}
       </script>
     </Helmet>
   );
@@ -109,6 +151,18 @@ export default function ProductDetail() {
     },
     enabled: !!productCode,
   });
+
+  const { data: relatedData } = useQuery<{ products: ProductWithCategory[] }>({
+    queryKey: ["/api/products/paginated", product?.categoryId],
+    queryFn: async () => {
+      const res = await fetch(`/api/products/paginated?category=${product?.categoryId}&limit=5`);
+      if (!res.ok) throw new Error("Failed to fetch related products");
+      return res.json();
+    },
+    enabled: !!product?.categoryId,
+  });
+
+  const relatedProducts = relatedData?.products?.filter((p) => p.id !== product?.id).slice(0, 4) ?? [];
 
   // Use product imageUrls array, fallback to imageUrl or placeholder
   const productImages = product ? (
@@ -438,6 +492,64 @@ export default function ProductDetail() {
           </motion.div>
         </div>
       </div>
+
+      {/* Related Products */}
+      {relatedProducts.length > 0 && (
+        <section className="bg-white border-t py-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-foreground mb-2">Related Products</h2>
+            <p className="text-muted-foreground mb-8">
+              Other parts in the same category that may interest you
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((related) => {
+                const relatedImage = related.imageUrls?.[0] || related.imageUrl || "/api/placeholder/300/300";
+                let relatedBrandSlug = 'spare-parts';
+                if (related.brandCompatibility) {
+                  const firstBrand = related.brandCompatibility.split(',')[0].trim();
+                  relatedBrandSlug = createSlug(firstBrand);
+                }
+                const relatedUrl = `/brand/${relatedBrandSlug}/${encodeURIComponent(related.delkomCode || related.id)}`;
+                return (
+                  <Link key={related.id} href={relatedUrl} data-testid={`related-product-${related.id}`}>
+                    <motion.div
+                      whileHover={{ scale: 1.02, y: -4 }}
+                      className="bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer"
+                    >
+                      <div className="aspect-square overflow-hidden bg-slate-50">
+                        <img
+                          src={relatedImage}
+                          alt={related.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 line-clamp-2">
+                          {related.name}
+                        </h3>
+                        {related.delkomCode && (
+                          <p className="text-xs text-muted-foreground font-mono mb-2">{related.delkomCode}</p>
+                        )}
+                        <span className="text-xs text-primary font-semibold">View Details →</span>
+                      </div>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+            </div>
+            {product?.categoryId && (
+              <div className="text-center mt-8">
+                <Link href={`/spare-parts?category=${product.categoryId}`}>
+                  <button className="bg-primary text-white font-semibold px-8 py-3 rounded-xl hover:bg-primary/90 transition-colors" data-testid="button-view-all-related">
+                    View All in This Category →
+                  </button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -155,6 +155,10 @@ export default function Header() {
                 </div>
               </div>
 
+              <Link href="/about" data-testid="nav-about" className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/about" ? "text-primary" : ""}`}>
+                About Us
+              </Link>
+
               <Link href="/contact" data-testid="nav-contact" className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/contact" ? "text-primary" : ""}`}>
                 <Mail size={16} />
                 Contact Us
@@ -194,6 +198,9 @@ export default function Header() {
                 <Link href="/spare-parts" data-testid="mobile-nav-spare-parts" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
                   <Cog size={16} className="inline mr-2" />
                   Spare Parts
+                </Link>
+                <Link href="/about" data-testid="mobile-nav-about" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                  About Us
                 </Link>
                 <Link href="/contact" data-testid="mobile-nav-contact" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
                   <Mail size={16} className="inline mr-2" />
