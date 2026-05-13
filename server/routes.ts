@@ -63,98 +63,168 @@ function generateProductHtml(
   }
 ): string {
   const baseUrl = "https://agorarockdrill.shop";
-  
-  // Create SEO-friendly title
-  const title = `${product.name}${product.delkomCode ? ` - ${product.delkomCode}` : ''} | Agora Rock Drill`;
-  
-  // Create description
-  const description = product.description 
-    ? product.description.slice(0, 160) 
-    : `${product.name} - High quality rock drill spare part${product.brandCompatibility ? ` compatible with ${product.brandCompatibility}` : ''}. Professional spare parts from Agora Rock Drill.`;
-  
-  // Get product image
+  const brands = product.brandCompatibility || '';
+  const code = product.delkomCode || '';
+  const primaryBrand = brands ? brands.split(',')[0].trim() : '';
+
+  // --- Unique title ---
+  const title = `${product.name}${code ? ` - ${code}` : ''}${primaryBrand ? ` | ${primaryBrand}` : ''} Spare Part | Agora Rock Drill`;
+
+  // --- Unique meta description (never duplicate) ---
+  let description: string;
+  if (product.description && product.description.trim().length > 40) {
+    description = product.description.slice(0, 155) + (product.description.length > 155 ? '...' : '');
+  } else {
+    const brandPart = primaryBrand ? `for ${primaryBrand}` : 'for rock drilling equipment';
+    const codePart = code ? ` Part number: ${code}.` : '';
+    description = `${product.name} — OEM-quality spare part ${brandPart}.${codePart} In stock at Agora Rock Drill. Request a quote for fast worldwide delivery from Ankara, Turkey.`;
+    if (description.length > 160) description = description.slice(0, 157) + '...';
+  }
+
+  // --- Image ---
   const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/og-image.jpg`;
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
-  
-  // Create canonical URL
+
+  // --- Canonical URL ---
   let brandSlug = 'spare-parts';
-  if (product.brandCompatibility) {
-    const firstBrand = product.brandCompatibility.split(',')[0].trim();
-    brandSlug = createSlug(firstBrand);
-  }
-  const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(product.delkomCode || '')}`;
-  
-  // Determine availability based on stock status
-  const availabilityUrl = product.stockStatus === 'out_of_stock' 
-    ? "https://schema.org/OutOfStock" 
-    : "https://schema.org/InStock";
-  
-  // Create JSON-LD structured data (no price - B2B "Request a Quote" model)
-  const jsonLd = {
+  if (primaryBrand) brandSlug = createSlug(primaryBrand);
+  const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(code)}`;
+
+  // --- Code variants for SEO ---
+  const codeVariants = getCodeVariants(code, brands);
+  const codeVariantsHtml = codeVariants
+    ? `<p style="margin:4px 0;font-family:monospace;color:#555;">${codeVariants.spaced}</p>
+       <p style="margin:4px 0;font-family:monospace;color:#555;">${codeVariants.dashed}</p>`
+    : '';
+
+  // --- JSON-LD: Product schema ---
+  const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": product.name,
     "description": description,
-    "sku": product.delkomCode || "",
-    "mpn": product.delkomCode || "",
+    "sku": code,
+    "mpn": code,
     "image": fullImageUrl,
-    "brand": {
-      "@type": "Brand",
-      "name": product.brandCompatibility || "Agora Rock Drill"
-    },
-    "manufacturer": {
-      "@type": "Organization",
-      "name": "Agora Rock Drill"
-    },
+    "brand": { "@type": "Brand", "name": primaryBrand || "Agora Rock Drill" },
+    "manufacturer": { "@type": "Organization", "name": "Agora Rock Drill" },
     "offers": {
       "@type": "Offer",
       "url": canonicalUrl,
-      "availability": availabilityUrl,
+      "availability": product.stockStatus === 'out_of_stock'
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
       "price": "0",
       "priceCurrency": "USD",
-      "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      "seller": {
-        "@type": "Organization",
-        "name": "Agora Rock Drill"
-      }
+      "priceValidUntil": priceValidUntil,
+      "seller": { "@type": "Organization", "name": "Agora Rock Drill" }
     }
   };
-  
-  // Create visible SSR content for Googlebot (inside #root, will be replaced by React)
+
+  // --- JSON-LD: BreadcrumbList ---
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
+      { "@type": "ListItem", "position": 2, "name": "Spare Parts", "item": `${baseUrl}/spare-parts` },
+      { "@type": "ListItem", "position": 3, "name": product.name, "item": canonicalUrl }
+    ]
+  };
+
+  // --- Rich SSR body content for Google (300+ words, unique per product) ---
+  const brandSentence = primaryBrand
+    ? `The <strong>${product.name}</strong> is a genuine-quality replacement part designed to be fully compatible with <strong>${brands}</strong> hydraulic rock drills and drill rig equipment.`
+    : `The <strong>${product.name}</strong> is a high-quality replacement spare part for hydraulic rock drills and drill rig equipment.`;
+
+  const stockLabel = product.stockStatus === 'out_of_stock' ? 'Currently out of stock' : 'In Stock';
+
   const ssrContent = `
-    <div id="ssr-product-content" style="padding: 40px 20px; max-width: 1200px; margin: 0 auto; font-family: system-ui, -apple-system, sans-serif;">
-      <nav style="margin-bottom: 20px; font-size: 14px; color: #666;">
-        <a href="${baseUrl}" style="color: #2563eb; text-decoration: none;">Home</a> &gt; 
-        <a href="${baseUrl}/spare-parts" style="color: #2563eb; text-decoration: none;">Spare Parts</a> &gt; 
+    <div id="ssr-product-content" style="padding:40px 20px;max-width:1200px;margin:0 auto;font-family:system-ui,-apple-system,sans-serif;">
+
+      <nav aria-label="Breadcrumb" style="margin-bottom:20px;font-size:14px;color:#666;">
+        <a href="${baseUrl}" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo;
+        <a href="${baseUrl}/spare-parts" style="color:#2563eb;text-decoration:none;">Spare Parts</a> &rsaquo;
+        ${primaryBrand ? `<a href="${baseUrl}/spare-parts?brand=${encodeURIComponent(primaryBrand)}" style="color:#2563eb;text-decoration:none;">${primaryBrand}</a> &rsaquo;` : ''}
         <span>${product.name}</span>
       </nav>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;">
         <div>
-          <img src="${fullImageUrl}" alt="${product.name}" style="width: 100%; max-width: 500px; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+          <img src="${fullImageUrl}" alt="${product.name} - ${code} spare part" width="500" height="500"
+               style="width:100%;max-width:500px;height:auto;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,.1);" />
         </div>
         <div>
-          <h1 style="font-size: 32px; font-weight: 700; margin: 0 0 16px 0; color: #1a1a1a;">${product.name}</h1>
-          <p style="font-size: 18px; color: #4a5568; margin-bottom: 24px;">${description}</p>
-          <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
-            <p style="margin: 0 0 8px 0;"><strong style="color: #2d3748;">Product Code:</strong> <span style="color: #1a1a1a; font-family: monospace; font-size: 16px;">${product.delkomCode || 'N/A'}</span></p>
-            ${(() => {
-              const variants = getCodeVariants(product.delkomCode || '', product.brandCompatibility || '');
-              if (!variants) return '';
-              return `<p style="margin: 0 0 4px 0; font-family: monospace; font-size: 15px; color: #4a5568;">${variants.spaced}</p>
-            <p style="margin: 0 0 12px 0; font-family: monospace; font-size: 15px; color: #4a5568;">${variants.dashed}</p>`;
-            })()}
-            <p style="margin: 0;"><strong style="color: #2d3748;">Brand Compatibility:</strong> <span style="color: #1a1a1a;">${product.brandCompatibility || 'Universal'}</span></p>
+          <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${product.name}</h1>
+          <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${description}</p>
+
+          <div style="background:#f7fafc;padding:20px;border-radius:8px;margin-bottom:20px;">
+            <h2 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#2d3748;">Product Code / Part Number</h2>
+            <p style="margin:0 0 4px;font-family:monospace;font-size:17px;font-weight:700;color:#1a1a1a;">${code || 'N/A'}</p>
+            ${codeVariantsHtml}
+            ${primaryBrand ? `<p style="margin:12px 0 0;"><strong style="color:#2d3748;">Brand:</strong> <span style="color:#1a1a1a;">${brands}</span></p>` : ''}
+            <p style="margin:8px 0 0;"><strong style="color:#2d3748;">Availability:</strong>
+              <span style="color:${product.stockStatus === 'out_of_stock' ? '#c53030' : '#276749'};">${stockLabel}</span></p>
           </div>
-          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-            <span style="background: #e6fffa; color: #047857; padding: 8px 16px; border-radius: 6px; font-size: 14px;">✓ In Stock</span>
-            <span style="background: #eff6ff; color: #1d4ed8; padding: 8px 16px; border-radius: 6px; font-size: 14px;">Worldwide Shipping</span>
+
+          <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+            <span style="background:#e6fffa;color:#047857;padding:8px 16px;border-radius:6px;font-size:14px;">&#10003; Quality Guaranteed</span>
+            <span style="background:#eff6ff;color:#1d4ed8;padding:8px 16px;border-radius:6px;font-size:14px;">&#9992; Worldwide Shipping</span>
+            <span style="background:#fefce8;color:#854d0e;padding:8px 16px;border-radius:6px;font-size:14px;">&#8635; Fast Delivery</span>
           </div>
-          <a href="${baseUrl}/contact" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">Request a Quote</a>
+
+          <a href="${baseUrl}/contact" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;padding:16px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
+            Request a Quote
+          </a>
         </div>
       </div>
-      <div style="margin-top: 48px; padding-top: 32px; border-top: 1px solid #e2e8f0;">
-        <h2 style="font-size: 24px; margin-bottom: 16px; color: #1a1a1a;">About This Product</h2>
-        <p style="color: #4a5568; line-height: 1.7;">${product.name} is a high-quality rock drill spare part available from Agora Rock Drill. ${product.brandCompatibility ? `Compatible with ${product.brandCompatibility} equipment.` : ''} We offer professional spare parts for hydraulic rock drills and drill rigs with worldwide shipping and quality guarantee.</p>
+
+      <div style="margin-top:48px;padding-top:32px;border-top:1px solid #e2e8f0;">
+        <h2 style="font-size:24px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Product Description</h2>
+        <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
+          ${brandSentence}
+          ${product.description ? product.description : `This part is sourced and quality-checked by Agora Rock Drill A.Ş., a specialist spare parts distributor with over 20 years of industry experience, operating from a 700+ m² warehouse in Ankara, Turkey.`}
+        </p>
+        <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
+          Searching by part number? This component is catalogued under part number <strong>${code}</strong>${codeVariants ? `, also referenced as <strong>${codeVariants.spaced}</strong> or <strong>${codeVariants.dashed}</strong>` : ''}.
+          ${primaryBrand ? `It is specifically designed for use with <strong>${brands}</strong> equipment, ensuring reliable performance and correct fit.` : 'It is compatible with a range of rock drilling equipment from leading manufacturers.'}
+        </p>
+        <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
+          Agora Rock Drill supplies original-quality spare parts for hydraulic rock drills, drill rigs, and related construction and mining equipment. Our catalog covers components from Atlas Copco, Epiroc, Sandvik, Furukawa, and many other leading manufacturers. All parts are inspected for quality before dispatch and are shipped worldwide with full export documentation.
+        </p>
+        <p style="color:#4a5568;line-height:1.8;">
+          To order the <strong>${product.name}</strong> (part no. <strong>${code}</strong>), submit a quote request using the button above or contact us directly at <a href="mailto:info@agorarockdrill.com" style="color:#2563eb;">info@agorarockdrill.com</a> or <a href="tel:+903123856003" style="color:#2563eb;">+90 312 385 60 03</a>. Our team will respond promptly with pricing and lead time information.
+        </p>
+      </div>
+
+      <div style="margin-top:40px;padding:24px;background:#f0f4ff;border-radius:8px;">
+        <h2 style="font-size:20px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Frequently Asked Questions</h2>
+        <div style="margin-bottom:16px;">
+          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">Is the ${product.name} (${code}) in stock?</h3>
+          <p style="color:#4a5568;margin:0;">${product.stockStatus === 'out_of_stock' ? `This item is currently out of stock. Please contact us for availability and lead times.` : `Yes, this item is currently in stock and available for immediate dispatch. Contact us for a quote.`}</p>
+        </div>
+        <div style="margin-bottom:16px;">
+          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">What brands is this part compatible with?</h3>
+          <p style="color:#4a5568;margin:0;">${primaryBrand ? `This part is compatible with ${brands} equipment. Please confirm the part number with our technical team before ordering.` : 'Please contact our team to confirm compatibility with your specific equipment model.'}</p>
+        </div>
+        <div style="margin-bottom:16px;">
+          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">Do you ship internationally?</h3>
+          <p style="color:#4a5568;margin:0;">Yes, Agora Rock Drill ships to over 50 countries worldwide. We provide full export documentation and work with reliable freight partners for fast delivery.</p>
+        </div>
+        <div>
+          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">What is the warranty on this part?</h3>
+          <p style="color:#4a5568;margin:0;">All parts supplied by Agora Rock Drill carry a 3-month warranty against manufacturing defects. Contact us for details.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:40px;text-align:center;">
+        <a href="${baseUrl}/spare-parts${primaryBrand ? `?brand=${encodeURIComponent(primaryBrand)}` : ''}" style="display:inline-block;background:#f1f5f9;color:#1a1a1a;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-right:12px;">
+          &larr; View More ${primaryBrand || 'Spare'} Parts
+        </a>
+        <a href="${baseUrl}/contact" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;">
+          Contact Us
+        </a>
       </div>
     </div>
   `;
@@ -229,7 +299,7 @@ function generateProductHtml(
   // Add JSON-LD structured data before </head>
   html = html.replace(
     '</head>',
-    `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>\n</head>`
+    `<script type="application/ld+json">${JSON.stringify(productJsonLd)}</script>\n<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</script>\n</head>`
   );
   
   // Add SSR content inside <div id="root"> - React will hydrate over this
@@ -623,41 +693,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper: find the HTML template, trying multiple paths (robust for dev + prod)
+  function findTemplatePath(): string | null {
+    const candidates = [
+      // Production build output (esbuild compiles server to dist/index.js)
+      path.resolve(import.meta.dirname, "public", "index.html"),
+      // Alternative: project root dist/public
+      path.resolve(process.cwd(), "dist", "public", "index.html"),
+      // Development source
+      path.resolve(import.meta.dirname, "..", "client", "index.html"),
+      path.resolve(process.cwd(), "client", "index.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) return p;
+    }
+    return null;
+  }
+
   // SEO: Dynamic HTML for product pages (Server-Side Rendering for meta tags)
-  // This route intercepts product page requests and injects SEO meta tags before serving
   app.get("/brand/:brand/:code", async (req, res, next) => {
     try {
       const productCode = decodeURIComponent(req.params.code);
       const product = await storage.getProductByCode(productCode);
-      
-      if (!product) {
-        // If product not found, let the SPA handle 404
+      if (!product) return next();
+
+      const templatePath = findTemplatePath();
+      if (!templatePath) {
+        console.warn("SSR template not found in any candidate path — serving SPA fallback");
         return next();
       }
-      
-      // Determine which HTML template to use based on environment
-      let templatePath: string;
-      const isProduction = process.env.NODE_ENV === 'production' || 
-                          (req.app.get("env") !== "development");
-      
-      if (isProduction) {
-        // Production: use built index.html
-        templatePath = path.resolve(import.meta.dirname, "public", "index.html");
-      } else {
-        // Development: use source index.html
-        templatePath = path.resolve(import.meta.dirname, "..", "client", "index.html");
-      }
-      
-      // Check if template exists
-      if (!fs.existsSync(templatePath)) {
-        console.log(`Template not found at ${templatePath}, falling back to SPA`);
-        return next();
-      }
-      
-      // Read template and generate dynamic HTML
+
       const template = await fs.promises.readFile(templatePath, "utf-8");
       const dynamicHtml = generateProductHtml(template, product);
-      
       res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
     } catch (error) {
       console.error("Error generating dynamic product page:", error);
@@ -669,37 +736,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/product/:idOrCode", async (req, res, next) => {
     try {
       const idOrCode = decodeURIComponent(req.params.idOrCode);
-      
-      // Try to find product by code first (most common for production URLs)
       let product = await storage.getProductByCode(idOrCode);
-      
-      // If not found by code, try by UUID
-      if (!product) {
-        product = await storage.getProduct(idOrCode);
-      }
-      
-      if (!product) {
+      if (!product) product = await storage.getProduct(idOrCode);
+      if (!product) return next();
+
+      const templatePath = findTemplatePath();
+      if (!templatePath) {
+        console.warn("SSR template not found in any candidate path — serving SPA fallback");
         return next();
       }
-      
-      // Determine which HTML template to use
-      let templatePath: string;
-      const isProduction = process.env.NODE_ENV === 'production' || 
-                          (req.app.get("env") !== "development");
-      
-      if (isProduction) {
-        templatePath = path.resolve(import.meta.dirname, "public", "index.html");
-      } else {
-        templatePath = path.resolve(import.meta.dirname, "..", "client", "index.html");
-      }
-      
-      if (!fs.existsSync(templatePath)) {
-        return next();
-      }
-      
+
       const template = await fs.promises.readFile(templatePath, "utf-8");
       const dynamicHtml = generateProductHtml(template, product);
-      
       res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
     } catch (error) {
       console.error("Error generating dynamic product page:", error);
