@@ -145,6 +145,11 @@
     animation: blob 7s infinite;
   }
 
+  @keyframes bannerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
   .animation-delay-2000 {
     animation-delay: 2s;
   }

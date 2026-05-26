@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 
 export default function FloatingSocial() {
   const [isVisible, setIsVisible] = useState(false);
-  const whatsappNumber = "905435755300";
-  const phoneNumber = "+905435755300";
+  const whatsappNumber = "905521718672";
+  const phoneNumber = "+905521718672";
 
   useEffect(() => {
     const handleScroll = () => {

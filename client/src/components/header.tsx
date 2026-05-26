@@ -121,36 +121,36 @@ export default function Header() {
                     By Category
                   </div>
                   <Link 
-                    href="/spare-parts?category=rock-drills" 
-                    data-testid="dropdown-rock-drills" 
+                    href="/spare-parts" 
+                    data-testid="dropdown-drifter-parts" 
                     className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
                   >
                     <i className="fas fa-hammer mr-3 text-primary w-4 text-center"></i>
-                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Rock Drills (Drifters)</span>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Drifter Spare Parts</span>
                   </Link>
                   <Link 
-                    href="/spare-parts?category=rotation-units" 
-                    data-testid="dropdown-rotation-units" 
+                    href="/spare-parts" 
+                    data-testid="dropdown-machine-parts" 
                     className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
                   >
-                    <i className="fas fa-sync-alt mr-3 text-primary w-4 text-center"></i>
-                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Rotation Units (DHR)</span>
+                    <i className="fas fa-cog mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Machine Spare Parts</span>
                   </Link>
                   <Link 
-                    href="/spare-parts?category=seal-kits" 
-                    data-testid="dropdown-seal-kits" 
-                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
-                  >
-                    <i className="fas fa-shield-alt mr-3 text-primary w-4 text-center"></i>
-                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Seal Kits & Diaphragms</span>
-                  </Link>
-                  <Link 
-                    href="/spare-parts?category=pumps-motors" 
-                    data-testid="dropdown-pumps-motors" 
+                    href="/spare-parts" 
+                    data-testid="dropdown-pump-motor-valves" 
                     className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
                   >
                     <i className="fas fa-tachometer-alt mr-3 text-primary w-4 text-center"></i>
-                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Pumps & Motors</span>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Pump, Motor, Valves, Bearings</span>
+                  </Link>
+                  <Link 
+                    href="/spare-parts" 
+                    data-testid="dropdown-seal-kits-electrical" 
+                    className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
+                  >
+                    <i className="fas fa-shield-alt mr-3 text-primary w-4 text-center"></i>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Seal Kits, Electrical Parts, Filters</span>
                   </Link>
                 </div>
               </div>

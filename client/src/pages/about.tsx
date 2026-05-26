@@ -5,8 +5,8 @@ import { Helmet } from "react-helmet";
 const stats = [
   { value: "20+", label: "Years of Experience" },
   { value: "700+", label: "m² Warehouse Space" },
-  { value: "2000+", label: "Products in Catalog" },
-  { value: "50+", label: "Countries Served" },
+  { value: "15,000+", label: "Products in Catalog" },
+  { value: "55+", label: "Countries Served" },
 ];
 
 const values = [
@@ -46,13 +46,6 @@ const values = [
     description:
       "As a direct distributor working with multiple manufacturers, we offer highly competitive pricing on high-quality spare parts without sacrificing reliability.",
   },
-];
-
-const brands = [
-  { name: "Atlas Copco", description: "Hydraulic rock drill components and rotation unit parts" },
-  { name: "Epiroc", description: "Full range of spare parts for underground and surface drills" },
-  { name: "Sandvik", description: "Precision parts for top hammer and DTH drilling equipment" },
-  { name: "Furukawa", description: "Hydraulic breaker and rock drill spare parts" },
 ];
 
 export default function About() {
@@ -180,18 +173,33 @@ export default function About() {
         </div>
       </section>
 
-      {/* Brand Compatibility */}
+      {/* Why AGORA Rock Drill */}
       <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-14">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Compatible Brands</h2>
+            <h2 className="text-4xl font-bold text-foreground mb-4">Why AGORA Rock Drill?</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              We stock spare parts compatible with the world's leading rock drilling equipment
-              manufacturers, ensuring broad coverage for your fleet.
+              AGORA Rock Drill A.Ş. is a Leading Trademark in Rock Drilling Industry
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {brands.map((brand, i) => (
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                emoji: "🔧",
+                title: "Strong Sectoral Knowledge",
+                description: "We produce solutions for spare parts, maintenance and repair needs of rock drilling machines. With 20+ years of expertise, our team understands your equipment at the deepest level."
+              },
+              {
+                emoji: "🚚",
+                title: "Fast and Reliable Delivery",
+                description: "As AGORA Rock Drill, we provide high speed delivery to dozens of countries in cooperation with leading logistics companies including DHL, FedEx and UPS."
+              },
+              {
+                emoji: "🏭",
+                title: "Wide Inventory Advantage",
+                description: "We stock thousands of original and alternative spare parts in our 700+ m² warehouses, ensuring fast order fulfillment without long lead times."
+              }
+            ].map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -200,8 +208,9 @@ export default function About() {
                 className="bg-card border border-border rounded-2xl p-8 text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
                 data-testid={`brand-card-${i}`}
               >
-                <div className="text-2xl font-bold text-primary mb-3">{brand.name}</div>
-                <p className="text-muted-foreground text-sm leading-relaxed">{brand.description}</p>
+                <div className="text-4xl mb-4">{item.emoji}</div>
+                <div className="text-xl font-bold text-primary mb-3">{item.title}</div>
+                <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -218,11 +227,11 @@ export default function About() {
           >
             <h2 className="text-4xl font-bold mb-6">Ready to Find Your Parts?</h2>
             <p className="text-xl text-white/90 mb-4 leading-relaxed">
-              Browse our catalog of 2,000+ spare parts or contact our expert team for
+              Browse our catalog of 15,000+ spare parts or contact our expert team for
               personalized assistance. We respond quickly to all inquiries and ship worldwide.
             </p>
             <p className="text-white/80 mb-10">
-              AGORA Rock Drill A.Ş. — Ankara, Turkey | info@agorarockdrill.com | +90 312 385 60 03
+              AGORA Rock Drill A.Ş. — Ankara, Turkey | agora@agorarockdrill.com | +90 552 171 86 72
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

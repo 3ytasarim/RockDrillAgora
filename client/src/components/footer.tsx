@@ -46,11 +46,11 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-bold mb-4">Product Categories</h4>
             <ul className="space-y-2">
-              <li><a href="/spare-parts?category=rock-drills" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-rock-drills">Rock Drills</a></li>
-              <li><a href="/spare-parts?category=rotation-units" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-rotation">Rotation Units</a></li>
-              <li><a href="/spare-parts?category=pumps-motors" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-pumps">Pumps & Motors</a></li>
-              <li><a href="/spare-parts?category=seal-kits" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-seals">Seal Kits</a></li>
-              <li><a href="/spare-parts?category=hydraulic" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-hydraulic">Hydraulic Parts</a></li>
+              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-drifter">Drifter Spare Parts</a></li>
+              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-machine">Machine Spare Parts</a></li>
+              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-pumps">Pump Motor Valves Bearings</a></li>
+              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-seals">Seal Kits Electrical Parts Filters</a></li>
+              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-hydraulic">Hydraulic Parts</a></li>
             </ul>
           </div>
 
@@ -61,7 +61,7 @@ export default function Footer() {
                 <i className="fas fa-phone mt-1"></i>
                 <div className="text-background/80">
                   <div>+90 312 385 60 03</div>
-                  <div>+90 543 575 53 00</div>
+                  <div>+90 552 171 86 72</div>
                 </div>
               </li>
               <li className="flex items-start gap-2">

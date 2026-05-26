@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Hammer, RotateCcw, Gauge, CheckCircle, Star, ChevronLeft, ChevronRight, ArrowRight, Mail, MessageSquare } from "lucide-react";
+import { Hammer, CheckCircle, ArrowRight, Mail, ChevronLeft, ChevronRight, Cpu, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import SearchBar from "@/components/search-bar";
-import CategoryCard from "@/components/category-card";
 import ProductCard from "@/components/product-card";
 import RequestQuoteModal from "@/components/request-quote-modal";
 import type { ProductWithCategory, Category } from "@shared/schema";
@@ -13,75 +12,91 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
-import heroImage1 from "@assets/shutterstock_1082374520-1536x1024_1759495597328.jpg";
-import heroImage2 from "@assets/shutterstock_453380569-1536x1025_1759495597327.jpg";
-import heroImage3 from "@assets/shutterstock_782926648-1536x1017_1759495597327.jpg";
-import tunnelDrillImage1 from "@assets/shutterstock_453380569-1536x1025_1759495597327.jpg";
-import tunnelDrillImage2 from "@assets/shutterstock_1204797238-1536x1025_1759495597328.jpg";
-import tunnelDrillImage3 from "@assets/shutterstock_1624956124-1536x1024_1759495597328.jpg";
-import outdoorDrillImage from "@assets/shutterstock_713592-1536x1024_1759495597327.jpg";
-import agoraHeadOfficeImage from "@assets/Agora_Head_Office_1759495281959.jpg";
+
 import atlasCopcoBrandLogo from "@assets/ref_atlas_copco_1759492041454.jpg";
 import epirocBrandLogo from "@assets/ref_epiroc_1759492041454.jpg";
 import sandvikBrandLogo from "@assets/sandvik-500x350-1_1759492041454.webp";
 import furukawaBrandLogo from "@assets/frukawa_logo_1759492041453.png";
-import atlasCopcoBrandImage from "@assets/stock_images/industrial_mining_dr_b27f97cf.jpg";
-import sandvikBrandImage from "@assets/stock_images/sandvik_mining_equip_895e605e.jpg";
-import furukawaBrandImage from "@assets/stock_images/furukawa_rock_drill__c1b19cb8.jpg";
+
+import slide1Image from "@assets/slide_1_1779833838588.jpeg";
+import slide2Image from "@assets/slide_2_1779833838588.jpeg";
+import slide3Image from "@assets/slide_3_1779833838588.jpeg";
+import slide4Image from "@assets/slide_4_catalog_1779833838588.jpeg";
+import brandSandvikImage from "@assets/brand_sandvik_1779833838588.jpeg";
+import brandFurukawaImage from "@assets/brand_furukawa_1779833838588.jpeg";
+import catDrifterImage from "@assets/cat_drifter_1779833838588.jpeg";
+import catMachineImage from "@assets/cat_machine_1779833838588.jpeg";
+import catOemImage from "@assets/cat_oem_1779833838588.jpeg";
+import companyMainImage from "@assets/company_main_1779833838588.jpeg";
+import companyThumb1Image from "@assets/company_thumb1_1779833838588.jpg";
+import companyThumb2Image from "@assets/company_thumb2_1779833838588.jpg";
+import companyThumb3Image from "@assets/company_thumb3_1779833838588.webp";
+import aboutUsImage from "@assets/about_us_1779833838588.jpeg";
 
 const heroSlides = [
   {
-    title: "AGORA ROCK DRILL",
-    subtitle: "Professional Spare Parts Solutions",
-    highlight: "20 YEARS EXPERIENCE",
-    description: "Original and alternative spare parts for Atlas Copco, Epiroc, Sandvik, Furukawa, Ingersoll Rand, Everdigm and more.",
-    image: heroImage1,
-    bgGradient: "from-slate-900 via-blue-900 to-slate-800"
+    firstLine: "AGORA",
+    secondLine: "ROCK DRILL",
+    badge: "OEM quality, Competitive Price, 100% Guarantee",
+    highlight: "20 Years Experience",
+    description: "We export spare parts for Epiroc, Atlas Copco and Sandvik rock drilling machines and underground trucks to over 55 countries with OEM and alternative options.",
+    image: slide1Image,
+    bgGradient: "from-slate-900 via-blue-900 to-slate-800",
+    cta: "browse"
   },
   {
-    title: "EXTENSIVE INVENTORY",
-    subtitle: "700+ m² Warehouse",
-    highlight: "THOUSANDS OF PARTS",
-    description: "Wide inventory advantage with original and alternative spare parts stocked in our large warehouse in Ankara, Turkey.",
-    image: heroImage2,
-    bgGradient: "from-slate-900 via-slate-800 to-blue-900"
+    firstLine: "STRONG STOCK",
+    secondLine: "CAPACITY",
+    badge: "Original Analysis & CNC Manufacturing",
+    highlight: "Drifter and Machine Spare Parts",
+    description: "We stock thousands of rock drill spare parts in our warehouses for the fastest shipping.",
+    image: slide2Image,
+    bgGradient: "from-slate-900 via-slate-800 to-blue-900",
+    cta: "browse"
   },
   {
-    title: "GLOBAL DELIVERY",
-    subtitle: "Fast & Reliable Shipping",
-    highlight: "DOZENS OF COUNTRIES",
-    description: "High speed delivery worldwide through DHL, FedEx and UPS. Expert teams speaking English, Russian and Turkish.",
-    image: heroImage3,
-    bgGradient: "from-blue-950 via-slate-900 to-slate-800"
+    firstLine: "PROFESSIONAL",
+    secondLine: "SOLUTIONS",
+    badge: "",
+    highlight: "Strong and Professional Technical Team",
+    description: "We provide repair and maintenance services for Epiroc and Sandvik rock drilling machines and we test the spare parts we produce under the most demanding conditions.",
+    image: slide3Image,
+    bgGradient: "from-blue-950 via-slate-900 to-slate-800",
+    cta: "contact"
+  },
+  {
+    firstLine: "AGORA ROCK DRILL",
+    secondLine: "CATALOG",
+    badge: "Download our complete product catalog",
+    highlight: "",
+    description: "View our full range of rock drilling spare parts including Epiroc, Atlas Copco, Sandvik and Furukawa components.",
+    image: slide4Image,
+    bgGradient: "from-slate-800 via-blue-950 to-slate-900",
+    cta: "catalog"
   }
+];
+
+const bannerImages = [
+  slide1Image, slide2Image, slide3Image, slide4Image,
+  catDrifterImage, catMachineImage, catOemImage,
+  companyMainImage, companyThumb1Image, companyThumb2Image, companyThumb3Image
 ];
 
 export default function Home() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000 })]);
-  const [brandsEmblaRef] = useEmblaCarousel({ loop: true, align: 'start', slidesToScroll: 1 }, [Autoplay({ delay: 3000, stopOnInteraction: false })]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
-  const handleRequestQuote = () => {
-    setQuoteModalOpen(true);
-  };
-
+  const handleRequestQuote = () => setQuoteModalOpen(true);
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
-    
-    const onSelect = () => {
-      setSelectedIndex(emblaApi.selectedScrollSnap());
-    };
-    
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
     emblaApi.on('select', onSelect);
     onSelect();
-    
-    return () => {
-      emblaApi.off('select', onSelect);
-    };
+    return () => { emblaApi.off('select', onSelect); };
   }, [emblaApi]);
 
   const { data: categories = [] } = useQuery<Category[]>({
@@ -120,56 +135,60 @@ export default function Home() {
               <div key={index} className="flex-[0_0_100%] min-w-0">
                 <div className={`relative bg-gradient-to-br ${slide.bgGradient} text-white overflow-hidden`}>
                   <div className="absolute inset-0 bg-black/40"></div>
-                  
                   <div className="max-w-7xl mx-auto px-4 py-24 md:py-32 relative z-10">
                     <div className="grid md:grid-cols-2 gap-12 items-center">
                       <div className="space-y-6">
                         <div className="space-y-2">
                           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none">
-                            <span className="text-accent drop-shadow-lg">{slide.title.split(' ')[0]}</span>
+                            <span className="text-accent drop-shadow-lg">{slide.firstLine}</span>
                             <br />
-                            <span className="text-white drop-shadow-lg">{slide.title.split(' ').slice(1).join(' ')}</span>
+                            <span className="text-white drop-shadow-lg">{slide.secondLine}</span>
                           </h1>
-                          <h2 className="text-3xl md:text-5xl font-bold text-secondary drop-shadow-lg">
-                            {slide.subtitle}
-                          </h2>
+                          {slide.highlight && (
+                            <h2 className="text-2xl md:text-4xl font-bold text-secondary drop-shadow-lg">
+                              {slide.highlight}
+                            </h2>
+                          )}
                         </div>
-                        
-                        <div className="inline-block bg-accent/90 px-6 py-3 rounded-lg">
-                          <p className="text-xl md:text-2xl font-black tracking-wider">
-                            {slide.highlight}
-                          </p>
-                        </div>
-                        
+                        {slide.badge && (
+                          <div className="inline-block bg-accent/90 px-6 py-3 rounded-lg">
+                            <p className="text-lg md:text-xl font-black tracking-wider">{slide.badge}</p>
+                          </div>
+                        )}
                         <p className="text-lg md:text-xl text-white/90 max-w-xl leading-relaxed">
                           {slide.description}
                         </p>
-                        
                         <div className="flex flex-wrap gap-4 pt-4">
-                          <Link href="/spare-parts">
-                            <Button 
-                              className="bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg font-bold shadow-2xl rounded-full group transition-all hover:scale-105" 
-                              data-testid="browse-products-btn"
-                            >
-                              Browse Products
-                              <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
-                            </Button>
-                          </Link>
-                          <Button 
-                            variant="outline" 
+                          {slide.cta === "catalog" ? (
+                            <a href="/catalog.pdf" target="_blank" rel="noopener noreferrer">
+                              <Button className="bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg font-bold shadow-2xl rounded-full group transition-all hover:scale-105" data-testid="view-catalog-btn">
+                                View Catalog
+                                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
+                              </Button>
+                            </a>
+                          ) : (
+                            <Link href="/spare-parts">
+                              <Button className="bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg font-bold shadow-2xl rounded-full group transition-all hover:scale-105" data-testid="browse-products-btn">
+                                Browse Products
+                                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
+                              </Button>
+                            </Link>
+                          )}
+                          <Button
+                            variant="outline"
                             className="border-3 border-white text-white hover:bg-white hover:text-primary px-8 py-6 text-lg font-bold rounded-full backdrop-blur-sm bg-white/10 transition-all hover:scale-105"
                             data-testid="contact-us-btn"
+                            onClick={() => window.location.href = "/contact"}
                           >
                             Contact Us
                           </Button>
                         </div>
                       </div>
-                      
                       <div className="hidden md:block relative">
                         <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
-                          <img 
+                          <img
                             src={slide.image}
-                            alt={slide.title}
+                            alt={`${slide.firstLine} ${slide.secondLine}`}
                             className="w-full h-[500px] object-cover"
                             loading={index === 0 ? "eager" : "lazy"}
                           />
@@ -177,42 +196,22 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  
                   <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDMiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        
-        <button 
-          onClick={scrollPrev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all hover:scale-110"
-          aria-label="Previous slide"
-          data-testid="button-hero-prev"
-        >
+
+        <button onClick={scrollPrev} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all hover:scale-110" aria-label="Previous slide" data-testid="button-hero-prev">
           <ChevronLeft size={28} />
         </button>
-        <button 
-          onClick={scrollNext}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all hover:scale-110"
-          aria-label="Next slide"
-          data-testid="button-hero-next"
-        >
+        <button onClick={scrollNext} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all hover:scale-110" aria-label="Next slide" data-testid="button-hero-next">
           <ChevronRight size={28} />
         </button>
-        
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => emblaApi?.scrollTo(index)}
-              className={`h-2 rounded-full transition-all ${
-                index === selectedIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-              data-testid={`button-hero-dot-${index}`}
-            />
+            <button key={index} onClick={() => emblaApi?.scrollTo(index)} className={`h-2 rounded-full transition-all ${index === selectedIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'}`} aria-label={`Go to slide ${index + 1}`} data-testid={`button-hero-dot-${index}`} />
           ))}
         </div>
       </section>
@@ -227,192 +226,75 @@ export default function Home() {
       {/* Trusted Brands Grid */}
       <section className="py-12 bg-gradient-to-r from-slate-50 to-slate-100">
         <div className="max-w-7xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="text-center mb-8">
             <h2 className="text-3xl font-bold text-foreground mb-2">Trusted Equipment Brands</h2>
             <p className="text-muted-foreground">We supply spare parts for all major rock drilling manufacturers</p>
           </motion.div>
-
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <Link href="/spare-parts?brand=Atlas Copco - Epiroc">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer"
-              >
-                <img 
-                  src={atlasCopcoBrandLogo} 
-                  alt="Atlas Copco" 
-                  className="max-h-32 max-w-full w-auto object-contain"
-                  data-testid="brand-logo-atlas-copco"
-                  loading="lazy"
-                />
-              </motion.div>
-            </Link>
-
-            <Link href="/spare-parts?brand=Atlas Copco - Epiroc">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer"
-              >
-                <img 
-                  src={epirocBrandLogo} 
-                  alt="Epiroc" 
-                  className="max-h-32 max-w-full w-auto object-contain"
-                  data-testid="brand-logo-epiroc"
-                  loading="lazy"
-                />
-              </motion.div>
-            </Link>
-
-            <Link href="/spare-parts?brand=Sandvik">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer"
-              >
-                <img 
-                  src={sandvikBrandLogo} 
-                  alt="Sandvik" 
-                  className="max-h-32 max-w-full w-auto object-contain"
-                  data-testid="brand-logo-sandvik"
-                  loading="lazy"
-                />
-              </motion.div>
-            </Link>
-
-            <Link href="/spare-parts?brand=Furukawa">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer"
-              >
-                <img 
-                  src={furukawaBrandLogo} 
-                  alt="Furukawa" 
-                  className="max-h-32 max-w-full w-auto object-contain"
-                  data-testid="brand-logo-furukawa"
-                  loading="lazy"
-                />
-              </motion.div>
-            </Link>
+            {[
+              { href: "/spare-parts?brand=Atlas Copco - Epiroc", src: atlasCopcoBrandLogo, alt: "Atlas Copco", testId: "brand-logo-atlas-copco", delay: 0.1 },
+              { href: "/spare-parts?brand=Atlas Copco - Epiroc", src: epirocBrandLogo, alt: "Epiroc", testId: "brand-logo-epiroc", delay: 0.2 },
+              { href: "/spare-parts?brand=Sandvik", src: sandvikBrandLogo, alt: "Sandvik", testId: "brand-logo-sandvik", delay: 0.3 },
+              { href: "/spare-parts?brand=Furukawa", src: furukawaBrandLogo, alt: "Furukawa", testId: "brand-logo-furukawa", delay: 0.4 },
+            ].map((brand, i) => (
+              <Link key={i} href={brand.href}>
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: brand.delay }} viewport={{ once: true }} whileHover={{ scale: 1.05, y: -5 }} className="bg-white p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all h-48 flex items-center justify-center cursor-pointer">
+                  <img src={brand.src} alt={brand.alt} className="max-h-32 max-w-full w-auto object-contain" data-testid={brand.testId} loading="lazy" />
+                </motion.div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Product Brands */}
+      {/* Product Brand */}
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Product Brands</h2>
+            <h2 className="text-4xl font-bold text-foreground mb-4">Product Brand</h2>
             <p className="text-xl text-muted-foreground">Browse our extensive range of rock drill spare parts</p>
           </div>
-
           <div className="grid md:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-card rounded-lg shadow-lg overflow-hidden border border-border hover:shadow-2xl transition-all cursor-pointer"
-              onClick={() => window.location.href = "/spare-parts?brand=Atlas Copco - Epiroc"}
-              data-testid="brand-card-atlas-epiroc"
-            >
-              <img 
-                src={atlasCopcoBrandImage} 
-                alt="Atlas Copco - Epiroc" 
-                className="w-full h-56 object-cover"
-                loading="lazy"
-              />
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-foreground mb-3">Atlas Copco - Epiroc</h3>
-                <p className="text-muted-foreground mb-4">
-                  Premium spare parts for Atlas Copco and Epiroc rock drilling equipment. Original and alternative parts for all models.
-                </p>
-                <div className="flex items-center justify-end">
-                  <span className="text-primary font-semibold">
-                    View Products <i className="fas fa-arrow-right ml-1"></i>
-                  </span>
+            {[
+              {
+                img: slide4Image,
+                alt: "Epiroc - Atlas Copco",
+                title: "Epiroc - Atlas Copco",
+                desc: "Epiroc and Atlas Copco drifters and machine parts, pumps, hydraulic valves, filters, cables, seal kits, and electrical products used in surface and underground rock drilling are available at AGORA Rock Drill.",
+                href: "/spare-parts?brand=Atlas Copco - Epiroc",
+                testId: "brand-card-atlas-epiroc",
+                delay: 0
+              },
+              {
+                img: brandSandvikImage,
+                alt: "Sandvik",
+                title: "Sandvik",
+                desc: "Spare parts for all drifter models used by Sandvik, as well as underground and surface drilling rigs, pumps, cables, electrical units, and seal kits are available in our warehouses.",
+                href: "/spare-parts?brand=Sandvik",
+                testId: "brand-card-sandvik",
+                delay: 0.1
+              },
+              {
+                img: brandFurukawaImage,
+                alt: "Furukawa",
+                title: "Furukawa",
+                desc: "All drifter models used by Furukawa, including drifter spare parts, pumps, cables, electrical units, and seal kits, are available in our warehouses.",
+                href: "/spare-parts?brand=Furukawa",
+                testId: "brand-card-furukawa",
+                delay: 0.2
+              }
+            ].map((brand, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: brand.delay }} viewport={{ once: true }} whileHover={{ scale: 1.02, y: -5 }} className="bg-card rounded-lg shadow-lg overflow-hidden border border-border hover:shadow-2xl transition-all cursor-pointer" onClick={() => window.location.href = brand.href} data-testid={brand.testId}>
+                <img src={brand.img} alt={brand.alt} className="w-full h-56 object-cover" loading="lazy" />
+                <div className="p-6">
+                  <h3 className="text-2xl font-bold text-foreground mb-3">{brand.title}</h3>
+                  <p className="text-muted-foreground mb-4">{brand.desc}</p>
+                  <div className="flex items-center justify-end">
+                    <span className="text-primary font-semibold">View Products →</span>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-card rounded-lg shadow-lg overflow-hidden border border-border hover:shadow-2xl transition-all cursor-pointer"
-              onClick={() => window.location.href = "/spare-parts?brand=Sandvik"}
-              data-testid="brand-card-sandvik"
-            >
-              <img 
-                src={sandvikBrandImage} 
-                alt="Sandvik" 
-                className="w-full h-56 object-cover"
-                loading="lazy"
-              />
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-foreground mb-3">Sandvik</h3>
-                <p className="text-muted-foreground mb-4">
-                  High-quality spare parts for Sandvik mining and rock excavation equipment. Complete range of drilling components.
-                </p>
-                <div className="flex items-center justify-end">
-                  <span className="text-primary font-semibold">
-                    View Products <i className="fas fa-arrow-right ml-1"></i>
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-card rounded-lg shadow-lg overflow-hidden border border-border hover:shadow-2xl transition-all cursor-pointer"
-              onClick={() => window.location.href = "/spare-parts?brand=Furukawa"}
-              data-testid="brand-card-furukawa"
-            >
-              <img 
-                src={furukawaBrandImage} 
-                alt="Furukawa" 
-                className="w-full h-56 object-cover"
-                loading="lazy"
-              />
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-foreground mb-3">Furukawa</h3>
-                <p className="text-muted-foreground mb-4">
-                  Reliable spare parts for Furukawa hydraulic rock drills and breakers. Durable components for heavy-duty applications.
-                </p>
-                <div className="flex items-center justify-end">
-                  <span className="text-primary font-semibold">
-                    View Products <i className="fas fa-arrow-right ml-1"></i>
-                  </span>
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -424,34 +306,47 @@ export default function Home() {
             <h2 className="text-4xl font-bold text-foreground mb-4">Product Categories</h2>
             <p className="text-xl text-muted-foreground">Browse our extensive range of rock drill spare parts</p>
           </div>
-
           <div className="grid md:grid-cols-3 gap-8">
-            <CategoryCard
-              title="Rock Drills (Drifters)"
-              description="Complete range of rock drill spare parts including pistons, drivers, guides, and cylinders for all major brands."
-              icon={Hammer}
-              productCount={500}
-              imageUrl="https://pixabay.com/get/g9df71494c156e3b4ab83b386da99617a211d31c5d26ab3d2f56d72900892766446c452c699ed382528082ab3746641a770c46ff7124022455789a8013a492cb7_1280.jpg"
-              onClick={() => window.location.href = "/spare-parts?category=rock-drills"}
-            />
-            
-            <CategoryCard
-              title="Rotation Units (DHR)"
-              description="DHR series rotation units, bushings, couplings, and complete assemblies for optimal drilling performance."
-              icon={RotateCcw}
-              productCount={350}
-              imageUrl="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500"
-              onClick={() => window.location.href = "/spare-parts?category=rotation-units"}
-            />
-            
-            <CategoryCard
-              title="Pumps & Motors"
-              description="Hydraulic pumps, motors, seal kits, diaphragms, and repair kits for all drill rig models."
-              icon={Gauge}
-              productCount={400}
-              imageUrl="https://images.unsplash.com/photo-1621905251918-48416bd8575a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500"
-              onClick={() => window.location.href = "/spare-parts?category=pumps-motors"}
-            />
+            {[
+              {
+                img: catDrifterImage,
+                icon: <Hammer className="text-primary" size={24} />,
+                title: "Drifter Spare Parts",
+                desc: "OEM quality spare parts for all rock drilling drifters from Epiroc, Atlas Copco, Sandvik and Furukawa brands.",
+                testId: "category-card-drifter",
+                delay: 0
+              },
+              {
+                img: catMachineImage,
+                icon: <Cpu className="text-primary" size={24} />,
+                title: "Machine Spare Parts",
+                desc: "Spare parts and components used in rock drilling drifters and underground truck machines from Epiroc, Atlas Copco, Sandvik, and Furukawa brands.",
+                testId: "category-card-machine",
+                delay: 0.1
+              },
+              {
+                img: catOemImage,
+                icon: <Layers className="text-primary" size={24} />,
+                title: "OEM Parts",
+                desc: "Rexroth, Parker Pump and Motor Valves, Haydaforce Valves, Donaldson Filters, Murr Cables, ABB Electrical Parts, SKF, NTN Timken Bearings.",
+                testId: "category-card-oem",
+                delay: 0.2
+              }
+            ].map((cat, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: cat.delay }} viewport={{ once: true }} whileHover={{ scale: 1.02, y: -5 }} className="bg-card rounded-lg shadow-lg overflow-hidden border border-border hover:shadow-2xl transition-all cursor-pointer" onClick={() => window.location.href = "/spare-parts"} data-testid={cat.testId}>
+                <img src={cat.img} alt={cat.title} className="w-full h-56 object-cover" loading="lazy" />
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    {cat.icon}
+                    <h3 className="text-2xl font-bold text-foreground">{cat.title}</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-4">{cat.desc}</p>
+                  <div className="flex items-center justify-end">
+                    <span className="text-primary font-semibold">View Products →</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -481,9 +376,7 @@ export default function Home() {
             <div className="space-y-16">
               {categories.map((category) => {
                 const categoryProducts = allProducts.filter(p => p.categoryId === category.id).slice(0, 4);
-                
                 if (categoryProducts.length === 0) return null;
-                
                 return (
                   <div key={category.id}>
                     <div className="flex justify-between items-center mb-8">
@@ -502,7 +395,6 @@ export default function Home() {
                         </Button>
                       </Link>
                     </div>
-                    
                     <div className="grid md:grid-cols-4 gap-6">
                       {categoryProducts.map((product) => (
                         <ProductCard key={product.id} product={product} onAddToCart={handleRequestQuote} />
@@ -511,10 +403,22 @@ export default function Home() {
                   </div>
                 );
               })}
-              
+
               {allProducts.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground text-lg">No products available at the moment.</p>
+                <div>
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl font-bold text-foreground mb-2">Our Products & Facilities</h3>
+                    <p className="text-muted-foreground">Explore our product range and facilities</p>
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="flex gap-4" style={{ animation: 'bannerScroll 35s linear infinite', width: 'max-content' }}>
+                      {[...bannerImages, ...bannerImages].map((img, i) => (
+                        <div key={i} className="flex-shrink-0 h-52 w-80 rounded-xl overflow-hidden shadow-md">
+                          <img src={img} alt={`Product ${(i % bannerImages.length) + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -523,7 +427,7 @@ export default function Home() {
           <div className="text-center mt-8">
             <Link href="/spare-parts">
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 font-semibold" data-testid="view-all-products-btn">
-                View All Products <i className="fas fa-arrow-right ml-2"></i>
+                View All Products →
               </Button>
             </Link>
           </div>
@@ -531,7 +435,7 @@ export default function Home() {
       </section>
 
       {/* Company Production Info */}
-      <motion.section 
+      <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -539,7 +443,7 @@ export default function Home() {
         className="py-16 bg-gradient-to-br from-slate-50 to-slate-100"
       >
         <div className="max-w-7xl mx-auto px-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -548,7 +452,7 @@ export default function Home() {
           >
             <div className="grid md:grid-cols-2 gap-0">
               <div className="p-8 md:p-12 flex flex-col justify-center">
-                <motion.h2 
+                <motion.h2
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
@@ -557,7 +461,7 @@ export default function Home() {
                 >
                   We produce professional solutions for spare parts, service and maintenance needs of rock drilling machines
                 </motion.h2>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
@@ -566,106 +470,114 @@ export default function Home() {
                 >
                   As AGORA Rock Drill A.Ş., we continue our work with 20 years of experience in the sector of rock drilling machinery and mining equipment. We stock thousands of original and alternative spare parts in our 700+ m² warehouse and deliver to dozens of countries through DHL, FedEx and UPS.
                 </motion.p>
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
                   viewport={{ once: true }}
                   className="grid grid-cols-3 gap-4"
                 >
-                  <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
-                  >
-                    <img 
-                      src={tunnelDrillImage1} 
-                      alt="Tunnel drilling operations" 
-                      className="w-full h-24 object-cover"
-                      loading="lazy"
-                    />
-                  </motion.div>
-                  <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
-                  >
-                    <img 
-                      src={tunnelDrillImage2} 
-                      alt="Underground drilling equipment" 
-                      className="w-full h-24 object-cover"
-                      loading="lazy"
-                    />
-                  </motion.div>
-                  <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer"
-                  >
-                    <img 
-                      src={tunnelDrillImage3} 
-                      alt="Professional drilling machinery" 
-                      className="w-full h-24 object-cover"
-                      loading="lazy"
-                    />
-                  </motion.div>
+                  {[companyThumb1Image, companyThumb2Image, companyThumb3Image].map((img, i) => (
+                    <motion.div key={i} whileHover={{ scale: 1.05 }} className="relative rounded-xl overflow-hidden shadow-lg border-4 border-white cursor-pointer">
+                      <img src={img} alt={`Agora Rock Drill facility ${i + 1}`} className="w-full h-24 object-cover" loading="lazy" />
+                    </motion.div>
+                  ))}
                 </motion.div>
               </div>
-              
-              {/* Right Side with Curtain Animation */}
+
               <div className="relative h-full min-h-[400px] overflow-hidden bg-slate-200">
-                {/* Background Image - Always visible, highest layer below curtains */}
-                <img 
-                  src={agoraHeadOfficeImage} 
-                  alt="AGORA Rock Drill Head Office - Ankara, Turkey" 
-                  className="absolute inset-0 w-full h-full object-cover z-[5]"
-                  loading="lazy"
-                />
-
-                {/* Left Curtain - Orange */}
-                <motion.div
-                  initial={{ width: "50%" }}
-                  whileInView={{ width: "0%" }}
-                  transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
-                  viewport={{ once: true }}
-                  className="absolute inset-y-0 left-0 bg-primary z-10"
-                />
-
-                {/* Right Curtain - Blue */}
-                <motion.div
-                  initial={{ width: "50%" }}
-                  whileInView={{ width: "0%" }}
-                  transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
-                  viewport={{ once: true }}
-                  className="absolute inset-y-0 right-0 bg-accent z-10"
-                />
+                <img src={companyMainImage} alt="AGORA Rock Drill - Ankara, Turkey" className="absolute inset-0 w-full h-full object-cover z-[5]" loading="lazy" />
+                <motion.div initial={{ width: "50%" }} whileInView={{ width: "0%" }} transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }} viewport={{ once: true }} className="absolute inset-y-0 left-0 bg-primary z-10" />
+                <motion.div initial={{ width: "50%" }} whileInView={{ width: "0%" }} transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }} viewport={{ once: true }} className="absolute inset-y-0 right-0 bg-accent z-10" />
               </div>
             </div>
           </motion.div>
         </div>
       </motion.section>
 
+      {/* About Us Section */}
+      <section className="py-16 bg-background">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }} viewport={{ once: true }}>
+              <h2 className="text-4xl font-bold text-foreground mb-6">We Are AGORA Rock Drill!</h2>
+              <p className="text-lg text-muted-foreground mb-4 leading-relaxed">
+                We produce professional solutions for spare parts, service and maintenance needs of rock drilling machines.
+              </p>
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                As AGORA Rock Drill A.Ş., we continue our work by bringing together our many years of experience in the field of rock drilling machinery and mining equipment.
+              </p>
+              <ul className="space-y-3 mb-6">
+                {[
+                  "20 years of sectoral experience and corporate structure",
+                  "Experts speaking English, Russian and Turkish",
+                  "Extensive product knowledge and strong inventory",
+                  "Reliable product with original and alternative parts",
+                  "Export to dozens of countries"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-foreground">
+                    <CheckCircle className="text-primary mt-0.5 flex-shrink-0" size={20} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                Located in a confined area of more than 700 square meters in Ankara Ostim Alınteri Boulevard, our company provides professional solutions for Rock Drilling Spare Parts, Service and Maintenance needs with a team of experts working in many areas of the sector.
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center bg-muted rounded-xl p-4">
+                  <div className="text-3xl font-extrabold text-primary">15,000+</div>
+                  <div className="text-sm text-muted-foreground mt-1">Products in Catalog</div>
+                </div>
+                <div className="text-center bg-muted rounded-xl p-4">
+                  <div className="text-3xl font-extrabold text-primary">55+</div>
+                  <div className="text-sm text-muted-foreground mt-1">Countries Served</div>
+                </div>
+                <div className="text-center bg-muted rounded-xl p-4">
+                  <div className="text-3xl font-extrabold text-primary">20+</div>
+                  <div className="text-sm text-muted-foreground mt-1">Years Experience</div>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }} viewport={{ once: true }} className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <img src={aboutUsImage} alt="AGORA Rock Drill Team and Facilities" className="w-full h-[520px] object-cover" loading="lazy" />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why AGORA Rock Drill? */}
+      <section className="py-16 bg-muted">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-foreground mb-4">Why AGORA Rock Drill?</h2>
+            <p className="text-xl text-muted-foreground">AGORA Rock Drill A.Ş. is a Leading Trademark in Rock Drilling Industry</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { emoji: "🔧", title: "Strong Sectoral Knowledge", desc: "We produce solutions for spare parts, maintenance and repair needs of rock drilling machines." },
+              { emoji: "🚚", title: "Fast and Reliable Delivery", desc: "As AGORA Rock Drill, we provide high speed delivery to dozens of countries in cooperation with leading logistics companies." },
+              { emoji: "🏭", title: "Wide Inventory Advantage", desc: "We stock thousands of original and alternative spare parts in our warehouses." }
+            ].map((item, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.1 }} viewport={{ once: true }} className="bg-card border border-border rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow text-center" data-testid={`why-agora-card-${i}`}>
+                <div className="text-4xl mb-4">{item.emoji}</div>
+                <h3 className="text-xl font-bold text-foreground mb-3">{item.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Quality Guarantee & Request Form */}
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-8 items-start">
-            {/* Quality Guarantee */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-                className="bg-white rounded-2xl p-8 shadow-lg border border-slate-200 mb-8"
-              >
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} viewport={{ once: true }} className="bg-white rounded-2xl p-8 shadow-lg border border-slate-200 mb-8">
                 <div className="flex items-center gap-4 mb-6">
-                  <motion.div 
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.8 }}
-                    className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-full p-4 shadow-lg"
-                  >
+                  <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.8 }} className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-full p-4 shadow-lg">
                     <i className="fas fa-award text-white text-3xl"></i>
                   </motion.div>
                   <h2 className="text-3xl font-bold text-foreground">Quality Guarantee</h2>
@@ -675,12 +587,7 @@ export default function Home() {
                 </p>
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                viewport={{ once: true }}
-              >
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} viewport={{ once: true }}>
                 <div className="mb-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-1 h-12 bg-accent rounded-full"></div>
@@ -691,27 +598,12 @@ export default function Home() {
                     You can get help from our experienced sales consultants for all the questions you want to ask, such as the parts and parts lists you want, spare parts you cannot find. To do this, simply fill out the contact form. Our experts will get back to you as soon as possible.
                   </p>
                 </div>
-
                 <div className="flex flex-wrap gap-4">
-                  <motion.a
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    href="mailto:agora@agorarockdrill.com"
-                    className="flex items-center gap-3 bg-white border-2 border-slate-200 rounded-xl px-6 py-3 hover:border-accent transition-colors shadow-sm"
-                    data-testid="link-email-contact"
-                  >
+                  <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} href="mailto:agora@agorarockdrill.com" className="flex items-center gap-3 bg-white border-2 border-slate-200 rounded-xl px-6 py-3 hover:border-accent transition-colors shadow-sm" data-testid="link-email-contact">
                     <Mail className="text-accent" size={24} />
                     <span className="font-semibold text-foreground">Send us a Mail</span>
                   </motion.a>
-                  <motion.a
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    href="https://wa.me/905435755300"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 bg-white border-2 border-slate-200 rounded-xl px-6 py-3 hover:border-green-500 transition-colors shadow-sm"
-                    data-testid="link-whatsapp-contact"
-                  >
+                  <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} href="https://wa.me/905521718672" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white border-2 border-slate-200 rounded-xl px-6 py-3 hover:border-green-500 transition-colors shadow-sm" data-testid="link-whatsapp-contact">
                     <i className="fab fa-whatsapp text-green-500 text-2xl"></i>
                     <span className="font-semibold text-foreground">Write to Whatsapp</span>
                   </motion.a>
@@ -720,81 +612,34 @@ export default function Home() {
             </motion.div>
 
             {/* Request Form */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="sticky top-24"
-            >
-              <motion.div 
-                whileHover={{ y: -5 }}
-                transition={{ duration: 0.3 }}
-                className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-3xl p-8 shadow-2xl"
-              >
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="sticky top-24">
+              <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.3 }} className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-3xl p-8 shadow-2xl">
                 <h3 className="text-3xl font-black text-slate-900 mb-6 text-center">Request Form</h3>
                 <form className="space-y-4">
                   <div>
-                    <label className="block text-slate-900 font-semibold mb-2">
-                      Name <span className="text-red-600">*</span>
-                    </label>
-                    <Input 
-                      type="text" 
-                      className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" 
-                      data-testid="contact-name-input"
-                    />
+                    <label className="block text-slate-900 font-semibold mb-2">Name <span className="text-red-600">*</span></label>
+                    <Input type="text" className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" data-testid="contact-name-input" />
                   </div>
                   <div>
-                    <label className="block text-slate-900 font-semibold mb-2">
-                      Corporate <span className="text-red-600">*</span>
-                    </label>
-                    <Input 
-                      type="text" 
-                      className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" 
-                      data-testid="contact-company-input"
-                    />
+                    <label className="block text-slate-900 font-semibold mb-2">Corporate <span className="text-red-600">*</span></label>
+                    <Input type="text" className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" data-testid="contact-company-input" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-slate-900 font-semibold mb-2">
-                        Mail <span className="text-red-600">*</span>
-                      </label>
-                      <Input 
-                        type="email" 
-                        className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" 
-                        data-testid="contact-email-input"
-                      />
+                      <label className="block text-slate-900 font-semibold mb-2">Mail <span className="text-red-600">*</span></label>
+                      <Input type="email" className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" data-testid="contact-email-input" />
                     </div>
                     <div>
-                      <label className="block text-slate-900 font-semibold mb-2">
-                        Phone <span className="text-red-600">*</span>
-                      </label>
-                      <Input 
-                        type="tel" 
-                        className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" 
-                        data-testid="contact-phone-input"
-                      />
+                      <label className="block text-slate-900 font-semibold mb-2">Phone <span className="text-red-600">*</span></label>
+                      <Input type="tel" className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900" data-testid="contact-phone-input" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-slate-900 font-semibold mb-2">
-                      Message <span className="text-red-600">*</span>
-                    </label>
-                    <Textarea 
-                      rows={4} 
-                      className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900 resize-none" 
-                      data-testid="contact-message-input"
-                    />
+                    <label className="block text-slate-900 font-semibold mb-2">Message <span className="text-red-600">*</span></label>
+                    <Textarea rows={4} className="w-full bg-white border-0 rounded-lg py-3 px-4 text-foreground focus:ring-2 focus:ring-slate-900 resize-none" data-testid="contact-message-input" />
                   </div>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-slate-900 text-white hover:bg-slate-800 font-bold py-6 text-lg rounded-xl shadow-lg"
-                      data-testid="contact-submit-btn"
-                    >
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button type="submit" className="w-full bg-slate-900 text-white hover:bg-slate-800 font-bold py-6 text-lg rounded-xl shadow-lg" data-testid="contact-submit-btn">
                       REQUEST A QUOTE
                     </Button>
                   </motion.div>
