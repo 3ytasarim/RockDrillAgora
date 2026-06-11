@@ -2,6 +2,30 @@
 
 This project is a full-stack catalog website for industrial spare parts, specifically hydraulic rock drill and drill rig components. It enables users to browse, search, and filter parts from various industrial equipment brands (Atlas Copco - Epiroc, Sandvik, Furukawa). The application includes a "Request Quote" system and an administrative panel for managing products and categories. The technology stack comprises React with TypeScript for the frontend, Express.js with TypeScript for the backend, and PostgreSQL with Drizzle ORM for the database.
 
+## Recent Updates (June 2026)
+
+**Homepage & Visual Overhaul:**
+- 4 new hero slides with real company photos (building, equipment, team, catalog)
+- Product Brand section: new photos for Epiroc/Atlas Copco, Sandvik, Furukawa with updated descriptions
+- Product Categories section: 3 new cards — Drifter Spare Parts, Machine Spare Parts, OEM Parts — with local photos
+- New "We Are AGORA Rock Drill!" homepage section with photo, bullet points and 15,000+ product stat
+- New "Why AGORA Rock Drill?" section with 3 feature boxes (Sectoral Knowledge, Fast Delivery, Wide Inventory)
+- "No products" fallback replaced with auto-scrolling photo banner
+- Company production section: all photos updated with real facility images
+- Catalog slide (4th hero) links to downloadable `/catalog.pdf`
+- WhatsApp/phone updated to `+90 552 171 86 72` (floating social + all contact links)
+
+**Navigation & Footer:**
+- Header "By Category" dropdown: Drifter Spare Parts, Machine Spare Parts, Pump/Motor/Valves/Bearings, Seal Kits/Electrical Parts/Filters
+- Footer Product Categories: updated to 5 new category names
+- Footer contact phone updated to `+90 552 171 86 72`
+
+**About Page:**
+- "Compatible Brands" section renamed to "Why AGORA Rock Drill?"
+- Content boxes updated with new feature descriptions
+- Product count stat updated: `2,000+` → `15,000+`
+- CTA section: email updated to `agora@agorarockdrill.com`, phone to `+90 552 171 86 72`
+
 ## Recent Updates (March 2026)
 
 **Comprehensive SEO Overhaul:**
@@ -66,9 +90,31 @@ The API provides RESTful endpoints for CRUD operations on `/api/products` and `/
 
 The project integrates with Replit Object Storage, utilizing Google Cloud Storage. An `ObjectStorageService` generates presigned URLs for uploads and normalizes public paths. The frontend `ObjectUploader` component, built with Uppy, handles file selection and direct uploads, with images then associated with products and served via a dedicated `/public-objects/` endpoint.
 
+## SEO Implementation
+
+The site is fully optimized for search engines with a multi-layer approach:
+
+**Server-Side Rendering (SSR):** Product pages (`/brand/:brand/:code` and `/product/:id`) are rendered server-side with injected meta tags, canonical URLs, Open Graph tags, and Twitter Card tags. A `<noscript>` block provides visible HTML content for crawlers.
+
+**Structured Data (JSON-LD):**
+- `Product` schema on every product page (name, description, image, offers, brand)
+- `BreadcrumbList` schema on product pages
+- `Organization` + `WebSite` schema (with `SearchAction`) in `index.html` globally
+
+**Sitemap:**
+- `/sitemap.xml` → sitemap index pointing to `/sitemap-static.xml` and `/sitemap-products-{n}.xml`
+- Static sitemap covers home, spare-parts, about, contact, privacy, terms
+- Product sitemaps are paginated (500 URLs/file) to support 2,000+ products
+
+**Robots.txt:** `/robots.txt` served dynamically, disallows `/agoraadminpanel`, points to sitemap.
+
+**Canonical URLs:** Every product page includes a canonical `<link>` matching the sitemap URL structure.
+
+**React Helmet:** Used client-side for dynamic `<title>` and `<meta>` tags on all pages.
+
 ## Homepage Design
 
-The homepage features a professional Embla carousel for a hero section with auto-play and navigation. It includes a "Company Production Info" section with text and thumbnail images, a "Quality Guarantee" section, and a "Need Help / Expert Consultation" section with contact options. A sticky "Request Form" with fields for Name, Corporate, Mail, Phone, and Message is also present. Products are listed grouped by category, each with an icon, description, up to 4 products, and a "View All" link.
+The homepage features a 4-slide Embla carousel hero section with real company photos, auto-play and navigation dots. It includes a "Trusted Brands Grid" with brand logos, a "Product Brand" section with 3 brand cards (Epiroc/Atlas Copco, Sandvik, Furukawa), a "Product Categories" section with 3 category cards, a "Products by Category" live product listing, a "Company Production Info" section with curtain animation reveal, a "We Are AGORA Rock Drill!" about section, a "Why AGORA Rock Drill?" feature section, and a "Quality Guarantee & Request Form" section. The 4th hero slide links to a downloadable product catalog PDF.
 
 ## Product Detail Page
 
