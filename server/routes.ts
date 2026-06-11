@@ -710,6 +710,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return null;
   }
 
+  // SEO: SSR for /spare-parts — inject product links so Google can discover all products via link-following
+  app.get("/spare-parts", async (req, res, next) => {
+    try {
+      const templatePath = findTemplatePath();
+      if (!templatePath) return next();
+
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+      const baseUrl = "https://agorarockdrill.shop";
+      const brandFilter = typeof req.query.brand === 'string' ? req.query.brand : null;
+
+      let products = await storage.getAllProducts();
+      if (brandFilter) {
+        products = products.filter(p =>
+          p.brandCompatibility && p.brandCompatibility.toLowerCase().includes(brandFilter.toLowerCase())
+        );
+      }
+      const validProducts = products.filter(p => p.delkomCode);
+
+      // Build SEO title & description
+      const pageTitle = brandFilter
+        ? `${brandFilter} Spare Parts | Agora Rock Drill`
+        : `Spare Parts Catalog | Atlas Copco, Sandvik, Furukawa | Agora Rock Drill`;
+      const pageDescription = brandFilter
+        ? `Browse ${validProducts.length}+ ${brandFilter} compatible spare parts. Rock drill components, drifter parts and more. Fast worldwide delivery from Agora Rock Drill, Ankara Turkey.`
+        : `Browse ${validProducts.length}+ spare parts for Atlas Copco, Epiroc, Sandvik and Furukawa rock drilling equipment. Drifter parts, machine parts, OEM quality. Request a quote today.`;
+
+      // Build HTML grid of product links — critical for Google to follow links to all product pages
+      const productLinksHtml = validProducts.map(p => {
+        const brandSlug = p.brandCompatibility
+          ? createSlug(p.brandCompatibility.split(',')[0].trim())
+          : 'spare-parts';
+        const productUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(p.delkomCode!)}`;
+        const imgSrc = p.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
+        const fullImg = imgSrc.startsWith('http') ? imgSrc : `${baseUrl}${imgSrc}`;
+        const brand = p.brandCompatibility ? p.brandCompatibility.split(',')[0].trim() : '';
+        return `
+          <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;">
+            <a href="${productUrl}" style="text-decoration:none;color:inherit;display:block;">
+              <img src="${fullImg}" alt="${p.name} - ${p.delkomCode}" width="200" height="200"
+                   loading="lazy" style="width:100%;height:160px;object-fit:cover;" />
+              <div style="padding:12px;">
+                <h2 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${p.name}</h2>
+                <p style="font-size:12px;color:#666;margin:0 0 4px;font-family:monospace;">${p.delkomCode}</p>
+                ${brand ? `<p style="font-size:12px;color:#2563eb;margin:0;">${brand}</p>` : ''}
+              </div>
+            </a>
+          </div>`;
+      }).join('');
+
+      const ssrContent = `
+    <div id="ssr-spare-parts" style="padding:40px 20px;max-width:1400px;margin:0 auto;font-family:system-ui,-apple-system,sans-serif;">
+      <nav aria-label="Breadcrumb" style="margin-bottom:20px;font-size:14px;color:#666;">
+        <a href="${baseUrl}" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo;
+        ${brandFilter ? `<a href="${baseUrl}/spare-parts" style="color:#2563eb;text-decoration:none;">Spare Parts</a> &rsaquo; <span>${brandFilter}</span>` : '<span>Spare Parts</span>'}
+      </nav>
+      <h1 style="font-size:28px;font-weight:700;margin:0 0 8px;color:#1a1a1a;">
+        ${brandFilter ? `${brandFilter} Spare Parts` : 'Rock Drill Spare Parts Catalog'}
+      </h1>
+      <p style="font-size:16px;color:#555;margin:0 0 32px;max-width:700px;">${pageDescription}</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;">
+        ${productLinksHtml}
+      </div>
+      <p style="margin-top:32px;font-size:14px;color:#666;">
+        Showing ${validProducts.length} products. 
+        <a href="${baseUrl}/contact" style="color:#2563eb;">Contact us</a> for custom orders or bulk pricing.
+      </p>
+    </div>`;
+
+      // Inject meta tags + SSR content
+      let html = template;
+      html = html.replace(/<title>[^<]*<\/title>/, `<title>${pageTitle}</title>`);
+      html = html.replace(
+        /<meta name="description"[^>]*>/,
+        `<meta name="description" content="${pageDescription.replace(/"/g, '&quot;')}" />`
+      );
+      const canonicalUrl = brandFilter
+        ? `${baseUrl}/spare-parts?brand=${encodeURIComponent(brandFilter)}`
+        : `${baseUrl}/spare-parts`;
+      html = html.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`);
+      html = html.replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${pageTitle}" />`);
+      html = html.replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${pageDescription.replace(/"/g, '&quot;')}" />`);
+      html = html.replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`);
+      html = html.replace(/(<div id="root">)/, `$1\n${ssrContent}`);
+
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch (error) {
+      console.error("Error generating spare-parts SSR page:", error);
+      next();
+    }
+  });
+
   // SEO: Dynamic HTML for product pages (Server-Side Rendering for meta tags)
   app.get("/brand/:brand/:code", async (req, res, next) => {
     try {
