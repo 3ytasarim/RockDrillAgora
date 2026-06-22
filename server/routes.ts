@@ -12,6 +12,21 @@ import path from "path";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Escape dynamic values for safe insertion into HTML text and double-quoted attributes
+function escapeHtml(text: string | null | undefined): string {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Serialize JSON-LD safely for embedding inside a <script> tag (prevents </script> breakout)
+function safeJsonLd(obj: unknown): string {
+  return JSON.stringify(obj).replace(/</g, '\\u003c');
+}
+
 // Helper function to create URL-friendly slug
 function createSlug(text: string): string {
   return text
@@ -60,7 +75,14 @@ function generateProductHtml(
     finalPrice?: string | null;
     originalPrice?: string | null;
     stockStatus?: string | null;
-  }
+    category?: { id: string; name: string } | null;
+  },
+  relatedProducts: Array<{
+    name: string;
+    delkomCode?: string | null;
+    brandCompatibility?: string | null;
+    imageUrls?: string[] | null;
+  }> = []
 ): string {
   const baseUrl = "https://agorarockdrill.shop";
   const brands = product.brandCompatibility || '';
@@ -81,9 +103,18 @@ function generateProductHtml(
     if (description.length > 160) description = description.slice(0, 157) + '...';
   }
 
+  // --- Escaped variants for safe HTML insertion (raw versions kept for JSON-LD) ---
+  const eName = escapeHtml(product.name);
+  const eCode = escapeHtml(code);
+  const eBrands = escapeHtml(brands);
+  const ePrimaryBrand = escapeHtml(primaryBrand);
+  const eTitle = escapeHtml(title);
+  const eDescription = escapeHtml(description);
+
   // --- Image ---
   const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/og-image.jpg`;
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
+  const eFullImageUrl = escapeHtml(fullImageUrl);
 
   // --- Canonical URL ---
   let brandSlug = 'spare-parts';
@@ -135,10 +166,44 @@ function generateProductHtml(
 
   // --- Rich SSR body content for Google (300+ words, unique per product) ---
   const brandSentence = primaryBrand
-    ? `The <strong>${product.name}</strong> is a genuine-quality replacement part designed to be fully compatible with <strong>${brands}</strong> hydraulic rock drills and drill rig equipment.`
-    : `The <strong>${product.name}</strong> is a high-quality replacement spare part for hydraulic rock drills and drill rig equipment.`;
+    ? `The <strong>${eName}</strong> is a genuine-quality replacement part designed to be fully compatible with <strong>${eBrands}</strong> hydraulic rock drills and drill rig equipment.`
+    : `The <strong>${eName}</strong> is a high-quality replacement spare part for hydraulic rock drills and drill rig equipment.`;
 
   const stockLabel = product.stockStatus === 'out_of_stock' ? 'Currently out of stock' : 'In Stock';
+  const categoryName = escapeHtml(product.category?.name || '');
+
+  // --- Related products HTML (same category) — internal links boost SEO crawling ---
+  const relatedProductsHtml = relatedProducts.length > 0
+    ? `
+      <div style="margin-top:48px;padding-top:32px;border-top:1px solid #e2e8f0;">
+        <h2 style="font-size:24px;font-weight:700;margin:0 0 24px;color:#1a1a1a;">Related Products</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;">
+          ${relatedProducts.map(rp => {
+            const rpCode = rp.delkomCode || '';
+            const rpBrandSlug = rp.brandCompatibility ? createSlug(rp.brandCompatibility.split(',')[0].trim()) : 'spare-parts';
+            const rpUrl = `${baseUrl}/brand/${rpBrandSlug}/${encodeURIComponent(rpCode)}`;
+            const rpImg = rp.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
+            const rpFullImg = rpImg.startsWith('http') ? rpImg : `${baseUrl}${rpImg}`;
+            const rpBrand = rp.brandCompatibility ? rp.brandCompatibility.split(',')[0].trim() : '';
+            const eRpName = escapeHtml(rp.name);
+            const eRpCode = escapeHtml(rpCode);
+            const eRpBrand = escapeHtml(rpBrand);
+            return `
+            <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;">
+              <a href="${escapeHtml(rpUrl)}" style="text-decoration:none;color:inherit;display:block;">
+                <img src="${escapeHtml(rpFullImg)}" alt="${eRpName} - ${eRpCode}" width="180" height="160"
+                     loading="lazy" style="width:100%;height:160px;object-fit:cover;" />
+                <div style="padding:12px;">
+                  <h3 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${eRpName}</h3>
+                  <p style="font-size:12px;color:#666;margin:0 0 4px;font-family:monospace;">${eRpCode}</p>
+                  ${eRpBrand ? `<p style="font-size:12px;color:#2563eb;margin:0;">${eRpBrand}</p>` : ''}
+                </div>
+              </a>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`
+    : '';
 
   const ssrContent = `
     <div id="ssr-product-content" style="padding:40px 20px;max-width:1200px;margin:0 auto;font-family:system-ui,-apple-system,sans-serif;">
@@ -146,24 +211,25 @@ function generateProductHtml(
       <nav aria-label="Breadcrumb" style="margin-bottom:20px;font-size:14px;color:#666;">
         <a href="${baseUrl}" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo;
         <a href="${baseUrl}/spare-parts" style="color:#2563eb;text-decoration:none;">Spare Parts</a> &rsaquo;
-        ${primaryBrand ? `<a href="${baseUrl}/spare-parts?brand=${encodeURIComponent(primaryBrand)}" style="color:#2563eb;text-decoration:none;">${primaryBrand}</a> &rsaquo;` : ''}
-        <span>${product.name}</span>
+        ${primaryBrand ? `<a href="${baseUrl}/spare-parts?brand=${encodeURIComponent(primaryBrand)}" style="color:#2563eb;text-decoration:none;">${ePrimaryBrand}</a> &rsaquo;` : ''}
+        <span>${eName}</span>
       </nav>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;">
         <div>
-          <img src="${fullImageUrl}" alt="${product.name} - ${code} spare part" width="500" height="500"
+          <img src="${eFullImageUrl}" alt="${eName} - ${eCode} spare part" width="500" height="500"
                style="width:100%;max-width:500px;height:auto;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,.1);" />
         </div>
         <div>
-          <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${product.name}</h1>
-          <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${description}</p>
+          <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${eName}</h1>
+          <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${eDescription}</p>
 
           <div style="background:#f7fafc;padding:20px;border-radius:8px;margin-bottom:20px;">
             <h2 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#2d3748;">Product Code / Part Number</h2>
-            <p style="margin:0 0 4px;font-family:monospace;font-size:17px;font-weight:700;color:#1a1a1a;">${code || 'N/A'}</p>
+            <p style="margin:0 0 4px;font-family:monospace;font-size:17px;font-weight:700;color:#1a1a1a;">${eCode || 'N/A'}</p>
             ${codeVariantsHtml}
-            ${primaryBrand ? `<p style="margin:12px 0 0;"><strong style="color:#2d3748;">Brand:</strong> <span style="color:#1a1a1a;">${brands}</span></p>` : ''}
+            ${primaryBrand ? `<p style="margin:12px 0 0;"><strong style="color:#2d3748;">Brand:</strong> <span style="color:#1a1a1a;">${eBrands}</span></p>` : ''}
+            ${categoryName ? `<p style="margin:8px 0 0;"><strong style="color:#2d3748;">Category:</strong> <span style="color:#1a1a1a;">${categoryName}</span></p>` : ''}
             <p style="margin:8px 0 0;"><strong style="color:#2d3748;">Availability:</strong>
               <span style="color:${product.stockStatus === 'out_of_stock' ? '#c53030' : '#276749'};">${stockLabel}</span></p>
           </div>
@@ -184,29 +250,29 @@ function generateProductHtml(
         <h2 style="font-size:24px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Product Description</h2>
         <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
           ${brandSentence}
-          ${product.description ? product.description : `This part is sourced and quality-checked by Agora Rock Drill A.Ş., a specialist spare parts distributor with over 20 years of industry experience, operating from a 700+ m² warehouse in Ankara, Turkey.`}
+          ${product.description ? escapeHtml(product.description) : `This part is sourced and quality-checked by Agora Rock Drill A.Ş., a specialist spare parts distributor with over 20 years of industry experience, operating from a 700+ m² warehouse in Ankara, Turkey.`}
         </p>
         <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
-          Searching by part number? This component is catalogued under part number <strong>${code}</strong>${codeVariants ? `, also referenced as <strong>${codeVariants.spaced}</strong> or <strong>${codeVariants.dashed}</strong>` : ''}.
-          ${primaryBrand ? `It is specifically designed for use with <strong>${brands}</strong> equipment, ensuring reliable performance and correct fit.` : 'It is compatible with a range of rock drilling equipment from leading manufacturers.'}
+          Searching by part number? This component is catalogued under part number <strong>${eCode}</strong>${codeVariants ? `, also referenced as <strong>${escapeHtml(codeVariants.spaced)}</strong> or <strong>${escapeHtml(codeVariants.dashed)}</strong>` : ''}.
+          ${primaryBrand ? `It is specifically designed for use with <strong>${eBrands}</strong> equipment, ensuring reliable performance and correct fit.` : 'It is compatible with a range of rock drilling equipment from leading manufacturers.'}
         </p>
         <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
           Agora Rock Drill supplies original-quality spare parts for hydraulic rock drills, drill rigs, and related construction and mining equipment. Our catalog covers components from Atlas Copco, Epiroc, Sandvik, Furukawa, and many other leading manufacturers. All parts are inspected for quality before dispatch and are shipped worldwide with full export documentation.
         </p>
         <p style="color:#4a5568;line-height:1.8;">
-          To order the <strong>${product.name}</strong> (part no. <strong>${code}</strong>), submit a quote request using the button above or contact us directly at <a href="mailto:info@agorarockdrill.com" style="color:#2563eb;">info@agorarockdrill.com</a> or <a href="tel:+903123856003" style="color:#2563eb;">+90 312 385 60 03</a>. Our team will respond promptly with pricing and lead time information.
+          To order the <strong>${eName}</strong> (part no. <strong>${eCode}</strong>), submit a quote request using the button above or contact us directly at <a href="mailto:info@agorarockdrill.com" style="color:#2563eb;">info@agorarockdrill.com</a> or <a href="tel:+903123856003" style="color:#2563eb;">+90 312 385 60 03</a>. Our team will respond promptly with pricing and lead time information.
         </p>
       </div>
 
       <div style="margin-top:40px;padding:24px;background:#f0f4ff;border-radius:8px;">
         <h2 style="font-size:20px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Frequently Asked Questions</h2>
         <div style="margin-bottom:16px;">
-          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">Is the ${product.name} (${code}) in stock?</h3>
+          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">Is the ${eName} (${eCode}) in stock?</h3>
           <p style="color:#4a5568;margin:0;">${product.stockStatus === 'out_of_stock' ? `This item is currently out of stock. Please contact us for availability and lead times.` : `Yes, this item is currently in stock and available for immediate dispatch. Contact us for a quote.`}</p>
         </div>
         <div style="margin-bottom:16px;">
           <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">What brands is this part compatible with?</h3>
-          <p style="color:#4a5568;margin:0;">${primaryBrand ? `This part is compatible with ${brands} equipment. Please confirm the part number with our technical team before ordering.` : 'Please contact our team to confirm compatibility with your specific equipment model.'}</p>
+          <p style="color:#4a5568;margin:0;">${primaryBrand ? `This part is compatible with ${eBrands} equipment. Please confirm the part number with our technical team before ordering.` : 'Please contact our team to confirm compatibility with your specific equipment model.'}</p>
         </div>
         <div style="margin-bottom:16px;">
           <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">Do you ship internationally?</h3>
@@ -218,9 +284,11 @@ function generateProductHtml(
         </div>
       </div>
 
+      ${relatedProductsHtml}
+
       <div style="margin-top:40px;text-align:center;">
         <a href="${baseUrl}/spare-parts${primaryBrand ? `?brand=${encodeURIComponent(primaryBrand)}` : ''}" style="display:inline-block;background:#f1f5f9;color:#1a1a1a;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-right:12px;">
-          &larr; View More ${primaryBrand || 'Spare'} Parts
+          &larr; View More ${ePrimaryBrand || 'Spare'} Parts
         </a>
         <a href="${baseUrl}/contact" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;">
           Contact Us
@@ -232,46 +300,48 @@ function generateProductHtml(
   // Replace meta tags in template
   let html = templateHtml;
   
+  const eCanonicalUrl = escapeHtml(canonicalUrl);
+
   // Replace title
   html = html.replace(
     /<title>.*?<\/title>/,
-    `<title>${title}</title>`
+    () => `<title>${eTitle}</title>`
   );
   
   // Replace meta title
   html = html.replace(
     /<meta name="title" content=".*?" \/>/,
-    `<meta name="title" content="${title}" />`
+    () => `<meta name="title" content="${eTitle}" />`
   );
   
   // Replace meta description
   html = html.replace(
     /<meta name="description" content=".*?" \/>/,
-    `<meta name="description" content="${description}" />`
+    () => `<meta name="description" content="${eDescription}" />`
   );
   
   // Replace canonical URL
   html = html.replace(
     /<link rel="canonical" href=".*?" \/>/,
-    `<link rel="canonical" href="${canonicalUrl}" />`
+    () => `<link rel="canonical" href="${eCanonicalUrl}" />`
   );
   
   // Replace OG tags
   html = html.replace(
     /<meta property="og:title" content=".*?" \/>/,
-    `<meta property="og:title" content="${title}" />`
+    () => `<meta property="og:title" content="${eTitle}" />`
   );
   html = html.replace(
     /<meta property="og:description" content=".*?" \/>/,
-    `<meta property="og:description" content="${description}" />`
+    () => `<meta property="og:description" content="${eDescription}" />`
   );
   html = html.replace(
     /<meta property="og:url" content=".*?" \/>/,
-    `<meta property="og:url" content="${canonicalUrl}" />`
+    () => `<meta property="og:url" content="${eCanonicalUrl}" />`
   );
   html = html.replace(
     /<meta property="og:image" content=".*?" \/>/,
-    `<meta property="og:image" content="${fullImageUrl}" />`
+    () => `<meta property="og:image" content="${eFullImageUrl}" />`
   );
   html = html.replace(
     /<meta property="og:type" content=".*?" \/>/,
@@ -281,34 +351,58 @@ function generateProductHtml(
   // Replace Twitter tags
   html = html.replace(
     /<meta name="twitter:title" content=".*?" \/>/,
-    `<meta name="twitter:title" content="${title}" />`
+    () => `<meta name="twitter:title" content="${eTitle}" />`
   );
   html = html.replace(
     /<meta name="twitter:description" content=".*?" \/>/,
-    `<meta name="twitter:description" content="${description}" />`
+    () => `<meta name="twitter:description" content="${eDescription}" />`
   );
   html = html.replace(
     /<meta name="twitter:url" content=".*?" \/>/,
-    `<meta name="twitter:url" content="${canonicalUrl}" />`
+    () => `<meta name="twitter:url" content="${eCanonicalUrl}" />`
   );
   html = html.replace(
     /<meta name="twitter:image" content=".*?" \/>/,
-    `<meta name="twitter:image" content="${fullImageUrl}" />`
+    () => `<meta name="twitter:image" content="${eFullImageUrl}" />`
   );
   
   // Add JSON-LD structured data before </head>
   html = html.replace(
     '</head>',
-    `<script type="application/ld+json">${JSON.stringify(productJsonLd)}</script>\n<script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</script>\n</head>`
+    () => `<script type="application/ld+json">${safeJsonLd(productJsonLd)}</script>\n<script type="application/ld+json">${safeJsonLd(breadcrumbJsonLd)}</script>\n</head>`
   );
   
   // Add SSR content inside <div id="root"> - React will hydrate over this
   html = html.replace(
     '<div id="root"></div>',
-    `<div id="root">${ssrContent}</div>`
+    () => `<div id="root">${ssrContent}</div>`
   );
   
   return html;
+}
+
+// Fetch related products from the same category (for SSR internal linking)
+async function getRelatedProducts(product: {
+  id?: string;
+  categoryId?: string | null;
+  delkomCode?: string | null;
+}): Promise<Array<{ name: string; delkomCode?: string | null; brandCompatibility?: string | null; imageUrls?: string[] | null }>> {
+  try {
+    if (!product.categoryId) return [];
+    const sameCategory = await storage.getProductsByCategory(product.categoryId);
+    return sameCategory
+      .filter(p => p.delkomCode && p.delkomCode !== product.delkomCode)
+      .slice(0, 8)
+      .map(p => ({
+        name: p.name,
+        delkomCode: p.delkomCode,
+        brandCompatibility: p.brandCompatibility,
+        imageUrls: p.imageUrls,
+      }));
+  } catch (err) {
+    console.error("Error fetching related products:", err);
+    return [];
+  }
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -729,11 +823,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validProducts = products.filter(p => p.delkomCode);
 
       // Build SEO title & description
+      const eBrandFilter = escapeHtml(brandFilter);
       const pageTitle = brandFilter
-        ? `${brandFilter} Spare Parts | Agora Rock Drill`
+        ? `${eBrandFilter} Spare Parts | Agora Rock Drill`
         : `Spare Parts Catalog | Atlas Copco, Sandvik, Furukawa | Agora Rock Drill`;
       const pageDescription = brandFilter
-        ? `Browse ${validProducts.length}+ ${brandFilter} compatible spare parts. Rock drill components, drifter parts and more. Fast worldwide delivery from Agora Rock Drill, Ankara Turkey.`
+        ? `Browse ${validProducts.length}+ ${eBrandFilter} compatible spare parts. Rock drill components, drifter parts and more. Fast worldwide delivery from Agora Rock Drill, Ankara Turkey.`
         : `Browse ${validProducts.length}+ spare parts for Atlas Copco, Epiroc, Sandvik and Furukawa rock drilling equipment. Drifter parts, machine parts, OEM quality. Request a quote today.`;
 
       // Build HTML grid of product links — critical for Google to follow links to all product pages
@@ -745,15 +840,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const imgSrc = p.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
         const fullImg = imgSrc.startsWith('http') ? imgSrc : `${baseUrl}${imgSrc}`;
         const brand = p.brandCompatibility ? p.brandCompatibility.split(',')[0].trim() : '';
+        const epName = escapeHtml(p.name);
+        const epCode = escapeHtml(p.delkomCode);
+        const epBrand = escapeHtml(brand);
         return `
           <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;">
-            <a href="${productUrl}" style="text-decoration:none;color:inherit;display:block;">
-              <img src="${fullImg}" alt="${p.name} - ${p.delkomCode}" width="200" height="200"
+            <a href="${escapeHtml(productUrl)}" style="text-decoration:none;color:inherit;display:block;">
+              <img src="${escapeHtml(fullImg)}" alt="${epName} - ${epCode}" width="200" height="200"
                    loading="lazy" style="width:100%;height:160px;object-fit:cover;" />
               <div style="padding:12px;">
-                <h2 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${p.name}</h2>
-                <p style="font-size:12px;color:#666;margin:0 0 4px;font-family:monospace;">${p.delkomCode}</p>
-                ${brand ? `<p style="font-size:12px;color:#2563eb;margin:0;">${brand}</p>` : ''}
+                <h2 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${epName}</h2>
+                <p style="font-size:12px;color:#666;margin:0 0 4px;font-family:monospace;">${epCode}</p>
+                ${epBrand ? `<p style="font-size:12px;color:#2563eb;margin:0;">${epBrand}</p>` : ''}
               </div>
             </a>
           </div>`;
@@ -763,10 +861,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <div id="ssr-spare-parts" style="padding:40px 20px;max-width:1400px;margin:0 auto;font-family:system-ui,-apple-system,sans-serif;">
       <nav aria-label="Breadcrumb" style="margin-bottom:20px;font-size:14px;color:#666;">
         <a href="${baseUrl}" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo;
-        ${brandFilter ? `<a href="${baseUrl}/spare-parts" style="color:#2563eb;text-decoration:none;">Spare Parts</a> &rsaquo; <span>${brandFilter}</span>` : '<span>Spare Parts</span>'}
+        ${brandFilter ? `<a href="${baseUrl}/spare-parts" style="color:#2563eb;text-decoration:none;">Spare Parts</a> &rsaquo; <span>${eBrandFilter}</span>` : '<span>Spare Parts</span>'}
       </nav>
       <h1 style="font-size:28px;font-weight:700;margin:0 0 8px;color:#1a1a1a;">
-        ${brandFilter ? `${brandFilter} Spare Parts` : 'Rock Drill Spare Parts Catalog'}
+        ${brandFilter ? `${eBrandFilter} Spare Parts` : 'Rock Drill Spare Parts Catalog'}
       </h1>
       <p style="font-size:16px;color:#555;margin:0 0 32px;max-width:700px;">${pageDescription}</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;">
@@ -778,21 +876,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       </p>
     </div>`;
 
-      // Inject meta tags + SSR content
-      let html = template;
-      html = html.replace(/<title>[^<]*<\/title>/, `<title>${pageTitle}</title>`);
-      html = html.replace(
-        /<meta name="description"[^>]*>/,
-        `<meta name="description" content="${pageDescription.replace(/"/g, '&quot;')}" />`
-      );
       const canonicalUrl = brandFilter
         ? `${baseUrl}/spare-parts?brand=${encodeURIComponent(brandFilter)}`
         : `${baseUrl}/spare-parts`;
-      html = html.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`);
-      html = html.replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${pageTitle}" />`);
-      html = html.replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${pageDescription.replace(/"/g, '&quot;')}" />`);
-      html = html.replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`);
-      html = html.replace(/(<div id="root">)/, `$1\n${ssrContent}`);
+      const eCanonicalUrl = escapeHtml(canonicalUrl);
+
+      // Inject meta tags + SSR content
+      let html = template;
+      html = html.replace(/<title>[^<]*<\/title>/, () => `<title>${pageTitle}</title>`);
+      html = html.replace(
+        /<meta name="description"[^>]*>/,
+        () => `<meta name="description" content="${pageDescription}" />`
+      );
+      html = html.replace(/<link rel="canonical"[^>]*>/, () => `<link rel="canonical" href="${eCanonicalUrl}" />`);
+      html = html.replace(/<meta property="og:title"[^>]*>/, () => `<meta property="og:title" content="${pageTitle}" />`);
+      html = html.replace(/<meta property="og:description"[^>]*>/, () => `<meta property="og:description" content="${pageDescription}" />`);
+      html = html.replace(/<meta property="og:url"[^>]*>/, () => `<meta property="og:url" content="${eCanonicalUrl}" />`);
+      html = html.replace(/(<div id="root">)/, (m) => `${m}\n${ssrContent}`);
 
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (error) {
@@ -814,8 +914,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return next();
       }
 
+      const relatedProducts = await getRelatedProducts(product);
       const template = await fs.promises.readFile(templatePath, "utf-8");
-      const dynamicHtml = generateProductHtml(template, product);
+      const dynamicHtml = generateProductHtml(template, product, relatedProducts);
       res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
     } catch (error) {
       console.error("Error generating dynamic product page:", error);
@@ -837,8 +938,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return next();
       }
 
+      const relatedProducts = await getRelatedProducts(product);
       const template = await fs.promises.readFile(templatePath, "utf-8");
-      const dynamicHtml = generateProductHtml(template, product);
+      const dynamicHtml = generateProductHtml(template, product, relatedProducts);
       res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
     } catch (error) {
       console.error("Error generating dynamic product page:", error);

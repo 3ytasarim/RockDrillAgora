@@ -1,0 +1,1 @@
+- [SSR HTML escaping](ssr-html-escaping.md) — DB fields in server/routes.ts SSR must use escapeHtml for HTML/attrs, safeJsonLd (raw values) for JSON-LD, and function replacers in .replace() to avoid $-substitution.
