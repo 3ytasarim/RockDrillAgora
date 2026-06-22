@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Package, FileText, Share2, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Package, FileText, Share2, Heart, ChevronDown, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import useEmblaCarousel from "embla-carousel-react";
@@ -109,6 +109,7 @@ export default function ProductDetail() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   // Support URL formats: /urun/:slug (primary), /product/:id and /brand/:brand/:code
   const slug = params.slug;
@@ -518,15 +519,72 @@ export default function ProductDetail() {
           </div>
 
           {/* FAQ */}
-          <div data-testid="section-faq" className="bg-blue-50/60 rounded-2xl p-6">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Frequently Asked Questions</h2>
-            <div className="space-y-5">
-              {getFaqItems(product).map((f, i) => (
-                <div key={i} data-testid={`faq-item-${i}`}>
-                  <h3 className="font-semibold text-foreground mb-1">{f.q}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{f.a}</p>
-                </div>
-              ))}
+          <div data-testid="section-faq">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-primary/10 p-2.5 rounded-xl">
+                <HelpCircle className="text-primary" size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Frequently Asked Questions</h2>
+                <p className="text-sm text-muted-foreground">Everything you need to know about this part</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {getFaqItems(product).map((f, i) => {
+                const isOpen = openFaqIndex === i;
+                return (
+                  <motion.div
+                    key={i}
+                    data-testid={`faq-item-${i}`}
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.3, delay: i * 0.06 }}
+                    className={`rounded-2xl border transition-colors overflow-hidden ${
+                      isOpen
+                        ? "border-primary/40 bg-white shadow-md shadow-primary/5"
+                        : "border-border bg-white hover:border-primary/30 hover:shadow-sm"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaqIndex(isOpen ? null : i)}
+                      className="w-full flex items-center justify-between gap-4 text-left px-5 py-4"
+                      data-testid={`faq-toggle-${i}`}
+                      aria-expanded={isOpen}
+                    >
+                      <span className={`font-semibold transition-colors ${isOpen ? "text-primary" : "text-foreground"}`}>
+                        {f.q}
+                      </span>
+                      <motion.span
+                        animate={{ rotate: isOpen ? 180 : 0 }}
+                        transition={{ duration: 0.25 }}
+                        className={`shrink-0 rounded-full p-1.5 transition-colors ${
+                          isOpen ? "bg-primary text-white" : "bg-slate-100 text-muted-foreground"
+                        }`}
+                      >
+                        <ChevronDown size={18} />
+                      </motion.span>
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          key="content"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <p className="px-5 pb-5 text-muted-foreground leading-relaxed" data-testid={`faq-answer-${i}`}>
+                            {f.a}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </div>
