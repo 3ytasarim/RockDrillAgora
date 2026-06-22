@@ -1,10 +1,20 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ChevronDown, Home, Cog, Mail, FileText, Menu, X } from "lucide-react";
+import { ChevronDown, Home, Cog, Mail, FileText, Menu, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import logoImage from "@assets/AgoraRockDrillLogo_1759477799213.png";
 import RequestQuoteModal from "@/components/request-quote-modal";
+import { HEADER_PAGES } from "@shared/sitemap-pages";
+
+// Icons keyed by page URL. Pages without an entry render without an icon.
+const NAV_ICONS: Record<string, LucideIcon> = {
+  "/": Home,
+  "/spare-parts": Cog,
+  "/contact": Mail,
+};
+
+const navKey = (url: string) => (url === "/" ? "home" : url.replace(/^\//, ""));
 
 export default function Header() {
   const [location] = useLocation();
@@ -56,12 +66,96 @@ export default function Header() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              <Link href="/" data-testid="nav-home" className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/" ? "text-primary" : ""}`}>
-                <Home size={16} />
-                Home
-              </Link>
-              
-              {/* Spare Parts Dropdown */}
+              {HEADER_PAGES.map((page) => {
+                if (page.url === "/spare-parts") {
+                  return (
+                    <SparePartsDropdown key={page.url} location={location} label={page.label} />
+                  );
+                }
+                const Icon = NAV_ICONS[page.url];
+                return (
+                  <Link
+                    key={page.url}
+                    href={page.url}
+                    data-testid={`nav-${navKey(page.url)}`}
+                    className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === page.url ? "text-primary" : ""}`}
+                  >
+                    {Icon && <Icon size={16} />}
+                    {page.label}
+                  </Link>
+                );
+              })}
+
+              {/* Free Request Button */}
+              <Button
+                onClick={() => setRequestModalOpen(true)}
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                data-testid="nav-request"
+              >
+                <FileText size={16} className="mr-2" />
+                Free Request
+              </Button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              data-testid="mobile-menu-toggle"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </Button>
+          </div>
+
+          {/* Mobile Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-border bg-background">
+              <div className="px-4 py-4 space-y-4">
+                {HEADER_PAGES.map((page) => {
+                  const Icon = NAV_ICONS[page.url];
+                  return (
+                    <Link
+                      key={page.url}
+                      href={page.url}
+                      data-testid={`mobile-nav-${navKey(page.url)}`}
+                      className="block text-foreground hover:text-primary font-semibold"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {Icon && <Icon size={16} className="inline mr-2" />}
+                      {page.label}
+                    </Link>
+                  );
+                })}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setRequestModalOpen(true);
+                  }}
+                  className="block w-full text-left text-foreground hover:text-primary font-semibold"
+                  data-testid="mobile-nav-request"
+                >
+                  <FileText size={16} className="inline mr-2" />
+                  Free Request
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* Request Quote Modal */}
+      <RequestQuoteModal
+        open={requestModalOpen}
+        onOpenChange={setRequestModalOpen}
+      />
+    </>
+  );
+}
+
+function SparePartsDropdown({ location, label }: { location: string; label: string }) {
+  return (
               <div className="dropdown-wrapper relative group">
                 <Link 
                   href="/spare-parts" 
@@ -69,7 +163,7 @@ export default function Header() {
                   className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/spare-parts" ? "text-primary" : ""}`}
                 >
                   <Cog size={16} />
-                  Spare Parts
+                  {label}
                   <ChevronDown 
                     size={12} 
                     className="transition-transform duration-200 group-hover:rotate-180" 
@@ -154,80 +248,5 @@ export default function Header() {
                   </Link>
                 </div>
               </div>
-
-              <Link href="/about" data-testid="nav-about" className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/about" ? "text-primary" : ""}`}>
-                About Us
-              </Link>
-
-              <Link href="/contact" data-testid="nav-contact" className={`flex items-center gap-1 text-foreground hover:text-primary font-semibold transition-colors ${location === "/contact" ? "text-primary" : ""}`}>
-                <Mail size={16} />
-                Contact Us
-              </Link>
-              
-              {/* Free Request Button */}
-              <Button 
-                onClick={() => setRequestModalOpen(true)}
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300"
-                data-testid="nav-request"
-              >
-                <FileText size={16} className="mr-2" />
-                Free Request
-              </Button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              data-testid="mobile-menu-toggle"
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </Button>
-          </div>
-
-          {/* Mobile Navigation Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-border bg-background">
-              <div className="px-4 py-4 space-y-4">
-                <Link href="/" data-testid="mobile-nav-home" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                  <Home size={16} className="inline mr-2" />
-                  Home
-                </Link>
-                <Link href="/spare-parts" data-testid="mobile-nav-spare-parts" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                  <Cog size={16} className="inline mr-2" />
-                  Spare Parts
-                </Link>
-                <Link href="/about" data-testid="mobile-nav-about" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                  About Us
-                </Link>
-                <Link href="/contact" data-testid="mobile-nav-contact" className="block text-foreground hover:text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                  <Mail size={16} className="inline mr-2" />
-                  Contact Us
-                </Link>
-                <button 
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setRequestModalOpen(true);
-                  }}
-                  className="block w-full text-left text-foreground hover:text-primary font-semibold" 
-                  data-testid="mobile-nav-request"
-                >
-                  <FileText size={16} className="inline mr-2" />
-                  Free Request
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
-      
-      {/* Request Quote Modal */}
-      <RequestQuoteModal 
-        open={requestModalOpen} 
-        onOpenChange={setRequestModalOpen}
-      />
-    </>
   );
 }

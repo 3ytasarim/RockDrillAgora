@@ -1,4 +1,7 @@
 import logoImage from "@assets/AgoraRockDrillLogo_1759477799213.png";
+import { FOOTER_PAGES } from "@shared/sitemap-pages";
+
+const navKey = (url: string) => (url === "/" ? "home" : url.replace(/^\//, ""));
 
 export default function Footer() {
   return (
@@ -34,12 +37,17 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-bold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><a href="/" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-home">Home</a></li>
-              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-spare-parts">Spare Parts</a></li>
-              <li><a href="/about" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-about">About Us</a></li>
-              <li><a href="/contact" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-contact">Contact Us</a></li>
-              <li><a href="/privacy" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-privacy">Privacy Policy</a></li>
-              <li><a href="/terms" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-terms">Terms &amp; Conditions</a></li>
+              {FOOTER_PAGES.map((page) => (
+                <li key={page.url}>
+                  <a
+                    href={page.url}
+                    className="text-background/80 hover:text-accent transition-colors"
+                    data-testid={`footer-${navKey(page.url)}`}
+                  >
+                    {page.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
