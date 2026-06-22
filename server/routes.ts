@@ -27,6 +27,35 @@ function safeJsonLd(obj: unknown): string {
   return JSON.stringify(obj).replace(/</g, '\\u003c');
 }
 
+// Generate a list of compatible machine families based on the product's brand compatibility.
+// Returns brand-level equipment families (not part-specific claims) for SEO context.
+function getCompatibleMachines(brands: string): string[] {
+  const b = (brands || '').toLowerCase();
+  const list: string[] = [];
+  if (b.includes('atlas') || b.includes('epiroc')) {
+    list.push('Atlas Copco / Epiroc COP series hydraulic rock drills (e.g. COP 1638, COP 1838, COP 2160, COP 3060)');
+    list.push('Boomer face drilling jumbos (Boomer S1 D, S2, M2 C, XE3 C series)');
+    list.push('Boltec rock bolting rigs and Simba long-hole production drill rigs');
+  }
+  if (b.includes('sandvik')) {
+    list.push('Sandvik hydraulic rock drills (e.g. HL510, HL550, HL700, HLX5, RD500 series)');
+    list.push('DD development drilling jumbos (DD311, DD321, DD421 series)');
+    list.push('DT tunnelling jumbos and DL long-hole production drill rigs');
+  }
+  if (b.includes('furukawa')) {
+    list.push('Furukawa hydraulic rock drills (e.g. HD200, HD300, HD500, HD715 series)');
+    list.push('Furukawa crawler drills and surface drill rigs');
+  }
+  if (b.includes('montabert')) {
+    list.push('Montabert hydraulic rock drills and drifters (HC series)');
+  }
+  if (list.length === 0) {
+    list.push('Hydraulic rock drills, drifters and drill rigs from leading manufacturers');
+    list.push('Surface and underground drilling equipment used in mining, tunnelling and construction');
+  }
+  return list;
+}
+
 // Helper function to create URL-friendly slug
 function createSlug(text: string): string {
   return text
@@ -140,6 +169,7 @@ function generateProductHtml(
     "image": fullImageUrl,
     "brand": { "@type": "Brand", "name": primaryBrand || "Agora Rock Drill" },
     "manufacturer": { "@type": "Organization", "name": "Agora Rock Drill" },
+    "category": product.category?.name || "Rock Drill Spare Parts",
     "offers": {
       "@type": "Offer",
       "url": canonicalUrl,
@@ -165,12 +195,166 @@ function generateProductHtml(
   };
 
   // --- Rich SSR body content for Google (300+ words, unique per product) ---
-  const brandSentence = primaryBrand
-    ? `The <strong>${eName}</strong> is a genuine-quality replacement part designed to be fully compatible with <strong>${eBrands}</strong> hydraulic rock drills and drill rig equipment.`
-    : `The <strong>${eName}</strong> is a high-quality replacement spare part for hydraulic rock drills and drill rig equipment.`;
-
   const stockLabel = product.stockStatus === 'out_of_stock' ? 'Currently out of stock' : 'In Stock';
   const categoryName = escapeHtml(product.category?.name || '');
+  const categoryLabel = product.category?.name || 'Rock Drill Spare Part';
+
+  // --- Compatible Machines (brand-level equipment families) ---
+  const compatibleMachines = getCompatibleMachines(brands);
+  const compatibleMachinesHtml = `
+      <div style="margin-top:40px;padding-top:32px;border-top:1px solid #e2e8f0;">
+        <h2 style="font-size:24px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Compatible Machines</h2>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 12px;">
+          The <strong>${eName}</strong>${eCode ? ` (part no. <strong>${eCode}</strong>)` : ''} is designed for use with the following ${ePrimaryBrand ? `${ePrimaryBrand} ` : ''}equipment families. Always confirm the exact part number with our technical team before ordering to guarantee correct fitment.
+        </p>
+        <ul style="color:#4a5568;line-height:1.8;margin:0;padding-left:20px;">
+          ${compatibleMachines.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
+        </ul>
+      </div>`;
+
+  // --- Technical Specifications ---
+  const specRows: [string, string][] = [
+    ['OEM Part Number', code || 'N/A'],
+    ['Manufacturer Compatibility', brands || 'Multiple manufacturers'],
+    ['Product Category', categoryLabel],
+    ['Condition', 'New — OEM-quality replacement part'],
+    ['Build Standard', 'Manufactured to original OEM specifications'],
+    ['Warranty', '3 months against manufacturing defects'],
+    ['Availability', product.stockStatus === 'out_of_stock' ? 'Out of stock — contact for lead time' : 'In stock'],
+    ['Shipped From', 'Ankara, Turkey — worldwide delivery'],
+  ];
+  const technicalSpecsHtml = `
+      <div style="margin-top:40px;padding-top:32px;border-top:1px solid #e2e8f0;">
+        <h2 style="font-size:24px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Technical Specifications</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:15px;">
+          <tbody>
+            ${specRows.map(([k, v], i) => `
+            <tr style="background:${i % 2 === 0 ? '#f7fafc' : '#fff'};">
+              <td style="padding:10px 14px;font-weight:600;color:#2d3748;width:40%;border:1px solid #e2e8f0;">${escapeHtml(k)}</td>
+              <td style="padding:10px 14px;color:#1a1a1a;border:1px solid #e2e8f0;">${escapeHtml(v)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+
+  // --- FAQ (5 questions, consistent set across all products) ---
+  const faqItems = [
+    {
+      q: `Is the ${product.name} (${code}) in stock?`,
+      a: product.stockStatus === 'out_of_stock'
+        ? `This item is currently out of stock. Please contact us for availability and estimated lead times.`
+        : `Yes, the ${product.name} is currently in stock and available for immediate dispatch. Contact us for a quote.`
+    },
+    {
+      q: `What equipment is part ${code} compatible with?`,
+      a: primaryBrand
+        ? `This part is compatible with ${brands} hydraulic rock drills and drill rigs. Please confirm the part number with our technical team before ordering.`
+        : `Please contact our team to confirm compatibility with your specific equipment model and serial number.`
+    },
+    {
+      q: `Are these genuine OEM parts or aftermarket replacements?`,
+      a: `Agora Rock Drill supplies original-quality replacement parts built to OEM specifications. Every part is inspected for quality before dispatch and carries a warranty.`
+    },
+    {
+      q: `Do you ship part ${code} internationally?`,
+      a: `Yes, Agora Rock Drill ships to over 50 countries worldwide with full export documentation and reliable freight partners for fast delivery.`
+    },
+    {
+      q: `How can I request a quote or place an order?`,
+      a: `Use the "Request a Quote" button on this page, or contact us at info@agorarockdrill.com or +90 312 385 60 03. Our team responds promptly with pricing and lead time.`
+    },
+  ];
+  const faqHtml = `
+      <div style="margin-top:40px;padding:24px;background:#f0f4ff;border-radius:8px;">
+        <h2 style="font-size:20px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Frequently Asked Questions</h2>
+        ${faqItems.map((f, i) => `
+        <div style="${i < faqItems.length - 1 ? 'margin-bottom:16px;' : ''}">
+          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">${escapeHtml(f.q)}</h3>
+          <p style="color:#4a5568;margin:0;">${escapeHtml(f.a)}</p>
+        </div>`).join('')}
+      </div>`;
+
+  // --- JSON-LD: FAQPage (raw values; serialized via safeJsonLd) ---
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map(f => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": { "@type": "Answer", "text": f.a }
+    }))
+  };
+
+  // --- Product Description (300-500 words, deterministically varied per product) ---
+  const descSeed = (() => {
+    let h = 0;
+    const s = `${code}|${product.name}`;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  })();
+  function pickVariant<T>(arr: T[], salt: number): T {
+    return arr[(descSeed + salt) % arr.length];
+  }
+  function countWords(htmlStr: string): number {
+    return htmlStr.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean).length;
+  }
+  const brandPhrase = primaryBrand ? `<strong>${eBrands}</strong>` : 'leading hydraulic rock drill and drill rig';
+  const introVariants = [
+    `The <strong>${eName}</strong> is a premium-quality replacement part engineered for ${brandPhrase} equipment, delivering the durability and precise tolerances demanded by professional drilling operations.`,
+    `Designed as a direct replacement, the <strong>${eName}</strong> meets the exacting standards of ${brandPhrase} hydraulic drilling systems and is built for long, trouble-free service life.`,
+    `Agora Rock Drill supplies the <strong>${eName}</strong>, an original-quality component manufactured to fit ${brandPhrase} rock drills and drill rigs with reliable, consistent performance.`,
+  ];
+  const appVariants = [
+    `Whether you work in underground mining, tunnelling, quarrying or civil construction, dependable spare parts keep penetration rates high and unplanned downtime low.`,
+    `From production drilling in mining to face drilling on tunnelling projects, this part supports stable impact energy, smooth operation and predictable maintenance intervals.`,
+    `Used across surface and underground drilling applications, it helps operators sustain output, protect surrounding components and extend the service life of the complete drilling system.`,
+  ];
+  const codeSentenceVariants = [
+    `This component is catalogued under part number <strong>${eCode}</strong>${codeVariants ? `, also referenced as <strong>${escapeHtml(codeVariants.spaced)}</strong> or <strong>${escapeHtml(codeVariants.dashed)}</strong>` : ''}, making cross-referencing and reordering straightforward.`,
+    `You can identify this item by its OEM part number <strong>${eCode}</strong>${codeVariants ? ` (also written ${escapeHtml(codeVariants.spaced)} or ${escapeHtml(codeVariants.dashed)})` : ''}, so you receive exactly the right component for your machine.`,
+    `Stocked under part number <strong>${eCode}</strong>${codeVariants ? `, and commonly searched as ${escapeHtml(codeVariants.spaced)} or ${escapeHtml(codeVariants.dashed)}` : ''}, this part is quick to locate in our catalogue and easy to quote.`,
+  ];
+  const qualityVariants = [
+    `Every part is inspected and quality-checked before dispatch by Agora Rock Drill A.Ş., a specialist distributor with over 20 years of industry experience operating from a 700+ m² warehouse in Ankara, Turkey.`,
+    `Backed by more than two decades of sector knowledge, Agora Rock Drill carefully inspects, packages and labels each component for quality and traceability before it leaves our Ankara facility.`,
+    `As a dedicated spare parts specialist, Agora Rock Drill applies rigorous quality control to this part so that it performs exactly as expected, first time and every time.`,
+  ];
+  const fitSentence = primaryBrand
+    ? `It is specifically designed for use with <strong>${eBrands}</strong> equipment, ensuring reliable performance and correct fit.`
+    : `It suits a range of rock drilling equipment from leading manufacturers.`;
+  const catSentence = categoryLabel !== 'Rock Drill Spare Part'
+    ? `As part of our ${escapeHtml(categoryLabel)} range, it is held in our Ankara inventory of more than 15,000 spare parts for fast dispatch worldwide.`
+    : `It is held in our Ankara inventory of more than 15,000 spare parts for fast dispatch worldwide.`;
+  const closingSentence = `To order the <strong>${eName}</strong> (part no. <strong>${eCode}</strong>), submit a quote request using the button above or contact us at <a href="mailto:info@agorarockdrill.com" style="color:#2563eb;">info@agorarockdrill.com</a> or <a href="tel:+903123856003" style="color:#2563eb;">+90 312 385 60 03</a>. Our team responds promptly with pricing and lead-time information.`;
+  const padPool = [
+    `All orders ship worldwide with full export documentation handled by reliable freight partners.`,
+    `Our catalogue covers components for Atlas Copco, Epiroc, Sandvik, Furukawa, Montabert and other leading manufacturers.`,
+    `Bulk pricing and consolidated shipments are available for workshops and fleet operators.`,
+    `If you are unsure about compatibility, our technical team can confirm fitment from your machine model and serial number.`,
+    `Genuine-quality materials and manufacturing tolerances help protect adjacent parts and reduce total cost of ownership.`,
+    `Common service items are kept in deep stock so that routine maintenance is never held up waiting for parts.`,
+  ];
+  const descParas: string[] = [
+    `${pickVariant(introVariants, 1)} ${pickVariant(appVariants, 2)}`,
+    `${pickVariant(codeSentenceVariants, 3)} ${fitSentence}`,
+    `${pickVariant(qualityVariants, 4)} ${catSentence}${product.description ? ` ${escapeHtml(product.description)}` : ''}`,
+  ];
+  let descWords = descParas.reduce((n, p) => n + countWords(p), 0) + countWords(closingSentence);
+  const padSentences: string[] = [];
+  let pIdx = 0;
+  while (descWords < 320 && pIdx < padPool.length * 2) {
+    const sentence = padPool[(descSeed + pIdx) % padPool.length];
+    padSentences.push(sentence);
+    descWords += countWords(sentence);
+    pIdx++;
+  }
+  if (padSentences.length) descParas.push(padSentences.join(' '));
+  descParas.push(closingSentence);
+  const descriptionHtml = `
+      <div style="margin-top:48px;padding-top:32px;border-top:1px solid #e2e8f0;">
+        <h2 style="font-size:24px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Product Description</h2>
+        ${descParas.map((p, i) => `<p style="color:#4a5568;line-height:1.8;${i < descParas.length - 1 ? 'margin-bottom:16px;' : ''}">${p}</p>`).join('\n        ')}
+      </div>`;
 
   // --- Related products HTML (same category) — internal links boost SEO crawling ---
   const relatedProductsHtml = relatedProducts.length > 0
@@ -225,7 +409,7 @@ function generateProductHtml(
           <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${eDescription}</p>
 
           <div style="background:#f7fafc;padding:20px;border-radius:8px;margin-bottom:20px;">
-            <h2 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#2d3748;">Product Code / Part Number</h2>
+            <h2 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#2d3748;">OEM Part Number</h2>
             <p style="margin:0 0 4px;font-family:monospace;font-size:17px;font-weight:700;color:#1a1a1a;">${eCode || 'N/A'}</p>
             ${codeVariantsHtml}
             ${primaryBrand ? `<p style="margin:12px 0 0;"><strong style="color:#2d3748;">Brand:</strong> <span style="color:#1a1a1a;">${eBrands}</span></p>` : ''}
@@ -246,43 +430,13 @@ function generateProductHtml(
         </div>
       </div>
 
-      <div style="margin-top:48px;padding-top:32px;border-top:1px solid #e2e8f0;">
-        <h2 style="font-size:24px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Product Description</h2>
-        <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
-          ${brandSentence}
-          ${product.description ? escapeHtml(product.description) : `This part is sourced and quality-checked by Agora Rock Drill A.Ş., a specialist spare parts distributor with over 20 years of industry experience, operating from a 700+ m² warehouse in Ankara, Turkey.`}
-        </p>
-        <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
-          Searching by part number? This component is catalogued under part number <strong>${eCode}</strong>${codeVariants ? `, also referenced as <strong>${escapeHtml(codeVariants.spaced)}</strong> or <strong>${escapeHtml(codeVariants.dashed)}</strong>` : ''}.
-          ${primaryBrand ? `It is specifically designed for use with <strong>${eBrands}</strong> equipment, ensuring reliable performance and correct fit.` : 'It is compatible with a range of rock drilling equipment from leading manufacturers.'}
-        </p>
-        <p style="color:#4a5568;line-height:1.8;margin-bottom:16px;">
-          Agora Rock Drill supplies original-quality spare parts for hydraulic rock drills, drill rigs, and related construction and mining equipment. Our catalog covers components from Atlas Copco, Epiroc, Sandvik, Furukawa, and many other leading manufacturers. All parts are inspected for quality before dispatch and are shipped worldwide with full export documentation.
-        </p>
-        <p style="color:#4a5568;line-height:1.8;">
-          To order the <strong>${eName}</strong> (part no. <strong>${eCode}</strong>), submit a quote request using the button above or contact us directly at <a href="mailto:info@agorarockdrill.com" style="color:#2563eb;">info@agorarockdrill.com</a> or <a href="tel:+903123856003" style="color:#2563eb;">+90 312 385 60 03</a>. Our team will respond promptly with pricing and lead time information.
-        </p>
-      </div>
+      ${descriptionHtml}
 
-      <div style="margin-top:40px;padding:24px;background:#f0f4ff;border-radius:8px;">
-        <h2 style="font-size:20px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Frequently Asked Questions</h2>
-        <div style="margin-bottom:16px;">
-          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">Is the ${eName} (${eCode}) in stock?</h3>
-          <p style="color:#4a5568;margin:0;">${product.stockStatus === 'out_of_stock' ? `This item is currently out of stock. Please contact us for availability and lead times.` : `Yes, this item is currently in stock and available for immediate dispatch. Contact us for a quote.`}</p>
-        </div>
-        <div style="margin-bottom:16px;">
-          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">What brands is this part compatible with?</h3>
-          <p style="color:#4a5568;margin:0;">${primaryBrand ? `This part is compatible with ${eBrands} equipment. Please confirm the part number with our technical team before ordering.` : 'Please contact our team to confirm compatibility with your specific equipment model.'}</p>
-        </div>
-        <div style="margin-bottom:16px;">
-          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">Do you ship internationally?</h3>
-          <p style="color:#4a5568;margin:0;">Yes, Agora Rock Drill ships to over 50 countries worldwide. We provide full export documentation and work with reliable freight partners for fast delivery.</p>
-        </div>
-        <div>
-          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">What is the warranty on this part?</h3>
-          <p style="color:#4a5568;margin:0;">All parts supplied by Agora Rock Drill carry a 3-month warranty against manufacturing defects. Contact us for details.</p>
-        </div>
-      </div>
+      ${technicalSpecsHtml}
+
+      ${compatibleMachinesHtml}
+
+      ${faqHtml}
 
       ${relatedProductsHtml}
 
@@ -369,7 +523,7 @@ function generateProductHtml(
   // Add JSON-LD structured data before </head>
   html = html.replace(
     '</head>',
-    () => `<script type="application/ld+json">${safeJsonLd(productJsonLd)}</script>\n<script type="application/ld+json">${safeJsonLd(breadcrumbJsonLd)}</script>\n</head>`
+    () => `<script type="application/ld+json">${safeJsonLd(productJsonLd)}</script>\n<script type="application/ld+json">${safeJsonLd(breadcrumbJsonLd)}</script>\n<script type="application/ld+json">${safeJsonLd(faqJsonLd)}</script>\n</head>`
   );
   
   // Add SSR content inside <div id="root"> - React will hydrate over this
