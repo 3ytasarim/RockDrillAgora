@@ -102,6 +102,22 @@ describe("Product page SSR (GET /urun/:slug)", () => {
     );
     expect(res.status).toBe(404);
   });
+
+  it("returns 404 when requested by part code instead of slug (no duplicate URL)", async () => {
+    // The canonical /urun/:slug route resolves by slug ONLY. Requesting a
+    // product by its part code must NOT serve a 200 page, otherwise the same
+    // product would be reachable at two URLs (/urun/{slug} and /urun/{code}),
+    // creating a non-canonical duplicate. Code-based access is the job of the
+    // legacy /product and /brand routes, which 301-redirect to /urun/{slug}.
+    const code = product.delkomCode as string;
+    expect(code, "test product must have a delkomCode").toBeTruthy();
+    // Guard the premise: the slug must genuinely differ from the raw code, so a
+    // 404 proves code-as-slug is rejected rather than coincidentally matching.
+    expect(slug).not.toBe(code);
+
+    const res = await request(app).get(`/urun/${encodeURIComponent(code)}`);
+    expect(res.status).toBe(404);
+  });
 });
 
 // Mirrors escapeHtml in server/routes.ts so title assertions compare like-for-like.
