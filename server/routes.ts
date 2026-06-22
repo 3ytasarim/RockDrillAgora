@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
-import { buildProductSlug, buildProductTitle, getCodeVariants } from "@shared/product-utils";
+import { buildProductTitle, getCodeVariants, getProductSlug } from "@shared/product-utils";
 import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getFaqItems, getProductDescription } from "@shared/product-content";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
@@ -29,25 +29,16 @@ function safeJsonLd(obj: unknown): string {
   return JSON.stringify(obj).replace(/</g, '\\u003c');
 }
 
-// Helper function to create URL-friendly slug
-function createSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-')
-    .trim();
-}
-
+// getCompatibleMachines is imported from @shared/product-content above.
 
 // Helper function to generate dynamic HTML with SEO meta tags
 function generateProductHtml(
   templateHtml: string,
   product: {
     name: string;
+    slug?: string | null;
     description?: string | null;
     delkomCode?: string | null;
-    slug?: string | null;
     brandCompatibility?: string | null;
     imageUrls?: string[] | null;
     imageUrl?: string | null;
@@ -58,8 +49,8 @@ function generateProductHtml(
   },
   relatedProducts: Array<{
     name: string;
-    delkomCode?: string | null;
     slug?: string | null;
+    delkomCode?: string | null;
     brandCompatibility?: string | null;
     imageUrls?: string[] | null;
   }> = []
@@ -69,7 +60,10 @@ function generateProductHtml(
   const code = product.delkomCode || '';
   const primaryBrand = brands ? brands.split(',')[0].trim() : '';
 
-  // --- Unique title ---
+  // --- Combined display title (Brand – Name – spaced – joined – dashed) ---
+  const displayTitle = buildProductTitle({ brand: brands, name: product.name, code });
+
+  // --- Unique SEO <title> (keeps brand/site suffix for search snippets) ---
   const title = `${product.name}${code ? ` - ${code}` : ''}${primaryBrand ? ` | ${primaryBrand}` : ''} Spare Part | Agora Rock Drill`;
 
   // --- Unique meta description (never duplicate) ---
@@ -96,8 +90,13 @@ function generateProductHtml(
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
   const eFullImageUrl = escapeHtml(fullImageUrl);
 
-  // --- Canonical URL (SEO-friendly slug) ---
-  const productSlug = product.slug || buildProductSlug(product);
+  // --- Canonical URL (SEO-friendly /urun/ slug) ---
+  const productSlug = getProductSlug({
+    slug: product.slug,
+    delkomCode: code,
+    name: product.name,
+    brandCompatibility: brands,
+  });
   const canonicalUrl = `${baseUrl}/urun/${productSlug}`;
 
   // --- Code variants for SEO ---
@@ -218,7 +217,8 @@ function generateProductHtml(
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;">
           ${relatedProducts.map(rp => {
             const rpCode = rp.delkomCode || '';
-            const rpUrl = `${baseUrl}/urun/${rp.slug || buildProductSlug(rp)}`;
+            const rpSlug = getProductSlug({ slug: rp.slug, delkomCode: rpCode, name: rp.name, brandCompatibility: rp.brandCompatibility || '' });
+            const rpUrl = `${baseUrl}/urun/${rpSlug}`;
             const rpImg = rp.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
             const rpFullImg = rpImg.startsWith('http') ? rpImg : `${baseUrl}${rpImg}`;
             const rpBrand = rp.brandCompatibility ? rp.brandCompatibility.split(',')[0].trim() : '';
@@ -258,7 +258,7 @@ function generateProductHtml(
                style="width:100%;max-width:500px;height:auto;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,.1);" />
         </div>
         <div>
-          <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${escapeHtml(buildProductTitle(product))}</h1>
+          <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${escapeHtml(displayTitle)}</h1>
           <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${eDescription}</p>
 
           <div style="background:#f7fafc;padding:20px;border-radius:8px;margin-bottom:20px;">
@@ -393,7 +393,7 @@ async function getRelatedProducts(product: {
   id?: string;
   categoryId?: string | null;
   delkomCode?: string | null;
-}): Promise<Array<{ name: string; delkomCode?: string | null; slug?: string | null; brandCompatibility?: string | null; imageUrls?: string[] | null }>> {
+}): Promise<Array<{ name: string; slug?: string | null; delkomCode?: string | null; brandCompatibility?: string | null; imageUrls?: string[] | null }>> {
   try {
     if (!product.categoryId) return [];
     const sameCategory = await storage.getProductsByCategory(product.categoryId);
@@ -402,8 +402,8 @@ async function getRelatedProducts(product: {
       .slice(0, 8)
       .map(p => ({
         name: p.name,
-        delkomCode: p.delkomCode,
         slug: p.slug,
+        delkomCode: p.delkomCode,
         brandCompatibility: p.brandCompatibility,
         imageUrls: p.imageUrls,
       }));
@@ -857,7 +857,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Build HTML grid of product links — critical for Google to follow links to all product pages
       const productLinksHtml = validProducts.map(p => {
-        const productUrl = `${baseUrl}/urun/${p.slug || buildProductSlug(p)}`;
+        const productUrl = `${baseUrl}/urun/${getProductSlug(p)}`;
         const imgSrc = p.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
         const fullImg = imgSrc.startsWith('http') ? imgSrc : `${baseUrl}${imgSrc}`;
         const brand = p.brandCompatibility ? p.brandCompatibility.split(',')[0].trim() : '';
@@ -918,6 +918,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (error) {
       console.error("Error generating spare-parts SSR page:", error);
+      next();
+    }
+  });
+
+  // SEO: Dynamic HTML for product pages via SEO-friendly /urun/:slug URL
+  app.get("/urun/:slug", async (req, res, next) => {
+    try {
+      const slug = decodeURIComponent(req.params.slug);
+      const product = await storage.getProductBySlug(slug);
+      if (!product) return next();
+
+      const templatePath = findTemplatePath();
+      if (!templatePath) {
+        console.warn("SSR template not found in any candidate path — serving SPA fallback");
+        return next();
+      }
+
+      const relatedProducts = await getRelatedProducts(product);
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+      const dynamicHtml = generateProductHtml(template, product, relatedProducts);
+      res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
+    } catch (error) {
+      console.error("Error generating dynamic product page (slug):", error);
       next();
     }
   });
@@ -1009,15 +1032,6 @@ Sitemap: https://agorarockdrill.shop/site-sitemap.xml
   });
 
   // Shared sitemap helper functions
-  const sitemapCreateSlug = (text: string): string => {
-    return text
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w-]+/g, '')
-      .replace(/--+/g, '-')
-      .trim();
-  };
-
   const sitemapEscapeXml = (text: string): string => {
     return text
       .replace(/&/g, '&amp;')
@@ -1118,8 +1132,7 @@ Sitemap: https://agorarockdrill.shop/site-sitemap.xml
       xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
 
       chunk.forEach(product => {
-        const slug = product.slug || buildProductSlug(product);
-        const productUrl = `/urun/${slug}`;
+        const productUrl = `/urun/${getProductSlug(product)}`;
 
         let lastModDate = today;
         if (product.updatedAt) {

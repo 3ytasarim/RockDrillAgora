@@ -9,15 +9,16 @@ import useEmblaCarousel from "embla-carousel-react";
 import type { ProductWithCategory } from "@shared/schema";
 import RequestQuoteModal from "@/components/request-quote-modal";
 import { Helmet } from "react-helmet";
-import { getCodeVariants, buildProductSlug, buildProductTitle } from "@shared/product-utils";
+import { getCodeVariants, buildProductTitle, getProductSlug, getProductHref } from "@shared/product-utils";
 import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getFaqItems, getProductDescription } from "@shared/product-content";
 
 function ProductSchema({ product }: { product: ProductWithCategory }) {
   const baseUrl = "https://agorarockdrill.shop";
   const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/api/placeholder/600/600`;
-  
-  const canonicalUrl = `${baseUrl}/urun/${product.slug || buildProductSlug(product)}`;
+
+  const canonicalUrl = `${baseUrl}/urun/${getProductSlug(product)}`;
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
+  const displayTitle = buildProductTitle({ brand: product.brandCompatibility, name: product.name, code: product.delkomCode });
 
   const productSchema = {
     "@context": "https://schema.org",
@@ -114,11 +115,10 @@ export default function ProductDetail() {
   // Support URL formats: /urun/:slug (primary), /product/:id and /brand/:brand/:code
   const slug = params.slug;
   const productCode = params.code || params.id;
-  const identifier = slug || productCode;
-  const apiPath = slug ? "/api/products/by-slug" : "/api/products/by-code";
+  const lookupKey = slug ? `/api/products/by-slug/${encodeURIComponent(slug)}` : `/api/products/by-code/${encodeURIComponent(productCode || '')}`;
 
   // If no identifier, show 404
-  if (!identifier) {
+  if (!slug && !productCode) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -132,13 +132,13 @@ export default function ProductDetail() {
   }
 
   const { data: product, isLoading, error } = useQuery<ProductWithCategory>({
-    queryKey: [apiPath, identifier],
+    queryKey: [lookupKey],
     queryFn: async () => {
-      const response = await fetch(`${apiPath}/${encodeURIComponent(identifier)}`);
+      const response = await fetch(lookupKey);
       if (!response.ok) throw new Error("Product not found");
       return response.json();
     },
-    enabled: !!identifier,
+    enabled: !!(slug || productCode),
   });
 
   const { data: relatedData } = useQuery<{ products: ProductWithCategory[] }>({
@@ -337,7 +337,7 @@ export default function ProductDetail() {
                   </span>
                 )}
                 <h1 className="text-2xl md:text-3xl font-black text-foreground mb-4 leading-tight">
-                  {buildProductTitle(product)}
+                  {buildProductTitle({ brand: product.brandCompatibility, name: product.name, code: product.delkomCode })}
                 </h1>
                 <p className="text-xl text-muted-foreground">
                   {product.description || "High-quality rock drill spare part"}
@@ -601,7 +601,7 @@ export default function ProductDetail() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((related) => {
                 const relatedImage = related.imageUrls?.[0] || related.imageUrl || "/api/placeholder/300/300";
-                const relatedUrl = `/urun/${related.slug || buildProductSlug(related)}`;
+                const relatedUrl = getProductHref(related);
                 return (
                   <Link key={related.id} href={relatedUrl} data-testid={`related-product-${related.id}`}>
                     <motion.div

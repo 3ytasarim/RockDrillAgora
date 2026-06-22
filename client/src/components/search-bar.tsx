@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import type { ProductWithCategory } from "@shared/schema";
-import { buildProductSlug } from "@shared/product-utils";
 import { Link } from "wouter";
+import { getProductHref } from "@shared/product-utils";
 
 interface SearchBarProps {
   onSearch: (query: string, code: string) => void;
@@ -264,7 +264,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                 </button>
                                 
                                 {/* Go to Product Button */}
-                                <Link href={`/urun/${product.slug || buildProductSlug(product)}`}>
+                                <Link href={getProductHref(product)}>
                                   <div
                                     className="inline-block bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer"
                                     data-testid={`go-to-product-code-${product.id}`}
@@ -402,7 +402,7 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
                                 </button>
                                 
                                 {/* Go to Product Button */}
-                                <Link href={`/urun/${product.slug || buildProductSlug(product)}`}>
+                                <Link href={getProductHref(product)}>
                                   <div
                                     className="inline-block bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer"
                                     data-testid={`go-to-product-${product.id}`}

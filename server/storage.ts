@@ -24,6 +24,7 @@ export interface IStorage {
   getProduct(id: string): Promise<ProductWithCategory | undefined>;
   getProductByCode(code: string): Promise<ProductWithCategory | undefined>;
   getProductBySlug(slug: string): Promise<ProductWithCategory | undefined>;
+  backfillProductSlugs(): Promise<number>;
   getAllProducts(): Promise<ProductWithCategory[]>;
   getProductsPaginated(filters: ProductFilters): Promise<PaginatedResult<ProductWithCategory>>;
   searchProducts(query: string): Promise<ProductWithCategory[]>;
@@ -104,12 +105,56 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .where(eq(products.slug, slug));
 
-    if (!product) return undefined;
+    if (product) {
+      return {
+        ...product.products,
+        category: product.categories,
+      };
+    }
+
+    // Defensive fallback: if no stored slug matches (e.g. legacy rows whose slug
+    // was never populated), recompute the slug for every product and compare.
+    const all = await this.db
+      .select()
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id));
+
+    const matched = all.find(row => {
+      if (!row.products.delkomCode || !row.products.name) return false;
+      const computed = buildProductSlug(
+        row.products.delkomCode,
+        row.products.name,
+        row.products.brandCompatibility || ''
+      );
+      return computed === slug;
+    });
+
+    if (!matched) return undefined;
 
     return {
-      ...product.products,
-      category: product.categories,
+      ...matched.products,
+      category: matched.categories,
     };
+  }
+
+  async backfillProductSlugs(): Promise<number> {
+    const rows = await this.db
+      .select()
+      .from(products)
+      .where(sql`${products.slug} IS NULL OR ${products.slug} = ''`);
+
+    let updated = 0;
+    for (const p of rows) {
+      if (!p.delkomCode || !p.name) continue;
+      const slug = buildProductSlug(p.delkomCode, p.name, p.brandCompatibility || '');
+      try {
+        await this.db.update(products).set({ slug }).where(eq(products.id, p.id));
+        updated++;
+      } catch (err) {
+        console.error(`Failed to backfill slug for product ${p.id}:`, err);
+      }
+    }
+    return updated;
   }
 
   async getAllProducts(): Promise<ProductWithCategory[]> {
@@ -296,7 +341,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
-    const slug = await this.ensureUniqueSlug(buildProductSlug(product));
+    const slug = await this.ensureUniqueSlug(
+      buildProductSlug(product.delkomCode, product.name, product.brandCompatibility || '')
+    );
     const [newProduct] = await this.db
       .insert(products)
       .values({
@@ -313,15 +360,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product> {
-    const [existing] = await this.db.select().from(products).where(eq(products.id, id));
-    const merged = { ...existing, ...product };
-    const slug = await this.ensureUniqueSlug(buildProductSlug(merged), id);
+    // Regenerate the slug (with collision handling) if anything that feeds into it changed.
+    let slugUpdate: { slug?: string } = {};
+    if (
+      product.delkomCode !== undefined ||
+      product.name !== undefined ||
+      product.brandCompatibility !== undefined
+    ) {
+      const existing = await this.getProduct(id);
+      const code = product.delkomCode ?? existing?.delkomCode ?? '';
+      const name = product.name ?? existing?.name ?? '';
+      const brand = product.brandCompatibility ?? existing?.brandCompatibility ?? '';
+      if (code && name) {
+        slugUpdate.slug = await this.ensureUniqueSlug(
+          buildProductSlug(code, name, brand || ''),
+          id
+        );
+      }
+    }
 
     const [updatedProduct] = await this.db
       .update(products)
       .set({
         ...product,
-        slug,
+        ...slugUpdate,
         updatedAt: new Date(),
       })
       .where(eq(products.id, id))

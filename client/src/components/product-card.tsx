@@ -2,7 +2,7 @@ import { ShoppingCart, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import type { ProductWithCategory } from "@shared/schema";
-import { buildProductSlug, buildProductTitle } from "@shared/product-utils";
+import { buildProductTitle, getProductHref } from "@shared/product-utils";
 
 interface ProductCardProps {
   product: ProductWithCategory;
@@ -27,7 +27,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
       </div>
       <div className="p-4">
         <h3 className="font-bold text-base text-foreground mb-2 leading-snug" data-testid={`product-name-${product.id}`}>
-          {buildProductTitle(product)}
+          {buildProductTitle({ brand: product.brandCompatibility, name: product.name, code: product.delkomCode })}
         </h3>
         <div className="text-sm text-muted-foreground mb-3">
           <div>Product Number: <span className="font-semibold" data-testid={`product-number-${product.id}`}>{product.delkomCode}</span></div>
@@ -47,7 +47,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             <ShoppingCart size={16} className="mr-2" />
             Request Quote
           </Button>
-          <Link href={`/urun/${product.slug || buildProductSlug(product)}`}>
+          <Link href={getProductHref(product)}>
             <Button 
               className="w-full bg-[#ed582e] hover:bg-[#d54d24] text-white font-semibold"
               data-testid={`go-to-product-${product.id}`}
