@@ -17,7 +17,7 @@ export const products = pgTable("products", {
   name: text("name").notNull(),
   description: text("description"),
   delkomCode: text("delkom_code").notNull().unique(),
-  slug: text("slug").unique(),
+  slug: text("slug").notNull().unique(),
   originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(),
   discountPercentage: integer("discount_percentage").default(0),
   finalPrice: decimal("final_price", { precision: 10, scale: 2 }).notNull(),

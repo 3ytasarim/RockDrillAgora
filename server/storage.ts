@@ -146,8 +146,11 @@ export class DatabaseStorage implements IStorage {
     let updated = 0;
     for (const p of rows) {
       if (!p.delkomCode || !p.name) continue;
-      const slug = buildProductSlug(p.delkomCode, p.name, p.brandCompatibility || '');
       try {
+        const slug = await this.ensureUniqueSlug(
+          buildProductSlug(p.delkomCode, p.name, p.brandCompatibility || ''),
+          p.id,
+        );
         await this.db.update(products).set({ slug }).where(eq(products.id, p.id));
         updated++;
       } catch (err) {
