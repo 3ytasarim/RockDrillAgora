@@ -7,6 +7,7 @@ import { storage } from "../server/storage";
 import { getDb } from "../server/db";
 import { products } from "@shared/schema";
 import { getProductSlug } from "@shared/product-utils";
+import { STATIC_SITEMAP_PAGES } from "@shared/sitemap-pages";
 import type { ProductWithCategory } from "@shared/schema";
 
 // These tests verify the sitemap actually exposes EVERY indexable product to
@@ -111,17 +112,9 @@ describe("Static sitemap (/sitemap-static.xml)", () => {
   // terms) and the three brand-filter landing pages. A regression that drops
   // one of these — or mangles its loc/changefreq/priority shape — would
   // silently de-index a high-value page, so we pin the whole set down here.
-  const EXPECTED_STATIC = [
-    "/",
-    "/spare-parts",
-    "/about",
-    "/contact",
-    "/privacy",
-    "/terms",
-    "/spare-parts?brand=Atlas%20Copco%20-%20Epiroc",
-    "/spare-parts?brand=Sandvik",
-    "/spare-parts?brand=Furukawa",
-  ];
+  // Derived from the single shared source of truth so the test can never drift
+  // from the real /sitemap-static.xml page list.
+  const EXPECTED_STATIC = STATIC_SITEMAP_PAGES.map((p) => p.url);
 
   it("returns 200 with XML content", async () => {
     const res = await request(app).get("/sitemap-static.xml");

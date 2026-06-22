@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
 import { buildProductTitle, getCodeVariants, getProductSlug } from "@shared/product-utils";
+import { STATIC_SITEMAP_PAGES } from "@shared/sitemap-pages";
 import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getFaqItems, getProductDescription } from "@shared/product-content";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
@@ -1046,19 +1047,7 @@ Sitemap: https://agorarockdrill.shop/site-sitemap.xml
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
-    const staticPages = [
-      { url: '/', priority: '1.0', changefreq: 'daily' },
-      { url: '/spare-parts', priority: '0.9', changefreq: 'daily' },
-      { url: '/about', priority: '0.8', changefreq: 'monthly' },
-      { url: '/contact', priority: '0.8', changefreq: 'monthly' },
-      { url: '/privacy', priority: '0.5', changefreq: 'yearly' },
-      { url: '/terms', priority: '0.5', changefreq: 'yearly' },
-      { url: '/spare-parts?brand=Atlas%20Copco%20-%20Epiroc', priority: '0.85', changefreq: 'daily' },
-      { url: '/spare-parts?brand=Sandvik', priority: '0.85', changefreq: 'daily' },
-      { url: '/spare-parts?brand=Furukawa', priority: '0.85', changefreq: 'daily' },
-    ];
-
-    staticPages.forEach(page => {
+    STATIC_SITEMAP_PAGES.forEach(page => {
       xml += '  <url>\n';
       xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
       xml += `    <lastmod>${today}</lastmod>\n`;
