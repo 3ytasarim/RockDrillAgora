@@ -81,6 +81,30 @@ describe("Sitemap index", () => {
   });
 });
 
+describe("robots.txt", () => {
+  // robots.txt is the entry point crawlers read first: it must point them at the
+  // sitemap (so the Task #6 sitemap work is actually discoverable) and keep them
+  // out of the admin panel. A regression here could de-index the site or expose
+  // /agoraadminpanel to crawlers, so we pin both behaviours down.
+  const SITEMAP_URL = `${BASE_URL}/site-sitemap.xml`;
+
+  it("returns 200 with plain-text content", async () => {
+    const res = await request(app).get("/robots.txt");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/plain");
+  });
+
+  it("points crawlers at the sitemap", async () => {
+    const res = await request(app).get("/robots.txt");
+    expect(res.text).toContain(`Sitemap: ${SITEMAP_URL}`);
+  });
+
+  it("disallows the admin panel", async () => {
+    const res = await request(app).get("/robots.txt");
+    expect(res.text).toMatch(/^Disallow:\s*\/agoraadminpanel\s*$/m);
+  });
+});
+
 describe("Static sitemap (/sitemap-static.xml)", () => {
   // The static sitemap is the only path search engines have to the most
   // important non-product pages (home, spare-parts, about, contact, privacy,
