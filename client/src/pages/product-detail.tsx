@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Package, FileText, Truck, Shield, Share2, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Package, FileText, Share2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import useEmblaCarousel from "embla-carousel-react";
@@ -408,38 +408,6 @@ export default function ProductDetail() {
                   </Link>
                 </div>
               )}
-            </motion.div>
-
-            {/* Features */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="grid grid-cols-2 gap-4"
-            >
-              <div className="bg-white rounded-xl p-4 shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <Shield className="text-green-600" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Warranty</p>
-                    <p className="font-semibold">3 Months</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 p-2 rounded-lg">
-                    <Truck className="text-blue-600" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Shipping</p>
-                    <p className="font-semibold">Worldwide</p>
-                  </div>
-                </div>
-              </div>
             </motion.div>
 
             {/* Action Buttons */}
