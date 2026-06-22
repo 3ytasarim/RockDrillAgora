@@ -81,6 +81,89 @@ describe("Sitemap index", () => {
   });
 });
 
+describe("Static sitemap (/sitemap-static.xml)", () => {
+  // The static sitemap is the only path search engines have to the most
+  // important non-product pages (home, spare-parts, about, contact, privacy,
+  // terms) and the three brand-filter landing pages. A regression that drops
+  // one of these — or mangles its loc/changefreq/priority shape — would
+  // silently de-index a high-value page, so we pin the whole set down here.
+  const EXPECTED_STATIC = [
+    "/",
+    "/spare-parts",
+    "/about",
+    "/contact",
+    "/privacy",
+    "/terms",
+    "/spare-parts?brand=Atlas%20Copco%20-%20Epiroc",
+    "/spare-parts?brand=Sandvik",
+    "/spare-parts?brand=Furukawa",
+  ];
+
+  it("returns 200 with XML content", async () => {
+    const res = await request(app).get("/sitemap-static.xml");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("xml");
+    expect(res.text).toContain("<urlset");
+  });
+
+  it("lists exactly the expected set of static URLs", async () => {
+    const res = await request(app).get("/sitemap-static.xml");
+    const actual = new Set(extractLocs(res.text).map(toPath));
+    const expected = new Set(EXPECTED_STATIC);
+    expect(actual).toEqual(expected);
+  });
+
+  it("references the static sitemap from the sitemap index", async () => {
+    const res = await request(app).get("/sitemap.xml");
+    expect(res.status).toBe(200);
+    expect(extractLocs(res.text).map(toPath)).toContain("/sitemap-static.xml");
+  });
+
+  it("gives every <url> a well-formed loc, changefreq and priority", async () => {
+    const res = await request(app).get("/sitemap-static.xml");
+
+    // Pull each <url>...</url> block so we can assert the children travel
+    // together (a stray loc without a changefreq/priority would be invalid).
+    const blocks = res.text.match(/<url>[\s\S]*?<\/url>/g) ?? [];
+    expect(blocks.length).toBe(EXPECTED_STATIC.length);
+
+    const validChangefreq = new Set([
+      "always",
+      "hourly",
+      "daily",
+      "weekly",
+      "monthly",
+      "yearly",
+      "never",
+    ]);
+
+    for (const block of blocks) {
+      const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1];
+      const changefreq = block.match(/<changefreq>([^<]+)<\/changefreq>/)?.[1];
+      const priority = block.match(/<priority>([^<]+)<\/priority>/)?.[1];
+
+      // loc must be the absolute https URL on the canonical host.
+      expect(loc, `missing loc in block: ${block}`).toBeDefined();
+      expect(loc!).toMatch(
+        /^https:\/\/agorarockdrill\.shop(\/|\/[^\s<>]*)$/
+      );
+
+      // changefreq must be one of the sitemap-spec values.
+      expect(
+        changefreq && validChangefreq.has(changefreq),
+        `bad changefreq "${changefreq}" in block: ${block}`
+      ).toBe(true);
+
+      // priority must be a number in [0.0, 1.0].
+      expect(priority, `missing priority in block: ${block}`).toBeDefined();
+      const p = Number(priority);
+      expect(Number.isNaN(p), `non-numeric priority "${priority}"`).toBe(false);
+      expect(p).toBeGreaterThanOrEqual(0.0);
+      expect(p).toBeLessThanOrEqual(1.0);
+    }
+  });
+});
+
 describe("Product sitemap coverage", () => {
   it("lists exactly one URL per indexable product across all pages", async () => {
     const index = await request(app).get("/sitemap.xml");
