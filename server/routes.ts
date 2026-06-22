@@ -922,7 +922,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // SEO: Dynamic HTML for product pages via SEO-friendly /urun/:slug URL
+  // SEO: Dynamic HTML for product pages (Server-Side Rendering for meta tags)
+  // SEO-friendly slug URL — the primary, canonical product route.
+  // Code-based lookups are handled by the legacy /product/:idOrCode and
+  // /brand/:brand/:code routes, which 301-redirect to this canonical slug URL.
   app.get("/urun/:slug", async (req, res, next) => {
     try {
       const slug = decodeURIComponent(req.params.slug);
@@ -941,31 +944,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
     } catch (error) {
       console.error("Error generating dynamic product page (slug):", error);
-      next();
-    }
-  });
-
-  // SEO: Dynamic HTML for product pages (Server-Side Rendering for meta tags)
-  // SEO: SEO-friendly slug URL — the primary, canonical product route
-  app.get("/urun/:slug", async (req, res, next) => {
-    try {
-      const slug = decodeURIComponent(req.params.slug);
-      let product = await storage.getProductBySlug(slug);
-      if (!product) product = await storage.getProductByCode(slug);
-      if (!product) return next();
-
-      const templatePath = findTemplatePath();
-      if (!templatePath) {
-        console.warn("SSR template not found in any candidate path — serving SPA fallback");
-        return next();
-      }
-
-      const relatedProducts = await getRelatedProducts(product);
-      const template = await fs.promises.readFile(templatePath, "utf-8");
-      const dynamicHtml = generateProductHtml(template, product, relatedProducts);
-      res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
-    } catch (error) {
-      console.error("Error generating dynamic product page:", error);
       next();
     }
   });
