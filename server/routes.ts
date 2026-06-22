@@ -970,29 +970,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SEO: Legacy product URL — 301 redirect to the canonical /urun/{slug}
   app.get("/brand/:brand/:code", async (req, res, next) => {
     try {
       const productCode = decodeURIComponent(req.params.code);
       const product = await storage.getProductByCode(productCode);
       if (!product) return next();
 
-      const templatePath = findTemplatePath();
-      if (!templatePath) {
-        console.warn("SSR template not found in any candidate path — serving SPA fallback");
-        return next();
-      }
-
-      const relatedProducts = await getRelatedProducts(product);
-      const template = await fs.promises.readFile(templatePath, "utf-8");
-      const dynamicHtml = generateProductHtml(template, product, relatedProducts);
-      res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
+      res.redirect(301, `/urun/${encodeURIComponent(getProductSlug(product))}`);
     } catch (error) {
-      console.error("Error generating dynamic product page:", error);
+      console.error("Error redirecting legacy product page:", error);
       next();
     }
   });
 
-  // SEO: Dynamic HTML for product pages accessed by ID or product code
+  // SEO: Legacy product URL (by ID or product code) — 301 redirect to /urun/{slug}
   app.get("/product/:idOrCode", async (req, res, next) => {
     try {
       const idOrCode = decodeURIComponent(req.params.idOrCode);
@@ -1000,18 +992,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!product) product = await storage.getProduct(idOrCode);
       if (!product) return next();
 
-      const templatePath = findTemplatePath();
-      if (!templatePath) {
-        console.warn("SSR template not found in any candidate path — serving SPA fallback");
-        return next();
-      }
-
-      const relatedProducts = await getRelatedProducts(product);
-      const template = await fs.promises.readFile(templatePath, "utf-8");
-      const dynamicHtml = generateProductHtml(template, product, relatedProducts);
-      res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
+      res.redirect(301, `/urun/${encodeURIComponent(getProductSlug(product))}`);
     } catch (error) {
-      console.error("Error generating dynamic product page:", error);
+      console.error("Error redirecting legacy product page:", error);
       next();
     }
   });
