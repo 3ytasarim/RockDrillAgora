@@ -957,7 +957,7 @@ Disallow: /agoraadminpanel
 Disallow: /api/upload
 Disallow: /api/presigned-url
 
-Sitemap: https://agorarockdrill.shop/sitemap.xml
+Sitemap: https://agorarockdrill.shop/site-sitemap.xml
 `;
     res.header('Content-Type', 'text/plain');
     res.send(robotsTxt);
@@ -983,7 +983,8 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
   };
 
   // Sitemap index - points to sub-sitemaps
-  app.get("/sitemap.xml", async (req, res) => {
+  // Served at /site-sitemap.xml (primary, submitted to Google) and /sitemap.xml (standard fallback)
+  app.get(["/site-sitemap.xml", "/sitemap.xml"], async (req, res) => {
     try {
       const products = await storage.getAllProducts();
       const baseUrl = "https://agorarockdrill.shop";
