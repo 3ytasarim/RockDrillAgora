@@ -33,6 +33,7 @@ function Router() {
               <Route path="/privacy" component={Privacy} />
               <Route path="/terms" component={Terms} />
               <Route path="/admin" component={Admin} />
+              <Route path="/urun/:slug" component={ProductDetail} />
               <Route path="/product/:id" component={ProductDetail} />
               <Route path="/brand/:brand/:code" component={ProductDetail} />
               <Route component={NotFound} />

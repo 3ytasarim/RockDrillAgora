@@ -1,2 +1,1 @@
-- [SSR HTML escaping](ssr-html-escaping.md) — DB fields in server/routes.ts SSR must use escapeHtml for HTML/attrs, safeJsonLd (raw values) for JSON-LD, and function replacers in .replace() to avoid $-substitution.
-- [SSR product content](ssr-product-content.md) — product SSR pages need per-product VARIED content (specs, compatible machines, 300-500w desc, FAQ); description uses deterministic code-hash seed (not random) for stable uniqueness.
+- [drizzle-kit push interactive prompt](drizzle-push-interactive.md) — push TUI can't be answered via piped stdin; add column+unique constraint to populated tables via raw SQL instead.

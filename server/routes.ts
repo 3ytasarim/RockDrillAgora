@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
+import { buildProductSlug, buildProductTitle, getCodeVariants } from "@shared/product-utils";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 import { sendQuoteRequestEmail } from "./email";
@@ -66,30 +67,6 @@ function createSlug(text: string): string {
     .trim();
 }
 
-// Generate formatted code variants for SEO (spaced and dashed)
-function getCodeVariants(code: string, brand: string): { spaced: string; dashed: string } | null {
-  if (!code) return null;
-  const raw = code.replace(/[-\s]/g, '');
-  if (!/^\d+$/.test(raw)) return null;
-
-  const brandLower = brand.toLowerCase();
-  const isEpiroc = brandLower.includes('epiroc') || brandLower.includes('atlas copco') || brandLower.includes('atlas-copco');
-  const isSandvik = brandLower.includes('sandvik');
-
-  if (isEpiroc && raw.length === 10) {
-    return { spaced: `${raw.slice(0,4)} ${raw.slice(4,8)} ${raw.slice(8,10)}`, dashed: `${raw.slice(0,4)}-${raw.slice(4,8)}-${raw.slice(8,10)}` };
-  }
-  if (isSandvik && raw.length === 8) {
-    return { spaced: `${raw.slice(0,3)} ${raw.slice(3,6)} ${raw.slice(6,8)}`, dashed: `${raw.slice(0,3)}-${raw.slice(3,6)}-${raw.slice(6,8)}` };
-  }
-  if (raw.length === 10) {
-    return { spaced: `${raw.slice(0,4)} ${raw.slice(4,8)} ${raw.slice(8,10)}`, dashed: `${raw.slice(0,4)}-${raw.slice(4,8)}-${raw.slice(8,10)}` };
-  }
-  if (raw.length === 8) {
-    return { spaced: `${raw.slice(0,3)} ${raw.slice(3,6)} ${raw.slice(6,8)}`, dashed: `${raw.slice(0,3)}-${raw.slice(3,6)}-${raw.slice(6,8)}` };
-  }
-  return null;
-}
 
 // Helper function to generate dynamic HTML with SEO meta tags
 function generateProductHtml(
@@ -98,6 +75,7 @@ function generateProductHtml(
     name: string;
     description?: string | null;
     delkomCode?: string | null;
+    slug?: string | null;
     brandCompatibility?: string | null;
     imageUrls?: string[] | null;
     imageUrl?: string | null;
@@ -109,6 +87,7 @@ function generateProductHtml(
   relatedProducts: Array<{
     name: string;
     delkomCode?: string | null;
+    slug?: string | null;
     brandCompatibility?: string | null;
     imageUrls?: string[] | null;
   }> = []
@@ -145,15 +124,15 @@ function generateProductHtml(
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
   const eFullImageUrl = escapeHtml(fullImageUrl);
 
-  // --- Canonical URL ---
-  let brandSlug = 'spare-parts';
-  if (primaryBrand) brandSlug = createSlug(primaryBrand);
-  const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(code)}`;
+  // --- Canonical URL (SEO-friendly slug) ---
+  const productSlug = product.slug || buildProductSlug(product);
+  const canonicalUrl = `${baseUrl}/urun/${productSlug}`;
 
   // --- Code variants for SEO ---
   const codeVariants = getCodeVariants(code, brands);
   const codeVariantsHtml = codeVariants
     ? `<p style="margin:4px 0;font-family:monospace;color:#555;">${codeVariants.spaced}</p>
+       <p style="margin:4px 0;font-family:monospace;color:#555;">${codeVariants.joined}</p>
        <p style="margin:4px 0;font-family:monospace;color:#555;">${codeVariants.dashed}</p>`
     : '';
 
@@ -364,12 +343,12 @@ function generateProductHtml(
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;">
           ${relatedProducts.map(rp => {
             const rpCode = rp.delkomCode || '';
-            const rpBrandSlug = rp.brandCompatibility ? createSlug(rp.brandCompatibility.split(',')[0].trim()) : 'spare-parts';
-            const rpUrl = `${baseUrl}/brand/${rpBrandSlug}/${encodeURIComponent(rpCode)}`;
+            const rpUrl = `${baseUrl}/urun/${rp.slug || buildProductSlug(rp)}`;
             const rpImg = rp.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
             const rpFullImg = rpImg.startsWith('http') ? rpImg : `${baseUrl}${rpImg}`;
             const rpBrand = rp.brandCompatibility ? rp.brandCompatibility.split(',')[0].trim() : '';
             const eRpName = escapeHtml(rp.name);
+            const eRpTitle = escapeHtml(buildProductTitle(rp));
             const eRpCode = escapeHtml(rpCode);
             const eRpBrand = escapeHtml(rpBrand);
             return `
@@ -378,8 +357,7 @@ function generateProductHtml(
                 <img src="${escapeHtml(rpFullImg)}" alt="${eRpName} - ${eRpCode}" width="180" height="160"
                      loading="lazy" style="width:100%;height:160px;object-fit:cover;" />
                 <div style="padding:12px;">
-                  <h3 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${eRpName}</h3>
-                  <p style="font-size:12px;color:#666;margin:0 0 4px;font-family:monospace;">${eRpCode}</p>
+                  <h3 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${eRpTitle}</h3>
                   ${eRpBrand ? `<p style="font-size:12px;color:#2563eb;margin:0;">${eRpBrand}</p>` : ''}
                 </div>
               </a>
@@ -405,7 +383,7 @@ function generateProductHtml(
                style="width:100%;max-width:500px;height:auto;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,.1);" />
         </div>
         <div>
-          <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${eName}</h1>
+          <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${escapeHtml(buildProductTitle(product))}</h1>
           <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${eDescription}</p>
 
           <div style="background:#f7fafc;padding:20px;border-radius:8px;margin-bottom:20px;">
@@ -540,7 +518,7 @@ async function getRelatedProducts(product: {
   id?: string;
   categoryId?: string | null;
   delkomCode?: string | null;
-}): Promise<Array<{ name: string; delkomCode?: string | null; brandCompatibility?: string | null; imageUrls?: string[] | null }>> {
+}): Promise<Array<{ name: string; delkomCode?: string | null; slug?: string | null; brandCompatibility?: string | null; imageUrls?: string[] | null }>> {
   try {
     if (!product.categoryId) return [];
     const sameCategory = await storage.getProductsByCategory(product.categoryId);
@@ -550,6 +528,7 @@ async function getRelatedProducts(product: {
       .map(p => ({
         name: p.name,
         delkomCode: p.delkomCode,
+        slug: p.slug,
         brandCompatibility: p.brandCompatibility,
         imageUrls: p.imageUrls,
       }));
@@ -631,6 +610,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(product);
     } catch (error) {
       console.error('Error fetching product by code:', error);
+      res.status(500).json({ error: "Failed to fetch product" });
+    }
+  });
+
+  app.get("/api/products/by-slug/:slug", async (req, res) => {
+    try {
+      const slug = decodeURIComponent(req.params.slug);
+      let product = await storage.getProductBySlug(slug);
+      // Fallback: tolerate old links where the param is a product code.
+      if (!product) product = await storage.getProductByCode(slug);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      res.json(product);
+    } catch (error) {
+      console.error('Error fetching product by slug:', error);
       res.status(500).json({ error: "Failed to fetch product" });
     }
   });
@@ -987,14 +982,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Build HTML grid of product links — critical for Google to follow links to all product pages
       const productLinksHtml = validProducts.map(p => {
-        const brandSlug = p.brandCompatibility
-          ? createSlug(p.brandCompatibility.split(',')[0].trim())
-          : 'spare-parts';
-        const productUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(p.delkomCode!)}`;
+        const productUrl = `${baseUrl}/urun/${p.slug || buildProductSlug(p)}`;
         const imgSrc = p.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
         const fullImg = imgSrc.startsWith('http') ? imgSrc : `${baseUrl}${imgSrc}`;
         const brand = p.brandCompatibility ? p.brandCompatibility.split(',')[0].trim() : '';
         const epName = escapeHtml(p.name);
+        const epTitle = escapeHtml(buildProductTitle(p));
         const epCode = escapeHtml(p.delkomCode);
         const epBrand = escapeHtml(brand);
         return `
@@ -1003,8 +996,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <img src="${escapeHtml(fullImg)}" alt="${epName} - ${epCode}" width="200" height="200"
                    loading="lazy" style="width:100%;height:160px;object-fit:cover;" />
               <div style="padding:12px;">
-                <h2 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${epName}</h2>
-                <p style="font-size:12px;color:#666;margin:0 0 4px;font-family:monospace;">${epCode}</p>
+                <h2 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${epTitle}</h2>
                 ${epBrand ? `<p style="font-size:12px;color:#2563eb;margin:0;">${epBrand}</p>` : ''}
               </div>
             </a>
@@ -1056,6 +1048,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // SEO: Dynamic HTML for product pages (Server-Side Rendering for meta tags)
+  // SEO: SEO-friendly slug URL — the primary, canonical product route
+  app.get("/urun/:slug", async (req, res, next) => {
+    try {
+      const slug = decodeURIComponent(req.params.slug);
+      let product = await storage.getProductBySlug(slug);
+      if (!product) product = await storage.getProductByCode(slug);
+      if (!product) return next();
+
+      const templatePath = findTemplatePath();
+      if (!templatePath) {
+        console.warn("SSR template not found in any candidate path — serving SPA fallback");
+        return next();
+      }
+
+      const relatedProducts = await getRelatedProducts(product);
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+      const dynamicHtml = generateProductHtml(template, product, relatedProducts);
+      res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
+    } catch (error) {
+      console.error("Error generating dynamic product page:", error);
+      next();
+    }
+  });
+
   app.get("/brand/:brand/:code", async (req, res, next) => {
     try {
       const productCode = decodeURIComponent(req.params.code);
@@ -1227,14 +1243,8 @@ Sitemap: https://agorarockdrill.shop/site-sitemap.xml
       xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
 
       chunk.forEach(product => {
-        let brandSlug = 'spare-parts';
-        if (product.brandCompatibility) {
-          const firstBrand = product.brandCompatibility.split(',')[0].trim();
-          brandSlug = sitemapCreateSlug(firstBrand);
-        }
-
-        const encodedCode = encodeURIComponent(product.delkomCode!);
-        const productUrl = `/brand/${brandSlug}/${encodedCode}`;
+        const slug = product.slug || buildProductSlug(product);
+        const productUrl = `/urun/${slug}`;
 
         let lastModDate = today;
         if (product.updatedAt) {

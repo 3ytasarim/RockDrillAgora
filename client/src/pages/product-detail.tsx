@@ -9,76 +9,13 @@ import useEmblaCarousel from "embla-carousel-react";
 import type { ProductWithCategory } from "@shared/schema";
 import RequestQuoteModal from "@/components/request-quote-modal";
 import { Helmet } from "react-helmet";
-
-function createSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-')
-    .trim();
-}
-
-// Returns alternative code formats for SEO and searchability
-function getCodeVariants(code: string, brand: string): { spaced: string; dashed: string } | null {
-  if (!code) return null;
-
-  // Strip existing dashes and spaces to get raw digits
-  const raw = code.replace(/[-\s]/g, '');
-
-  // Only format purely numeric codes
-  if (!/^\d+$/.test(raw)) return null;
-
-  const brandLower = brand.toLowerCase();
-  const isEpiroc = brandLower.includes('epiroc') || brandLower.includes('atlas copco') || brandLower.includes('atlas-copco');
-  const isSandvik = brandLower.includes('sandvik');
-
-  if (isEpiroc && raw.length === 10) {
-    // Epiroc / Atlas Copco: 4-4-2 format
-    const a = raw.slice(0, 4);
-    const b = raw.slice(4, 8);
-    const c = raw.slice(8, 10);
-    return { spaced: `${a} ${b} ${c}`, dashed: `${a}-${b}-${c}` };
-  }
-
-  if (isSandvik && raw.length === 8) {
-    // Sandvik: 3-3-2 format
-    const a = raw.slice(0, 3);
-    const b = raw.slice(3, 6);
-    const c = raw.slice(6, 8);
-    return { spaced: `${a} ${b} ${c}`, dashed: `${a}-${b}-${c}` };
-  }
-
-  // Fallback: try to detect by length for any brand
-  if (raw.length === 10) {
-    const a = raw.slice(0, 4);
-    const b = raw.slice(4, 8);
-    const c = raw.slice(8, 10);
-    return { spaced: `${a} ${b} ${c}`, dashed: `${a}-${b}-${c}` };
-  }
-
-  if (raw.length === 8) {
-    const a = raw.slice(0, 3);
-    const b = raw.slice(3, 6);
-    const c = raw.slice(6, 8);
-    return { spaced: `${a} ${b} ${c}`, dashed: `${a}-${b}-${c}` };
-  }
-
-  return null;
-}
+import { getCodeVariants, buildProductSlug, buildProductTitle } from "@shared/product-utils";
 
 function ProductSchema({ product }: { product: ProductWithCategory }) {
   const baseUrl = "https://agorarockdrill.shop";
   const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/api/placeholder/600/600`;
   
-  // Create brand slug matching sitemap logic
-  let brandSlug = 'spare-parts';
-  if (product.brandCompatibility) {
-    const firstBrand = product.brandCompatibility.split(',')[0].trim();
-    brandSlug = createSlug(firstBrand);
-  }
-  
-  const canonicalUrl = `${baseUrl}/brand/${brandSlug}/${encodeURIComponent(product.delkomCode || '')}`;
+  const canonicalUrl = `${baseUrl}/urun/${product.slug || buildProductSlug(product)}`;
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
 
   const productSchema = {
@@ -172,12 +109,14 @@ export default function ProductDetail() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
-  // Support both URL formats: /product/:id and /brand/:brand/:code
+  // Support URL formats: /urun/:slug (primary), /product/:id and /brand/:brand/:code
+  const slug = params.slug;
   const productCode = params.code || params.id;
-  const brandSlug = params.brand;
+  const identifier = slug || productCode;
+  const apiPath = slug ? "/api/products/by-slug" : "/api/products/by-code";
 
-  // If no product code, show 404
-  if (!productCode) {
+  // If no identifier, show 404
+  if (!identifier) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -191,13 +130,13 @@ export default function ProductDetail() {
   }
 
   const { data: product, isLoading, error } = useQuery<ProductWithCategory>({
-    queryKey: ["/api/products/by-code", productCode],
+    queryKey: [apiPath, identifier],
     queryFn: async () => {
-      const response = await fetch(`/api/products/by-code/${productCode}`);
+      const response = await fetch(`${apiPath}/${encodeURIComponent(identifier)}`);
       if (!response.ok) throw new Error("Product not found");
       return response.json();
     },
-    enabled: !!productCode,
+    enabled: !!identifier,
   });
 
   const { data: relatedData } = useQuery<{ products: ProductWithCategory[] }>({
@@ -392,8 +331,8 @@ export default function ProductDetail() {
                     Featured Product
                   </span>
                 )}
-                <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4 leading-tight">
-                  {product.name}
+                <h1 className="text-2xl md:text-3xl font-black text-foreground mb-4 leading-tight">
+                  {buildProductTitle(product)}
                 </h1>
                 <p className="text-xl text-muted-foreground">
                   {product.description || "High-quality rock drill spare part"}
@@ -418,21 +357,24 @@ export default function ProductDetail() {
                   <p className="text-sm text-muted-foreground mb-2">Product Code</p>
                   {(() => {
                     const variants = getCodeVariants(product.delkomCode || '', product.brandCompatibility || '');
-                    return (
-                      <div className="space-y-1">
+                    if (!variants) {
+                      return (
                         <p className="font-bold text-lg font-mono tracking-wider text-foreground" data-testid="product-code-raw">
                           {product.delkomCode}
                         </p>
-                        {variants && (
-                          <>
-                            <p className="font-semibold text-base font-mono text-muted-foreground tracking-widest" data-testid="product-code-spaced">
-                              {variants.spaced}
-                            </p>
-                            <p className="font-semibold text-base font-mono text-muted-foreground tracking-wider" data-testid="product-code-dashed">
-                              {variants.dashed}
-                            </p>
-                          </>
-                        )}
+                      );
+                    }
+                    return (
+                      <div className="space-y-1">
+                        <p className="font-bold text-lg font-mono tracking-widest text-foreground" data-testid="product-code-spaced">
+                          {variants.spaced}
+                        </p>
+                        <p className="font-semibold text-base font-mono text-muted-foreground tracking-wider" data-testid="product-code-joined">
+                          {variants.joined}
+                        </p>
+                        <p className="font-semibold text-base font-mono text-muted-foreground tracking-wider" data-testid="product-code-dashed">
+                          {variants.dashed}
+                        </p>
                       </div>
                     );
                   })()}
@@ -571,12 +513,7 @@ export default function ProductDetail() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((related) => {
                 const relatedImage = related.imageUrls?.[0] || related.imageUrl || "/api/placeholder/300/300";
-                let relatedBrandSlug = 'spare-parts';
-                if (related.brandCompatibility) {
-                  const firstBrand = related.brandCompatibility.split(',')[0].trim();
-                  relatedBrandSlug = createSlug(firstBrand);
-                }
-                const relatedUrl = `/brand/${relatedBrandSlug}/${encodeURIComponent(related.delkomCode || related.id)}`;
+                const relatedUrl = `/urun/${related.slug || buildProductSlug(related)}`;
                 return (
                   <Link key={related.id} href={relatedUrl} data-testid={`related-product-${related.id}`}>
                     <motion.div

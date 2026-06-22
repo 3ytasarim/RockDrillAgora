@@ -17,6 +17,7 @@ export const products = pgTable("products", {
   name: text("name").notNull(),
   description: text("description"),
   delkomCode: text("delkom_code").notNull().unique(),
+  slug: text("slug").unique(),
   originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(),
   discountPercentage: integer("discount_percentage").default(0),
   finalPrice: decimal("final_price", { precision: 10, scale: 2 }).notNull(),
@@ -49,6 +50,7 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
+  slug: true,
   createdAt: true,
   updatedAt: true,
   finalPrice: true,

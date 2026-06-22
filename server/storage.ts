@@ -1,6 +1,7 @@
 import { products, categories, type Product, type InsertProduct, type Category, type InsertCategory, type ProductWithCategory } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, like, or, desc, asc, sql, ilike } from "drizzle-orm";
+import { buildProductSlug } from "@shared/product-utils";
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -22,6 +23,7 @@ export interface IStorage {
   // Products
   getProduct(id: string): Promise<ProductWithCategory | undefined>;
   getProductByCode(code: string): Promise<ProductWithCategory | undefined>;
+  getProductBySlug(slug: string): Promise<ProductWithCategory | undefined>;
   getAllProducts(): Promise<ProductWithCategory[]>;
   getProductsPaginated(filters: ProductFilters): Promise<PaginatedResult<ProductWithCategory>>;
   searchProducts(query: string): Promise<ProductWithCategory[]>;
@@ -89,6 +91,21 @@ export class DatabaseStorage implements IStorage {
     
     if (!product) return undefined;
     
+    return {
+      ...product.products,
+      category: product.categories,
+    };
+  }
+
+  async getProductBySlug(slug: string): Promise<ProductWithCategory | undefined> {
+    const [product] = await this.db
+      .select()
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(eq(products.slug, slug));
+
+    if (!product) return undefined;
+
     return {
       ...product.products,
       category: product.categories,
@@ -262,11 +279,29 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
+  private async ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
+    const safeBase = baseSlug || "urun";
+    let candidate = safeBase;
+    let suffix = 2;
+    // Loop until we find a slug not used by another product.
+    while (true) {
+      const [existing] = await this.db
+        .select({ id: products.id })
+        .from(products)
+        .where(eq(products.slug, candidate));
+      if (!existing || existing.id === excludeId) return candidate;
+      candidate = `${safeBase}-${suffix}`;
+      suffix += 1;
+    }
+  }
+
   async createProduct(product: InsertProduct): Promise<Product> {
+    const slug = await this.ensureUniqueSlug(buildProductSlug(product));
     const [newProduct] = await this.db
       .insert(products)
       .values({
         ...product,
+        slug,
         originalPrice: "0.00",
         finalPrice: "0.00",
         discountPercentage: 0,
@@ -278,10 +313,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product> {
+    const [existing] = await this.db.select().from(products).where(eq(products.id, id));
+    const merged = { ...existing, ...product };
+    const slug = await this.ensureUniqueSlug(buildProductSlug(merged), id);
+
     const [updatedProduct] = await this.db
       .update(products)
       .set({
         ...product,
+        slug,
         updatedAt: new Date(),
       })
       .where(eq(products.id, id))
