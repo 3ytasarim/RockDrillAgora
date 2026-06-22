@@ -10,6 +10,7 @@ import type { ProductWithCategory } from "@shared/schema";
 import RequestQuoteModal from "@/components/request-quote-modal";
 import { Helmet } from "react-helmet";
 import { getCodeVariants, buildProductSlug, buildProductTitle } from "@shared/product-utils";
+import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getFaqItems, getProductDescription } from "@shared/product-content";
 
 function ProductSchema({ product }: { product: ProductWithCategory }) {
   const baseUrl = "https://agorarockdrill.shop";
@@ -142,14 +143,17 @@ export default function ProductDetail() {
   const { data: relatedData } = useQuery<{ products: ProductWithCategory[] }>({
     queryKey: ["/api/products/paginated", product?.categoryId],
     queryFn: async () => {
-      const res = await fetch(`/api/products/paginated?category=${product?.categoryId}&limit=5`);
+      const res = await fetch(`/api/products/paginated?category=${product?.categoryId}&limit=100`);
       if (!res.ok) throw new Error("Failed to fetch related products");
       return res.json();
     },
     enabled: !!product?.categoryId,
   });
 
-  const relatedProducts = relatedData?.products?.filter((p) => p.id !== product?.id).slice(0, 4) ?? [];
+  // Match SSR getRelatedProducts: same category, exclude same part code, take first 8.
+  const relatedProducts = (relatedData?.products ?? [])
+    .filter((p) => p.delkomCode && p.delkomCode !== product?.delkomCode)
+    .slice(0, 8);
 
   // Use product imageUrls array, fallback to imageUrl or placeholder
   const productImages = product ? (
@@ -470,6 +474,64 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {/* SEO Content Sections */}
+      <section className="bg-white border-t py-16">
+        <div className="max-w-5xl mx-auto px-4 space-y-12">
+          {/* Product Description */}
+          <div data-testid="section-product-description">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Product Description</h2>
+            <div className="space-y-4 text-muted-foreground leading-relaxed">
+              {getProductDescription(product).map((para, i) => (
+                <p key={i} data-testid={`text-description-para-${i}`}>{para}</p>
+              ))}
+            </div>
+          </div>
+
+          {/* Compatible Machines */}
+          <div data-testid="section-compatible-machines">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Compatible Machines</h2>
+            <p className="text-muted-foreground mb-3 leading-relaxed">
+              {getCompatibleMachinesIntro(product)}
+            </p>
+            <ul className="list-disc pl-5 space-y-2 text-muted-foreground leading-relaxed">
+              {getCompatibleMachines(product.brandCompatibility || "").map((m, i) => (
+                <li key={i} data-testid={`text-compatible-machine-${i}`}>{m}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Technical Specifications */}
+          <div data-testid="section-technical-specifications">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Technical Specifications</h2>
+            <div className="overflow-hidden rounded-xl border border-border">
+              <table className="w-full text-sm">
+                <tbody>
+                  {getTechnicalSpecs(product).map(([k, v], i) => (
+                    <tr key={k} className={i % 2 === 0 ? "bg-slate-50" : "bg-white"}>
+                      <td className="py-3 px-4 font-semibold text-foreground w-2/5 border-b border-border">{k}</td>
+                      <td className="py-3 px-4 text-muted-foreground border-b border-border" data-testid={`text-spec-${i}`}>{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <div data-testid="section-faq" className="bg-blue-50/60 rounded-2xl p-6">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Frequently Asked Questions</h2>
+            <div className="space-y-5">
+              {getFaqItems(product).map((f, i) => (
+                <div key={i} data-testid={`faq-item-${i}`}>
+                  <h3 className="font-semibold text-foreground mb-1">{f.q}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{f.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Related Products */}
       {relatedProducts.length > 0 && (
         <section className="bg-white border-t py-16">
@@ -498,7 +560,7 @@ export default function ProductDetail() {
                       </div>
                       <div className="p-4">
                         <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 line-clamp-2">
-                          {related.name}
+                          {buildProductTitle(related)}
                         </h3>
                         {related.delkomCode && (
                           <p className="text-xs text-muted-foreground font-mono mb-2">{related.delkomCode}</p>
