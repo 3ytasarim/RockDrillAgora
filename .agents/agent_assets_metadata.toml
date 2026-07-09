@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Lka41QhoHvXh8LjEFtEgA"
+uri = "file://exports/agora-products.xml"
+type = "unspecified"
+title = "Agora Rock Drill – Tüm Ürünler (XML, 1.214 ürün)"
