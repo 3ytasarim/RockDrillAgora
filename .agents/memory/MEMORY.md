@@ -1,4 +1,5 @@
 - [drizzle-kit push interactive prompt](drizzle-push-interactive.md) — push TUI can't be answered via piped stdin; add column+unique constraint to populated tables via raw SQL instead.
 - [SSR HTML escaping](ssr-html-escaping.md) — DB fields in server/routes.ts SSR must use escapeHtml for HTML/attrs, safeJsonLd (raw values) for JSON-LD, and function replacers in .replace() to avoid $-substitution.
 - [SSR product content](ssr-product-content.md) — product SSR pages need per-product VARIED content (specs, compatible machines, 300-500w desc, FAQ); description uses deterministic code-hash seed (not random) for stable uniqueness.
+- [Prod data restore](prod-data-restore.md) — prod SQL is read-only; restore lost prod data by replaying the live POST /api/products API from exports/ backups.
 - [Product URL slugs](product-url-slugs.md) — SEO product URLs use /urun/{slug}; slug stored in DB, shared helpers in shared/product-utils.ts; old /product & /brand routes still resolve.
