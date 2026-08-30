@@ -22,7 +22,10 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           src={product.imageUrls?.[0] || product.imageUrl || "/api/placeholder/300/300"}
           alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""}`}
           className="w-full h-48 object-contain p-4 bg-white"
+          width={300}
+          height={220}
           loading="lazy"
+          decoding="async"
         />
       </div>
       <div className="p-4">

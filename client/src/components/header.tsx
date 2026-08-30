@@ -186,25 +186,25 @@ function SparePartsDropdown({ location, label }: { location: string; label: stri
                   <div className="px-5 pt-3 pb-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                     By Brand
                   </div>
-                  <Link 
-                    href="/spare-parts?brand=Atlas Copco - Epiroc" 
-                    data-testid="dropdown-brand-atlas-epiroc" 
+                  <Link
+                    href="/spare-parts/atlas-copco-epiroc"
+                    data-testid="dropdown-brand-atlas-epiroc"
                     className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
                   >
                     <i className="fas fa-industry mr-3 text-primary w-4 text-center"></i>
-                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Atlas Copco - Epiroc</span>
+                    <span className="group-hover/item:translate-x-1 transition-transform duration-150">Atlas Copco / Epiroc</span>
                   </Link>
-                  <Link 
-                    href="/spare-parts?brand=Sandvik" 
-                    data-testid="dropdown-brand-sandvik" 
+                  <Link
+                    href="/spare-parts/sandvik"
+                    data-testid="dropdown-brand-sandvik"
                     className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 group/item"
                   >
                     <i className="fas fa-industry mr-3 text-primary w-4 text-center"></i>
                     <span className="group-hover/item:translate-x-1 transition-transform duration-150">Sandvik</span>
                   </Link>
-                  <Link 
-                    href="/spare-parts?brand=Furukawa" 
-                    data-testid="dropdown-brand-furukawa" 
+                  <Link
+                    href="/spare-parts/furukawa"
+                    data-testid="dropdown-brand-furukawa"
                     className="flex items-center px-5 py-2.5 hover:bg-primary/10 transition-all duration-150 pl-8 border-b border-border group/item"
                   >
                     <i className="fas fa-industry mr-3 text-primary w-4 text-center"></i>

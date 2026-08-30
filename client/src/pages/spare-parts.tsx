@@ -1,7 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useParams } from "wouter";
+import { Helmet } from "react-helmet";
 import { Filter, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { BRANDS, brandBySlug } from "@shared/catalog";
+import NotFound from "@/pages/not-found";
+
+const SITE = "https://agorarockdrill.shop";
 
 // Custom hook to track URL search params changes
 function useSearchParams() {
@@ -54,7 +59,7 @@ interface PaginatedResult {
   totalPages: number;
 }
 
-const ITEMS_PER_PAGE = 24;
+const ITEMS_PER_PAGE = 48; // must match CATALOG_PAGE_SIZE in server/routes.ts
 
 const AVAILABLE_BRANDS = [
   "Atlas Copco - Epiroc",
@@ -63,7 +68,9 @@ const AVAILABLE_BRANDS = [
 ];
 
 export default function SpareParts() {
-  const [location] = useLocation();
+  const params = useParams();
+  const brandDef = params.brandSlug ? brandBySlug(params.brandSlug) : undefined;
+  const unknownBrand = !!params.brandSlug && !brandDef;
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -87,11 +94,12 @@ export default function SpareParts() {
   // Use custom hook to track URL params
   const urlParams = useSearchParams();
 
-  // Get search/brand params from URL - now properly reacts to URL changes
+  // Get search/brand/page params from URL - reacts to URL changes
   useEffect(() => {
     const search = urlParams.get("search") || urlParams.get("code");
     const brand = urlParams.get("brand");
-    
+    const pageParam = parseInt(urlParams.get("page") || "1") || 1;
+
     if (search) {
       setSearchQuery(search);
       setDebouncedSearch(search);
@@ -99,13 +107,23 @@ export default function SpareParts() {
       setSearchQuery("");
       setDebouncedSearch("");
     }
-    if (brand) {
-      setBrandFilter(brand);
-    } else {
-      setBrandFilter("");
+    // Brand comes from the clean /spare-parts/<slug> route when present,
+    // otherwise from a legacy ?brand= query param.
+    setBrandFilter(brandDef ? brandDef.name : brand || "");
+    setCurrentPage(Math.max(1, pageParam));
+  }, [urlParams, brandDef]);
+
+  // Keep ?page= in the URL so pagination is shareable / crawlable.
+  useEffect(() => {
+    const base = brandDef ? `/spare-parts/${brandDef.slug}` : "/spare-parts";
+    const qs = new URLSearchParams(window.location.search);
+    if (currentPage > 1) qs.set("page", String(currentPage));
+    else qs.delete("page");
+    const next = qs.toString() ? `${base}?${qs}` : base;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
     }
-    setCurrentPage(1);
-  }, [urlParams]);
+  }, [currentPage, brandDef]);
 
   // Fetch paginated products
   const { data: paginatedResult, isLoading } = useQuery<PaginatedResult>({
@@ -193,12 +211,50 @@ export default function SpareParts() {
     return pages;
   };
 
+  const canonicalPath = brandDef
+    ? `/spare-parts/${brandDef.slug}${currentPage > 1 ? `?page=${currentPage}` : ""}`
+    : `/spare-parts${currentPage > 1 ? `?page=${currentPage}` : ""}`;
+  const pageSuffix = currentPage > 1 ? ` – Page ${currentPage}` : "";
+  const metaTitle = brandDef
+    ? `${brandDef.label} Spare Parts${pageSuffix} | Agora Rock Drill`
+    : `Rock Drill Spare Parts Catalogue${pageSuffix} | Agora Rock Drill`;
+  const metaDesc = brandDef
+    ? `Spare parts compatible with ${brandDef.label} rock drilling equipment, listed by OEM part number. Request a quote from Agora Rock Drill.`
+    : `Full catalogue of rock drill spare parts for Atlas Copco / Epiroc, Sandvik and Furukawa equipment, listed by OEM part number.`;
+  const h1 = brandDef ? `${brandDef.label} Spare Parts` : "Rock Drill Spare Parts";
+  const blurb = brandDef ? brandDef.blurb : "Browse our complete catalogue of rock drill spare parts, listed by OEM part number.";
+
+  if (unknownBrand) return <NotFound />;
+
   return (
     <div>
+      <Helmet>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDesc} />
+        <link rel="canonical" href={`${SITE}${canonicalPath}`} />
+        <meta name="robots" content="index, follow" />
+        {currentPage > 1 && <link rel="prev" href={`${SITE}${(brandDef ? `/spare-parts/${brandDef.slug}` : "/spare-parts")}${currentPage - 1 > 1 ? `?page=${currentPage - 1}` : ""}`} />}
+        {currentPage < totalPages && <link rel="next" href={`${SITE}${(brandDef ? `/spare-parts/${brandDef.slug}` : "/spare-parts")}?page=${currentPage + 1}`} />}
+      </Helmet>
       <section className="industrial-gradient text-primary-foreground py-16">
         <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-5xl font-bold mb-4">Rock Drill Spare Parts</h1>
-          <p className="text-xl text-primary-foreground/90">Browse our complete catalog of high-quality spare parts</p>
+          <nav aria-label="Breadcrumb" className="text-sm text-primary-foreground/80 mb-3">
+            <a href="/" className="hover:underline">Home</a>
+            {brandDef && <> <span>›</span> <a href="/spare-parts" className="hover:underline">Spare Parts</a></>}
+            <span> › </span>
+            <span>{brandDef ? brandDef.label : "Spare Parts"}</span>
+          </nav>
+          <h1 className="text-4xl md:text-5xl font-bold mb-3">{h1}</h1>
+          <p className="text-lg text-primary-foreground/90 max-w-3xl">{blurb}</p>
+          {!brandDef && (
+            <div className="flex flex-wrap gap-3 mt-5">
+              {BRANDS.map((b) => (
+                <a key={b.slug} href={`/spare-parts/${b.slug}`} className="bg-white/10 hover:bg-white/20 rounded-full px-4 py-1.5 text-sm font-medium transition-colors">
+                  {b.label} parts
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

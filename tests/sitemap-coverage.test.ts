@@ -84,10 +84,9 @@ describe("Sitemap index", () => {
 
 describe("robots.txt", () => {
   // robots.txt is the entry point crawlers read first: it must point them at the
-  // sitemap (so the Task #6 sitemap work is actually discoverable) and keep them
-  // out of the admin panel. A regression here could de-index the site or expose
-  // /agoraadminpanel to crawlers, so we pin both behaviours down.
-  const SITEMAP_URL = `${BASE_URL}/site-sitemap.xml`;
+  // sitemap and keep them out of the admin panel. A regression here could
+  // de-index the site or expose /agoraadminpanel to crawlers.
+  const SITEMAP_URL = `${BASE_URL}/sitemap.xml`;
 
   it("returns 200 with plain-text content", async () => {
     const res = await request(app).get("/robots.txt");
@@ -136,47 +135,20 @@ describe("Static sitemap (/sitemap-static.xml)", () => {
     expect(extractLocs(res.text).map(toPath)).toContain("/sitemap-static.xml");
   });
 
-  it("gives every <url> a well-formed loc, changefreq and priority", async () => {
+  it("gives every <url> a single well-formed absolute loc (no changefreq/priority noise)", async () => {
     const res = await request(app).get("/sitemap-static.xml");
 
-    // Pull each <url>...</url> block so we can assert the children travel
-    // together (a stray loc without a changefreq/priority would be invalid).
     const blocks = res.text.match(/<url>[\s\S]*?<\/url>/g) ?? [];
     expect(blocks.length).toBe(EXPECTED_STATIC.length);
 
-    const validChangefreq = new Set([
-      "always",
-      "hourly",
-      "daily",
-      "weekly",
-      "monthly",
-      "yearly",
-      "never",
-    ]);
-
     for (const block of blocks) {
       const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1];
-      const changefreq = block.match(/<changefreq>([^<]+)<\/changefreq>/)?.[1];
-      const priority = block.match(/<priority>([^<]+)<\/priority>/)?.[1];
-
-      // loc must be the absolute https URL on the canonical host.
       expect(loc, `missing loc in block: ${block}`).toBeDefined();
-      expect(loc!).toMatch(
-        /^https:\/\/agorarockdrill\.shop(\/|\/[^\s<>]*)$/
-      );
-
-      // changefreq must be one of the sitemap-spec values.
-      expect(
-        changefreq && validChangefreq.has(changefreq),
-        `bad changefreq "${changefreq}" in block: ${block}`
-      ).toBe(true);
-
-      // priority must be a number in [0.0, 1.0].
-      expect(priority, `missing priority in block: ${block}`).toBeDefined();
-      const p = Number(priority);
-      expect(Number.isNaN(p), `non-numeric priority "${priority}"`).toBe(false);
-      expect(p).toBeGreaterThanOrEqual(0.0);
-      expect(p).toBeLessThanOrEqual(1.0);
+      expect(loc!).toMatch(/^https:\/\/agorarockdrill\.shop(\/|\/[^\s<>]*)$/);
+      // No fake freshness signals — sitemap deliberately carries loc only.
+      expect(block).not.toContain("<changefreq>");
+      expect(block).not.toContain("<priority>");
+      expect(block).not.toContain("<lastmod>");
     }
   });
 });
@@ -316,27 +288,22 @@ describe("Product sitemap pagination — real 500-URL split", () => {
       .where(like(products.delkomCode, `${SEED_PREFIX}%`));
   });
 
-  it("splits into a full first page and a remainder second page", async () => {
+  it("splits into a full first page and a valid second page", async () => {
     expect(totalIndexable).toBeGreaterThan(CHUNK_SIZE);
     const expectedChunks = Math.ceil(totalIndexable / CHUNK_SIZE);
     expect(expectedChunks).toBeGreaterThanOrEqual(2);
 
     const page1 = await request(app).get("/sitemap-products-1.xml");
     expect(page1.status).toBe(200);
-    const page1Count = extractLocs(page1.text).filter((loc) =>
-      loc.includes("/urun/")
-    ).length;
+    const page1Count = extractLocs(page1.text).filter((loc) => loc.includes("/urun/")).length;
     expect(page1Count).toBe(CHUNK_SIZE);
 
     const page2 = await request(app).get("/sitemap-products-2.xml");
     expect(page2.status).toBe(200);
-    const page2Count = extractLocs(page2.text).filter((loc) =>
-      loc.includes("/urun/")
-    ).length;
-    expect(page2Count).toBe(totalIndexable - CHUNK_SIZE);
-
-    // No product is dropped or duplicated at the page boundary.
-    expect(page1Count + page2Count).toBe(totalIndexable);
+    const page2Count = extractLocs(page2.text).filter((loc) => loc.includes("/urun/")).length;
+    // Page 2 is either full (more pages follow) or holds the remainder (it's last).
+    const expectedPage2 = expectedChunks > 2 ? CHUNK_SIZE : totalIndexable - CHUNK_SIZE;
+    expect(page2Count).toBe(expectedPage2);
   });
 
   it("lists every seeded product exactly once across all pages", async () => {

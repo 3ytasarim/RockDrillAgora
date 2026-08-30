@@ -36,13 +36,12 @@ export const NAV_PAGES: NavPage[] = [
 export const HEADER_PAGES: NavPage[] = NAV_PAGES.filter((p) => p.inHeader);
 export const FOOTER_PAGES: NavPage[] = NAV_PAGES.filter((p) => p.inFooter);
 
-// Brand-filter landing pages. These are indexable for SEO but are not menu
-// items, so they live in the sitemap only (reached via the header's "By Brand"
-// dropdown, not as standalone nav entries).
+// Brand catalogue landing pages — clean, crawlable URLs (see shared/catalog.ts).
+// Reached via the header's "By Brand" dropdown and the homepage brand sections.
 const BRAND_SITEMAP_PAGES: StaticSitemapPage[] = [
-  { url: "/spare-parts?brand=Atlas%20Copco%20-%20Epiroc", priority: "0.85", changefreq: "daily" },
-  { url: "/spare-parts?brand=Sandvik", priority: "0.85", changefreq: "daily" },
-  { url: "/spare-parts?brand=Furukawa", priority: "0.85", changefreq: "daily" },
+  { url: "/spare-parts/atlas-copco-epiroc", priority: "0.85", changefreq: "weekly" },
+  { url: "/spare-parts/sandvik", priority: "0.85", changefreq: "weekly" },
+  { url: "/spare-parts/furukawa", priority: "0.85", changefreq: "weekly" },
 ];
 
 // The full list of static URLs exposed in /sitemap-static.xml: every navigable

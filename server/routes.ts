@@ -5,6 +5,7 @@ import { insertProductSchema, insertCategorySchema } from "@shared/schema";
 import { buildProductTitle, getCodeVariants, getProductSlug } from "@shared/product-utils";
 import { STATIC_SITEMAP_PAGES } from "@shared/sitemap-pages";
 import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getProductDescription } from "@shared/product-content";
+import { BRANDS, brandBySlug, brandForProduct, pickRelated, pickBrandShowcase } from "@shared/catalog";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 import { sendQuoteRequestEmail } from "./email";
@@ -60,22 +61,25 @@ function generateProductHtml(
   const brands = product.brandCompatibility || '';
   const code = product.delkomCode || '';
   const primaryBrand = brands ? brands.split(',')[0].trim() : '';
+  const brandDef = brandForProduct(product);
 
   // --- Combined display title (Brand – Name – spaced – joined – dashed) ---
   const displayTitle = buildProductTitle({ brand: brands, name: product.name, code });
 
   // --- Unique SEO <title> (keeps brand/site suffix for search snippets) ---
-  const title = `${product.name}${code ? ` - ${code}` : ''}${primaryBrand ? ` | ${primaryBrand}` : ''} Spare Part | Agora Rock Drill`;
+  const title = `${product.name}${code ? ` ${code}` : ''}${primaryBrand ? ` | ${primaryBrand}` : ''} spare part | Agora Rock Drill`;
 
-  // --- Unique meta description (never duplicate) ---
+  // --- Visible one-line summary (shown under the H1) — clean, never truncated ---
+  const brandPart = primaryBrand ? ` compatible with ${primaryBrand}` : '';
+  const summary = `${product.name}${code ? `, OEM part number ${code}` : ''}${brandPart} rock drilling equipment. Contact Agora Rock Drill for price, stock and delivery time.`;
+
+  // --- Meta description: the real product description if we have one, else the summary ---
   let description: string;
   if (product.description && product.description.trim().length > 40) {
-    description = product.description.slice(0, 155) + (product.description.length > 155 ? '...' : '');
+    const d = product.description.trim().replace(/\s+/g, ' ');
+    description = d.length > 158 ? d.slice(0, 155).replace(/\s+\S*$/, '') + '…' : d;
   } else {
-    const brandPart = primaryBrand ? `for ${primaryBrand}` : 'for rock drilling equipment';
-    const codePart = code ? ` Part number: ${code}.` : '';
-    description = `${product.name} — OEM-quality spare part ${brandPart}.${codePart} In stock at Agora Rock Drill. Request a quote for fast worldwide delivery from Ankara, Turkey.`;
-    if (description.length > 160) description = description.slice(0, 157) + '...';
+    description = summary.length > 158 ? summary.slice(0, 155).replace(/\s+\S*$/, '') + '…' : summary;
   }
 
   // --- Escaped variants for safe HTML insertion (raw versions kept for JSON-LD) ---
@@ -85,6 +89,7 @@ function generateProductHtml(
   const ePrimaryBrand = escapeHtml(primaryBrand);
   const eTitle = escapeHtml(title);
   const eDescription = escapeHtml(description);
+  const eSummary = escapeHtml(summary);
 
   // --- Image ---
   const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/og-image.jpg`;
@@ -100,20 +105,20 @@ function generateProductHtml(
   });
   const canonicalUrl = `${baseUrl}/urun/${productSlug}`;
 
-  // --- Code variants for SEO ---
+  // --- Part number: show ONE human-readable form (spaced if numeric, else raw).
+  //     Search-friendly variants live in the backend search, not stacked in the UI. ---
   const codeVariants = getCodeVariants(code, brands);
-  const codeVariantsHtml = codeVariants
-    ? `<p style="margin:4px 0;font-family:monospace;color:#555;">${codeVariants.spaced}</p>
-       <p style="margin:4px 0;font-family:monospace;color:#555;">${codeVariants.joined}</p>
-       <p style="margin:4px 0;font-family:monospace;color:#555;">${codeVariants.dashed}</p>`
-    : '';
+  const displayCode = codeVariants ? codeVariants.spaced : code;
+  const codeVariantsHtml = '';
 
   // --- JSON-LD: Product schema ---
+  // description mirrors the visible "Product Description" section verbatim.
+  const jsonLdDescription = getProductDescription(product).join(' ');
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": product.name,
-    "description": description,
+    "description": jsonLdDescription,
     "sku": code,
     "mpn": code,
     "image": fullImageUrl,
@@ -137,18 +142,19 @@ function generateProductHtml(
     }
   };
 
-  // --- JSON-LD: BreadcrumbList ---
+  // --- JSON-LD: BreadcrumbList (mirrors the visible breadcrumb nav) ---
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
       { "@type": "ListItem", "position": 2, "name": "Spare Parts", "item": `${baseUrl}/spare-parts` },
-      { "@type": "ListItem", "position": 3, "name": product.name, "item": canonicalUrl }
+      ...(brandDef ? [{ "@type": "ListItem", "position": 3, "name": brandDef.label, "item": `${baseUrl}/spare-parts/${brandDef.slug}` }] : []),
+      { "@type": "ListItem", "position": brandDef ? 4 : 3, "name": product.name, "item": canonicalUrl }
     ]
   };
 
-  // --- Rich SSR body content for Google (300+ words, unique per product) ---
+  // --- SSR body content (factual only — no spun text, no fabricated specs) ---
   const stockLabel = product.stockStatus === 'out_of_stock' ? 'Currently out of stock' : 'In Stock';
   const categoryName = escapeHtml(product.category?.name || '');
   const categoryLabel = product.category?.name || 'Rock Drill Spare Part';
@@ -229,7 +235,7 @@ function generateProductHtml(
       <nav aria-label="Breadcrumb" style="margin-bottom:20px;font-size:14px;color:#666;">
         <a href="${baseUrl}" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo;
         <a href="${baseUrl}/spare-parts" style="color:#2563eb;text-decoration:none;">Spare Parts</a> &rsaquo;
-        ${primaryBrand ? `<a href="${baseUrl}/spare-parts?brand=${encodeURIComponent(primaryBrand)}" style="color:#2563eb;text-decoration:none;">${ePrimaryBrand}</a> &rsaquo;` : ''}
+        ${brandDef ? `<a href="${baseUrl}/spare-parts/${brandDef.slug}" style="color:#2563eb;text-decoration:none;">${escapeHtml(brandDef.label)}</a> &rsaquo;` : ''}
         <span>${eName}</span>
       </nav>
 
@@ -240,12 +246,11 @@ function generateProductHtml(
         </div>
         <div>
           <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${escapeHtml(displayTitle)}</h1>
-          <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${eDescription}</p>
+          <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${eSummary}</p>
 
           <div style="background:#f7fafc;padding:20px;border-radius:8px;margin-bottom:20px;">
             <h2 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#2d3748;">OEM Part Number</h2>
-            <p style="margin:0 0 4px;font-family:monospace;font-size:17px;font-weight:700;color:#1a1a1a;">${eCode || 'N/A'}</p>
-            ${codeVariantsHtml}
+            <p style="margin:0 0 4px;font-family:monospace;font-size:17px;font-weight:700;color:#1a1a1a;">${escapeHtml(displayCode) || 'N/A'}</p>
             ${primaryBrand ? `<p style="margin:12px 0 0;"><strong style="color:#2d3748;">Brand:</strong> <span style="color:#1a1a1a;">${eBrands}</span></p>` : ''}
             ${categoryName ? `<p style="margin:8px 0 0;"><strong style="color:#2d3748;">Category:</strong> <span style="color:#1a1a1a;">${categoryName}</span></p>` : ''}
             <p style="margin:8px 0 0;"><strong style="color:#2d3748;">Availability:</strong>
@@ -273,8 +278,8 @@ function generateProductHtml(
       ${relatedProductsHtml}
 
       <div style="margin-top:40px;text-align:center;">
-        <a href="${baseUrl}/spare-parts${primaryBrand ? `?brand=${encodeURIComponent(primaryBrand)}` : ''}" style="display:inline-block;background:#f1f5f9;color:#1a1a1a;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-right:12px;">
-          &larr; View More ${ePrimaryBrand || 'Spare'} Parts
+        <a href="${baseUrl}${brandDef ? `/spare-parts/${brandDef.slug}` : '/spare-parts'}" style="display:inline-block;background:#f1f5f9;color:#1a1a1a;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-right:12px;">
+          &larr; View all ${escapeHtml(brandDef?.label || 'spare')} parts
         </a>
         <a href="${baseUrl}/contact" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;">
           Contact Us
@@ -367,30 +372,111 @@ function generateProductHtml(
   return html;
 }
 
-// Fetch related products from the same category (for SSR internal linking)
+// Related products for SSR internal linking + the /api/products/:id/related
+// endpoint the client uses. Deterministic per product (see pickRelated):
+// same brand/category, has image + slug, prefers same name-family, stable order.
 async function getRelatedProducts(product: {
   id?: string;
+  name?: string;
   categoryId?: string | null;
   delkomCode?: string | null;
-}): Promise<Array<{ name: string; slug?: string | null; delkomCode?: string | null; brandCompatibility?: string | null; imageUrls?: string[] | null }>> {
+}, count = 6): Promise<Array<{ id: string; name: string; slug?: string | null; delkomCode?: string | null; brandCompatibility?: string | null; imageUrls?: string[] | null }>> {
   try {
-    if (!product.categoryId) return [];
+    if (!product.categoryId || !product.id) return [];
     const sameCategory = await storage.getProductsByCategory(product.categoryId);
-    return sameCategory
-      .filter(p => p.delkomCode && p.delkomCode !== product.delkomCode)
-      .slice(0, 8)
-      .map(p => ({
-        name: p.name,
-        slug: p.slug,
-        delkomCode: p.delkomCode,
-        brandCompatibility: p.brandCompatibility,
-        imageUrls: p.imageUrls,
-      }));
+    return pickRelated(sameCategory as any, product as any, count).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      delkomCode: p.delkomCode,
+      brandCompatibility: p.brandCompatibility,
+      imageUrls: p.imageUrls,
+    }));
   } catch (err) {
     console.error("Error fetching related products:", err);
     return [];
   }
 }
+
+const BASE_URL = "https://agorarockdrill.shop";
+
+// Replace the head SEO tags in the template. All values pre-escaped by caller.
+function injectSeo(
+  template: string,
+  o: { title: string; description: string; canonical: string; ogType?: string; robots?: string; prev?: string; next?: string; jsonLd?: string }
+): string {
+  let html = template;
+  html = html.replace(/<title>[^<]*<\/title>/, () => `<title>${o.title}</title>`);
+  html = html.replace(/<meta name="title" content="[^"]*" \/>/, () => `<meta name="title" content="${o.title}" />`);
+  html = html.replace(/<meta name="description" content="[^"]*" \/>/, () => `<meta name="description" content="${o.description}" />`);
+  html = html.replace(/<link rel="canonical" href="[^"]*" \/>/, () => `<link rel="canonical" href="${o.canonical}" />`);
+  html = html.replace(/<meta property="og:title" content="[^"]*" \/>/, () => `<meta property="og:title" content="${o.title}" />`);
+  html = html.replace(/<meta property="og:description" content="[^"]*" \/>/, () => `<meta property="og:description" content="${o.description}" />`);
+  html = html.replace(/<meta property="og:url" content="[^"]*" \/>/, () => `<meta property="og:url" content="${o.canonical}" />`);
+  html = html.replace(/<meta property="og:type" content="[^"]*" \/>/, () => `<meta property="og:type" content="${o.ogType || "website"}" />`);
+  html = html.replace(/<meta name="twitter:title" content="[^"]*" \/>/, () => `<meta name="twitter:title" content="${o.title}" />`);
+  html = html.replace(/<meta name="twitter:description" content="[^"]*" \/>/, () => `<meta name="twitter:description" content="${o.description}" />`);
+  if (o.robots) {
+    // replace the template's default robots meta rather than adding a second one
+    html = html.replace(/<meta name="robots" content="[^"]*" \/>/, () => `<meta name="robots" content="${o.robots}" />`);
+  }
+  const headExtra =
+    (o.prev ? `<link rel="prev" href="${o.prev}" />\n` : "") +
+    (o.next ? `<link rel="next" href="${o.next}" />\n` : "") +
+    (o.jsonLd ? `<script type="application/ld+json">${o.jsonLd}</script>\n` : "");
+  if (headExtra) html = html.replace("</head>", () => `${headExtra}</head>`);
+  return html;
+}
+
+// One product card as a crawlable <a href>. Used by every SSR catalogue grid.
+function productCardHtml(p: { name: string; slug?: string | null; delkomCode?: string | null; brandCompatibility?: string | null; imageUrls?: string[] | null }): string {
+  const url = `${BASE_URL}/urun/${getProductSlug(p)}`;
+  const img = p.imageUrls?.[0];
+  const fullImg = img ? (img.startsWith("http") ? img : `${BASE_URL}${img}`) : "";
+  const title = escapeHtml(buildProductTitle(p));
+  const alt = escapeHtml(`${p.name}${p.delkomCode ? ` – ${p.delkomCode}` : ""}`);
+  return `
+    <li style="list-style:none;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;">
+      <a href="${escapeHtml(url)}" style="text-decoration:none;color:inherit;display:block;">
+        ${fullImg
+          ? `<img src="${escapeHtml(fullImg)}" alt="${alt}" width="300" height="220" loading="lazy" style="width:100%;height:180px;object-fit:contain;background:#fff;padding:8px;" />`
+          : `<div style="width:100%;height:180px;background:#f1f5f9;"></div>`}
+        <div style="padding:12px;">
+          <h3 style="font-size:14px;font-weight:600;margin:0;color:#1a1a1a;line-height:1.35;">${title}</h3>
+        </div>
+      </a>
+    </li>`;
+}
+
+function catalogGridHtml(products: Array<any>): string {
+  return `<ul style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin:0;padding:0;">${products.map(productCardHtml).join("")}</ul>`;
+}
+
+// Crawlable numbered pagination with rel prev/next anchors.
+function paginationHtml(basePath: string, page: number, totalPages: number): string {
+  if (totalPages <= 1) return "";
+  const url = (n: number) => `${BASE_URL}${basePath}${n > 1 ? `${basePath.includes("?") ? "&" : "?"}page=${n}` : ""}`;
+  const links: string[] = [];
+  if (page > 1) links.push(`<a rel="prev" href="${escapeHtml(url(page - 1))}" style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:6px;color:#1a1a1a;text-decoration:none;">&larr; Previous</a>`);
+  const win = 3;
+  for (let n = 1; n <= totalPages; n++) {
+    if (n === 1 || n === totalPages || (n >= page - win && n <= page + win)) {
+      links.push(
+        n === page
+          ? `<span style="padding:8px 14px;border:1px solid #1a1a1a;border-radius:6px;font-weight:700;">${n}</span>`
+          : `<a href="${escapeHtml(url(n))}" style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:6px;color:#1a1a1a;text-decoration:none;">${n}</a>`
+      );
+    } else if (links[links.length - 1] !== "…") {
+      links.push("…");
+    }
+  }
+  if (page < totalPages) links.push(`<a rel="next" href="${escapeHtml(url(page + 1))}" style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:6px;color:#1a1a1a;text-decoration:none;">Next &rarr;</a>`);
+  return `<nav aria-label="Pagination" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:40px 0 8px;">${links
+    .map((l) => (l === "…" ? `<span style="padding:8px 6px;color:#94a3b8;">…</span>` : l))
+    .join("")}</nav>`;
+}
+
+const CATALOG_PAGE_SIZE = 48;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Static product images (rsynced onto the server, not object storage).
@@ -467,6 +553,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching product:', error);
       res.status(500).json({ error: "Failed to fetch product" });
+    }
+  });
+
+  // Homepage brand showcase — same deterministic picks the SSR renders.
+  app.get("/api/home-showcase", async (_req, res) => {
+    try {
+      const all = await storage.getAllProducts();
+      const out: Record<string, any[]> = {};
+      for (const brand of BRANDS) out[brand.slug] = pickBrandShowcase(all as any, brand, 8);
+      res.set("Cache-Control", "public, max-age=300");
+      res.json(out);
+    } catch (error) {
+      console.error("Error building home showcase:", error);
+      res.status(500).json({ error: "Failed to build showcase" });
+    }
+  });
+
+  // Related products for a detail page — same set the SSR renders (deterministic).
+  app.get("/api/products/:id/related", async (req, res) => {
+    try {
+      const product = await storage.getProduct(req.params.id);
+      if (!product) return res.status(404).json({ error: "Product not found" });
+      const related = await getRelatedProducts(product, 6);
+      const full = await Promise.all(related.map((r) => storage.getProduct(r.id)));
+      res.set("Cache-Control", "public, max-age=300");
+      res.json(full.filter(Boolean));
+    } catch (error) {
+      console.error("Error fetching related products:", error);
+      res.status(500).json({ error: "Failed to fetch related products" });
     }
   });
 
@@ -822,96 +937,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return null;
   }
 
-  // SEO: SSR for /spare-parts — inject product links so Google can discover all products via link-following
+  // Shared: render a paginated catalogue page (used by /spare-parts and /spare-parts/:brand)
+  function renderCatalogSSR(template: string, opts: {
+    title: string; description: string; canonicalPath: string; basePath: string;
+    h1: string; blurb: string; breadcrumbHtml: string;
+    pageProducts: any[]; totalCount: number; page: number; totalPages: number;
+  }): string {
+    const canonical = `${BASE_URL}${opts.canonicalPath}`;
+    const prev = opts.page > 1 ? `${BASE_URL}${opts.basePath}${opts.page - 1 > 1 ? `${opts.basePath.includes("?") ? "&" : "?"}page=${opts.page - 1}` : ""}` : undefined;
+    const next = opts.page < opts.totalPages ? `${BASE_URL}${opts.basePath}${opts.basePath.includes("?") ? "&" : "?"}page=${opts.page + 1}` : undefined;
+    const ssr = `
+    <div id="ssr-catalog" style="padding:40px 20px;max-width:1280px;margin:0 auto;font-family:system-ui,-apple-system,sans-serif;">
+      <nav aria-label="Breadcrumb" style="margin-bottom:20px;font-size:14px;color:#666;">${opts.breadcrumbHtml}</nav>
+      <h1 style="font-size:28px;font-weight:700;margin:0 0 10px;color:#1a1a1a;">${escapeHtml(opts.h1)}</h1>
+      <p style="font-size:16px;color:#555;margin:0 0 8px;max-width:760px;line-height:1.6;">${escapeHtml(opts.blurb)}</p>
+      <p style="font-size:14px;color:#888;margin:0 0 28px;">${opts.totalCount} parts${opts.totalPages > 1 ? ` · page ${opts.page} of ${opts.totalPages}` : ""}</p>
+      ${catalogGridHtml(opts.pageProducts)}
+      ${paginationHtml(opts.basePath, opts.page, opts.totalPages)}
+    </div>`;
+    let html = injectSeo(template, {
+      title: escapeHtml(opts.title),
+      description: escapeHtml(opts.description),
+      canonical: escapeHtml(canonical),
+      ogType: "website",
+      prev: prev && escapeHtml(prev),
+      next: next && escapeHtml(next),
+    });
+    html = html.replace(/(<div id="root">)/, (m) => `${m}\n${ssr}`);
+    return html;
+  }
+
+  // SEO: /spare-parts — full catalogue, server-paginated, crawlable.
+  //   ?brand=<name>  -> 301 to the clean /spare-parts/<slug> landing page.
   app.get("/spare-parts", async (req, res, next) => {
+    try {
+      // Legacy ?brand= filter -> 301 to clean brand landing URL
+      const brandParam = typeof req.query.brand === "string" ? req.query.brand : "";
+      if (brandParam) {
+        const b = BRANDS.find((x) => x.match(brandParam) || x.slug === brandParam.toLowerCase().replace(/[^a-z]+/g, "-"));
+        if (b) return res.redirect(301, brandParam ? `/spare-parts/${b.slug}` : "/spare-parts");
+      }
+
+      const templatePath = findTemplatePath();
+      if (!templatePath) return next();
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+
+      const all = (await storage.getAllProducts()).filter((p) => p.delkomCode);
+      const page = Math.max(1, parseInt(String(req.query.page || "1")) || 1);
+      const totalPages = Math.max(1, Math.ceil(all.length / CATALOG_PAGE_SIZE));
+      const pageProducts = all.slice((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE);
+      if (pageProducts.length === 0 && page > 1) return next();
+
+      const suffix = page > 1 ? ` – Page ${page}` : "";
+      const html = renderCatalogSSR(template, {
+        title: `Rock Drill Spare Parts Catalogue${suffix} | Agora Rock Drill`,
+        description: `Full catalogue of ${all.length} rock drill spare parts for Atlas Copco / Epiroc, Sandvik and Furukawa equipment, listed by OEM part number. Request a quote.`,
+        canonicalPath: page > 1 ? `/spare-parts?page=${page}` : `/spare-parts`,
+        basePath: `/spare-parts`,
+        h1: "Rock Drill Spare Parts Catalogue",
+        blurb: "Every part is listed by its OEM part number so you can match it to your machine. Browse by brand or search by part number.",
+        breadcrumbHtml: `<a href="${BASE_URL}" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo; <span>Spare Parts</span>`,
+        pageProducts, totalCount: all.length, page, totalPages,
+      });
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch (error) {
+      console.error("Error generating /spare-parts SSR:", error);
+      next();
+    }
+  });
+
+  // SEO: /spare-parts/<brand> — clean, crawlable brand catalogue landing pages.
+  app.get("/spare-parts/:brandSlug", async (req, res, next) => {
+    try {
+      const brand = brandBySlug(req.params.brandSlug);
+      const templatePath = findTemplatePath();
+      if (!templatePath) return next();
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+
+      // Unknown brand slug -> real 404 (no soft-200 catalogue clone).
+      if (!brand) {
+        const html404 = injectSeo(template, {
+          title: "Page not found | Agora Rock Drill",
+          description: "The page you requested does not exist.",
+          canonical: `${BASE_URL}${req.originalUrl}`,
+          robots: "noindex, follow",
+        });
+        return res.status(404).set({ "Content-Type": "text/html" }).end(html404);
+      }
+
+
+      const all = (await storage.getAllProducts()).filter((p) => p.delkomCode && brand.match(p.brandCompatibility || ""));
+      const page = Math.max(1, parseInt(String(req.query.page || "1")) || 1);
+      const totalPages = Math.max(1, Math.ceil(all.length / CATALOG_PAGE_SIZE));
+      const pageProducts = all.slice((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE);
+      if (pageProducts.length === 0 && page > 1) return next();
+
+      const suffix = page > 1 ? ` – Page ${page}` : "";
+      const html = renderCatalogSSR(template, {
+        title: `${brand.label} Spare Parts${suffix} | Agora Rock Drill`,
+        description: `${all.length} spare parts compatible with ${brand.label} rock drilling equipment, listed by OEM part number. Request a quote from Agora Rock Drill.`,
+        canonicalPath: page > 1 ? `/spare-parts/${brand.slug}?page=${page}` : `/spare-parts/${brand.slug}`,
+        basePath: `/spare-parts/${brand.slug}`,
+        h1: `${brand.label} Spare Parts`,
+        blurb: brand.blurb,
+        breadcrumbHtml: `<a href="${BASE_URL}" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo; <a href="${BASE_URL}/spare-parts" style="color:#2563eb;text-decoration:none;">Spare Parts</a> &rsaquo; <span>${escapeHtml(brand.label)}</span>`,
+        pageProducts, totalCount: all.length, page, totalPages,
+      });
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch (error) {
+      console.error("Error generating brand catalogue SSR:", error);
+      next();
+    }
+  });
+
+  // SEO: "/" — inject real, crawlable product links (per brand) into the first HTML.
+  app.get("/", async (req, res, next) => {
     try {
       const templatePath = findTemplatePath();
       if (!templatePath) return next();
-
       const template = await fs.promises.readFile(templatePath, "utf-8");
-      const baseUrl = "https://agorarockdrill.shop";
-      const brandFilter = typeof req.query.brand === 'string' ? req.query.brand : null;
+      const all = await storage.getAllProducts();
 
-      let products = await storage.getAllProducts();
-      if (brandFilter) {
-        products = products.filter(p =>
-          p.brandCompatibility && p.brandCompatibility.toLowerCase().includes(brandFilter.toLowerCase())
-        );
-      }
-      const validProducts = products.filter(p => p.delkomCode);
-
-      // Build SEO title & description
-      const eBrandFilter = escapeHtml(brandFilter);
-      const pageTitle = brandFilter
-        ? `${eBrandFilter} Spare Parts | Agora Rock Drill`
-        : `Spare Parts Catalog | Atlas Copco, Sandvik, Furukawa | Agora Rock Drill`;
-      const pageDescription = brandFilter
-        ? `Browse ${validProducts.length}+ ${eBrandFilter} compatible spare parts. Rock drill components, drifter parts and more. Fast worldwide delivery from Agora Rock Drill, Ankara Turkey.`
-        : `Browse ${validProducts.length}+ spare parts for Atlas Copco, Epiroc, Sandvik and Furukawa rock drilling equipment. Drifter parts, machine parts, OEM quality. Request a quote today.`;
-
-      // Build HTML grid of product links — critical for Google to follow links to all product pages
-      const productLinksHtml = validProducts.map(p => {
-        const productUrl = `${baseUrl}/urun/${getProductSlug(p)}`;
-        const imgSrc = p.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
-        const fullImg = imgSrc.startsWith('http') ? imgSrc : `${baseUrl}${imgSrc}`;
-        const brand = p.brandCompatibility ? p.brandCompatibility.split(',')[0].trim() : '';
-        const epName = escapeHtml(p.name);
-        const epTitle = escapeHtml(buildProductTitle(p));
-        const epCode = escapeHtml(p.delkomCode);
-        const epBrand = escapeHtml(brand);
+      const sections = BRANDS.map((brand) => {
+        const picks = pickBrandShowcase(all as any, brand, 8);
+        if (picks.length === 0) return "";
         return `
-          <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;">
-            <a href="${escapeHtml(productUrl)}" style="text-decoration:none;color:inherit;display:block;">
-              <img src="${escapeHtml(fullImg)}" alt="${epName} - ${epCode}" width="200" height="200"
-                   loading="lazy" style="width:100%;height:160px;object-fit:cover;" />
-              <div style="padding:12px;">
-                <h2 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${epTitle}</h2>
-                ${epBrand ? `<p style="font-size:12px;color:#2563eb;margin:0;">${epBrand}</p>` : ''}
-              </div>
-            </a>
-          </div>`;
-      }).join('');
+      <section style="margin:0 0 48px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin:0 0 16px;">
+          <h2 style="font-size:22px;font-weight:700;margin:0;color:#1a1a1a;">${escapeHtml(brand.label)} Spare Parts</h2>
+          <a href="${BASE_URL}/spare-parts/${brand.slug}" style="color:#2563eb;text-decoration:none;font-weight:600;white-space:nowrap;">View all ${escapeHtml(brand.label)} parts &rarr;</a>
+        </div>
+        ${catalogGridHtml(picks)}
+      </section>`;
+      }).join("");
 
-      const ssrContent = `
-    <div id="ssr-spare-parts" style="padding:40px 20px;max-width:1400px;margin:0 auto;font-family:system-ui,-apple-system,sans-serif;">
-      <nav aria-label="Breadcrumb" style="margin-bottom:20px;font-size:14px;color:#666;">
-        <a href="${baseUrl}" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo;
-        ${brandFilter ? `<a href="${baseUrl}/spare-parts" style="color:#2563eb;text-decoration:none;">Spare Parts</a> &rsaquo; <span>${eBrandFilter}</span>` : '<span>Spare Parts</span>'}
-      </nav>
-      <h1 style="font-size:28px;font-weight:700;margin:0 0 8px;color:#1a1a1a;">
-        ${brandFilter ? `${eBrandFilter} Spare Parts` : 'Rock Drill Spare Parts Catalog'}
-      </h1>
-      <p style="font-size:16px;color:#555;margin:0 0 32px;max-width:700px;">${pageDescription}</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;">
-        ${productLinksHtml}
-      </div>
-      <p style="margin-top:32px;font-size:14px;color:#666;">
-        Showing ${validProducts.length} products. 
-        <a href="${baseUrl}/contact" style="color:#2563eb;">Contact us</a> for custom orders or bulk pricing.
-      </p>
+      const ssr = `
+    <div id="ssr-home" style="padding:40px 20px;max-width:1280px;margin:0 auto;font-family:system-ui,-apple-system,sans-serif;">
+      <h1 style="font-size:26px;font-weight:700;margin:0 0 8px;color:#1a1a1a;">Rock Drill Spare Parts — Atlas Copco / Epiroc, Sandvik, Furukawa</h1>
+      <p style="font-size:16px;color:#555;margin:0 0 32px;max-width:760px;line-height:1.6;">Agora Rock Drill supplies replacement spare parts for hydraulic rock drills and drilling rigs, listed by OEM part number. Browse a selection below or open the full catalogue.</p>
+      ${sections}
+      <p style="margin-top:8px;"><a href="${BASE_URL}/spare-parts" style="color:#2563eb;text-decoration:none;font-weight:600;">Browse the full spare parts catalogue &rarr;</a></p>
     </div>`;
 
-      const canonicalUrl = brandFilter
-        ? `${baseUrl}/spare-parts?brand=${encodeURIComponent(brandFilter)}`
-        : `${baseUrl}/spare-parts`;
-      const eCanonicalUrl = escapeHtml(canonicalUrl);
-
-      // Inject meta tags + SSR content
-      let html = template;
-      html = html.replace(/<title>[^<]*<\/title>/, () => `<title>${pageTitle}</title>`);
-      html = html.replace(
-        /<meta name="description"[^>]*>/,
-        () => `<meta name="description" content="${pageDescription}" />`
-      );
-      html = html.replace(/<link rel="canonical"[^>]*>/, () => `<link rel="canonical" href="${eCanonicalUrl}" />`);
-      html = html.replace(/<meta property="og:title"[^>]*>/, () => `<meta property="og:title" content="${pageTitle}" />`);
-      html = html.replace(/<meta property="og:description"[^>]*>/, () => `<meta property="og:description" content="${pageDescription}" />`);
-      html = html.replace(/<meta property="og:url"[^>]*>/, () => `<meta property="og:url" content="${eCanonicalUrl}" />`);
-      html = html.replace(/(<div id="root">)/, (m) => `${m}\n${ssrContent}`);
-
+      let html = injectSeo(template, {
+        title: escapeHtml("Agora Rock Drill — Rock Drill Spare Parts (Atlas Copco / Epiroc, Sandvik, Furukawa)"),
+        description: escapeHtml("Replacement spare parts for Atlas Copco / Epiroc, Sandvik and Furukawa hydraulic rock drills and drill rigs, listed by OEM part number. Request a quote from Agora Rock Drill."),
+        canonical: `${BASE_URL}/`,
+        ogType: "website",
+      });
+      html = html.replace(/(<div id="root">)/, (m) => `${m}\n${ssr}`);
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (error) {
-      console.error("Error generating spare-parts SSR page:", error);
+      console.error("Error generating home SSR:", error);
       next();
     }
   });
@@ -977,10 +1154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 Allow: /
 Disallow: /admin
 Disallow: /agoraadminpanel
-Disallow: /api/upload
-Disallow: /api/presigned-url
+Disallow: /api/
 
-Sitemap: https://agorarockdrill.shop/site-sitemap.xml
+Sitemap: https://agorarockdrill.shop/sitemap.xml
 `;
     res.header('Content-Type', 'text/plain');
     res.send(robotsTxt);
@@ -996,71 +1172,68 @@ Sitemap: https://agorarockdrill.shop/site-sitemap.xml
       .replace(/'/g, '&apos;');
   };
 
-  // Sitemap index - points to sub-sitemaps
-  // Served at /site-sitemap.xml (primary, submitted to Google) and /sitemap.xml (standard fallback)
-  app.get(["/site-sitemap.xml", "/sitemap.xml"], async (req, res) => {
+  const isoDay = (d: unknown): string | null => {
+    if (!d) return null;
+    try {
+      const dt = d instanceof Date ? d : new Date(d as string);
+      return isNaN(dt.getTime()) ? null : dt.toISOString().split("T")[0];
+    } catch { return null; }
+  };
+
+  // Sitemap index. No fake freshness: product-sitemap lastmod = newest real
+  // product updated_at; static sitemap carries no lastmod.
+  app.get(["/sitemap.xml", "/site-sitemap.xml"], async (req, res) => {
     try {
       const products = await storage.getAllProducts();
       const baseUrl = "https://agorarockdrill.shop";
-      const today = new Date().toISOString().split('T')[0];
       const CHUNK_SIZE = 500;
-      const productChunks = Math.ceil(products.filter(p => p.delkomCode).length / CHUNK_SIZE);
+      const valid = products.filter((p) => p.delkomCode);
+      const productChunks = Math.max(1, Math.ceil(valid.length / CHUNK_SIZE));
+      const newest = valid
+        .map((p) => isoDay(p.updatedAt))
+        .filter(Boolean)
+        .sort()
+        .pop();
 
-      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-
-      // Static pages sitemap
-      xml += '  <sitemap>\n';
-      xml += `    <loc>${baseUrl}/sitemap-static.xml</loc>\n`;
-      xml += `    <lastmod>${today}</lastmod>\n`;
-      xml += '  </sitemap>\n';
-
-      // Product sitemaps (500 per file)
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+      xml += `  <sitemap><loc>${baseUrl}/sitemap-static.xml</loc></sitemap>\n`;
       for (let i = 0; i < productChunks; i++) {
-        xml += '  <sitemap>\n';
-        xml += `    <loc>${baseUrl}/sitemap-products-${i + 1}.xml</loc>\n`;
-        xml += `    <lastmod>${today}</lastmod>\n`;
-        xml += '  </sitemap>\n';
+        xml += `  <sitemap><loc>${baseUrl}/sitemap-products-${i + 1}.xml</loc>${newest ? `<lastmod>${newest}</lastmod>` : ""}</sitemap>\n`;
       }
-
-      xml += '</sitemapindex>';
-      res.header('Content-Type', 'application/xml');
-      res.send(xml);
+      xml += "</sitemapindex>";
+      res.header("Content-Type", "application/xml").send(xml);
     } catch (error) {
-      console.error('Error generating sitemap index:', error);
+      console.error("Error generating sitemap index:", error);
       res.status(500).json({ error: "Failed to generate sitemap" });
     }
   });
 
-  // Static pages sitemap
+  // Static pages + brand catalogue landing pages. No changefreq/priority/lastmod.
   app.get("/sitemap-static.xml", (req, res) => {
     const baseUrl = "https://agorarockdrill.shop";
-    const today = new Date().toISOString().split('T')[0];
-
-    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-
-    STATIC_SITEMAP_PAGES.forEach(page => {
-      xml += '  <url>\n';
-      xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
-      xml += `    <lastmod>${today}</lastmod>\n`;
-      xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
-      xml += `    <priority>${page.priority}</priority>\n`;
-      xml += '  </url>\n';
-    });
-
-    xml += '</urlset>';
-    res.header('Content-Type', 'application/xml');
-    res.send(xml);
+    const urls = [
+      ...STATIC_SITEMAP_PAGES.map((p) => p.url),
+      "/spare-parts",
+      ...BRANDS.map((b) => `/spare-parts/${b.slug}`),
+    ];
+    const seen = new Set<string>();
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    for (const u of urls) {
+      if (seen.has(u)) continue;
+      seen.add(u);
+      xml += `  <url><loc>${baseUrl}${u}</loc></url>\n`;
+    }
+    xml += "</urlset>";
+    res.header("Content-Type", "application/xml").send(xml);
   });
 
-  // Product sitemaps - paginated at 500 per file
+  // Product sitemaps - paginated at 500 per file.
+  // lastmod ONLY from real updated_at; no changefreq/priority.
   app.get("/sitemap-products-:page.xml", async (req, res) => {
     try {
       const page = parseInt(req.params.page) || 1;
       const CHUNK_SIZE = 500;
       const baseUrl = "https://agorarockdrill.shop";
-      const today = new Date().toISOString().split('T')[0];
 
       const allProducts = await storage.getAllProducts();
       const validProducts = allProducts.filter(p => p.delkomCode);
@@ -1076,22 +1249,11 @@ Sitemap: https://agorarockdrill.shop/site-sitemap.xml
 
       chunk.forEach(product => {
         const productUrl = `/urun/${getProductSlug(product)}`;
-
-        let lastModDate = today;
-        if (product.updatedAt) {
-          try {
-            const dateObj = product.updatedAt instanceof Date
-              ? product.updatedAt
-              : new Date(product.updatedAt);
-            lastModDate = dateObj.toISOString().split('T')[0];
-          } catch (e) { /* use today */ }
-        }
+        const lastMod = isoDay(product.updatedAt);
 
         xml += '  <url>\n';
         xml += `    <loc>${baseUrl}${productUrl}</loc>\n`;
-        xml += `    <lastmod>${lastModDate}</lastmod>\n`;
-        xml += `    <changefreq>weekly</changefreq>\n`;
-        xml += `    <priority>0.7</priority>\n`;
+        if (lastMod) xml += `    <lastmod>${lastMod}</lastmod>\n`;
 
         if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
           product.imageUrls.forEach((imageUrl: string) => {

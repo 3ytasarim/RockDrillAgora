@@ -8,6 +8,7 @@ import SearchBar from "@/components/search-bar";
 import ProductCard from "@/components/product-card";
 import RequestQuoteModal from "@/components/request-quote-modal";
 import type { ProductWithCategory, Category } from "@shared/schema";
+import { BRANDS as HOME_BRANDS } from "@shared/catalog";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
@@ -108,11 +109,11 @@ export default function Home() {
     },
   });
 
-  const { data: allProducts = [], isLoading: productsLoading } = useQuery<ProductWithCategory[]>({
-    queryKey: ["/api/products", "featured"],
+  const { data: showcase = {}, isLoading: productsLoading } = useQuery<Record<string, ProductWithCategory[]>>({
+    queryKey: ["/api/home-showcase"],
     queryFn: async () => {
-      const response = await fetch("/api/products?featured=true");
-      if (!response.ok) throw new Error("Failed to fetch products");
+      const response = await fetch("/api/home-showcase");
+      if (!response.ok) throw new Error("Failed to fetch showcase");
       return response.json();
     },
     staleTime: 300000,
@@ -351,21 +352,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Products by Category */}
+      {/* Spare parts by brand — real, crawlable product links */}
       <section className="py-16 bg-muted">
         <div className="max-w-7xl mx-auto px-4">
+          <div className="mb-10">
+            <h2 className="text-3xl font-bold text-foreground mb-2">Rock Drill Spare Parts by Brand</h2>
+            <p className="text-muted-foreground max-w-3xl">
+              Replacement parts for Atlas Copco / Epiroc, Sandvik and Furukawa hydraulic rock drills and drill rigs, listed by OEM part number.
+            </p>
+          </div>
+
           {productsLoading ? (
             <div className="space-y-12">
-              {[1, 2, 3].map(catIndex => (
+              {[1, 2, 3].map((catIndex) => (
                 <div key={catIndex}>
                   <div className="bg-muted h-8 w-64 rounded mb-6 animate-pulse"></div>
                   <div className="grid md:grid-cols-4 gap-6">
-                    {[1, 2, 3, 4].map(i => (
+                    {[1, 2, 3, 4].map((i) => (
                       <div key={i} className="bg-card rounded-lg p-6 animate-pulse">
                         <div className="bg-muted h-48 rounded mb-4"></div>
                         <div className="bg-muted h-4 rounded mb-2"></div>
                         <div className="bg-muted h-4 rounded mb-4 w-2/3"></div>
-                        <div className="bg-muted h-8 rounded"></div>
                       </div>
                     ))}
                   </div>
@@ -374,62 +381,36 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-16">
-              {categories.map((category) => {
-                const categoryProducts = allProducts.filter(p => p.categoryId === category.id).slice(0, 4);
-                if (categoryProducts.length === 0) return null;
+              {HOME_BRANDS.map((brand) => {
+                const items = showcase[brand.slug] || [];
+                if (items.length === 0) return null;
                 return (
-                  <div key={category.id}>
-                    <div className="flex justify-between items-center mb-8">
-                      <div>
-                        <h2 className="text-3xl font-bold text-foreground mb-2">
-                          <i className={`${category.icon} text-primary mr-3`}></i>
-                          {category.name}
-                        </h2>
-                        {category.description && (
-                          <p className="text-muted-foreground">{category.description}</p>
-                        )}
-                      </div>
-                      <Link href={`/spare-parts?category=${category.id}`}>
-                        <Button variant="outline" className="font-semibold">
-                          View All <ChevronRight size={16} className="ml-2" />
+                  <div key={brand.slug}>
+                    <div className="flex justify-between items-center mb-8 gap-4">
+                      <h2 className="text-2xl md:text-3xl font-bold text-foreground">{brand.label} Spare Parts</h2>
+                      <a href={`/spare-parts/${brand.slug}`} data-testid={`view-all-${brand.slug}`}>
+                        <Button variant="outline" className="font-semibold whitespace-nowrap">
+                          View All {brand.label} Parts <ChevronRight size={16} className="ml-2" />
                         </Button>
-                      </Link>
+                      </a>
                     </div>
-                    <div className="grid md:grid-cols-4 gap-6">
-                      {categoryProducts.map((product) => (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      {items.map((product) => (
                         <ProductCard key={product.id} product={product} onAddToCart={handleRequestQuote} />
                       ))}
                     </div>
                   </div>
                 );
               })}
-
-              {allProducts.length === 0 && (
-                <div>
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold text-foreground mb-2">Our Products & Facilities</h3>
-                    <p className="text-muted-foreground">Explore our product range and facilities</p>
-                  </div>
-                  <div className="overflow-hidden">
-                    <div className="flex gap-4" style={{ animation: 'bannerScroll 35s linear infinite', width: 'max-content' }}>
-                      {[...bannerImages, ...bannerImages].map((img, i) => (
-                        <div key={i} className="flex-shrink-0 h-52 w-80 rounded-xl overflow-hidden shadow-md">
-                          <img src={img} alt={`Product ${(i % bannerImages.length) + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
-          <div className="text-center mt-8">
-            <Link href="/spare-parts">
+          <div className="text-center mt-12">
+            <a href="/spare-parts">
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 font-semibold" data-testid="view-all-products-btn">
-                View All Products →
+                Browse the full spare parts catalogue →
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>

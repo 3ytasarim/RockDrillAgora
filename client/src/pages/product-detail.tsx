@@ -142,20 +142,16 @@ export default function ProductDetail() {
     enabled: !!(slug || productCode),
   });
 
-  const { data: relatedData } = useQuery<{ products: ProductWithCategory[] }>({
-    queryKey: ["/api/products/paginated", product?.categoryId],
+  // Same deterministic set the server renders into the SSR HTML.
+  const { data: relatedProducts = [] } = useQuery<ProductWithCategory[]>({
+    queryKey: [`/api/products/${product?.id}/related`],
     queryFn: async () => {
-      const res = await fetch(`/api/products/paginated?category=${product?.categoryId}&limit=100`);
+      const res = await fetch(`/api/products/${product?.id}/related`);
       if (!res.ok) throw new Error("Failed to fetch related products");
       return res.json();
     },
-    enabled: !!product?.categoryId,
+    enabled: !!product?.id,
   });
-
-  // Match SSR getRelatedProducts: same category, exclude same part code, take first 8.
-  const relatedProducts = (relatedData?.products ?? [])
-    .filter((p) => p.delkomCode && p.delkomCode !== product?.delkomCode)
-    .slice(0, 8);
 
   // Use product imageUrls array, fallback to imageUrl or placeholder
   const productImages = product ? (
@@ -341,7 +337,9 @@ export default function ProductDetail() {
                   {buildProductTitle({ brand: product.brandCompatibility, name: product.name, code: product.delkomCode })}
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  {product.description || "High-quality rock drill spare part"}
+                  {product.description?.trim()
+                    ? product.description
+                    : `${product.name}${product.delkomCode ? `, OEM part number ${product.delkomCode}` : ""}${product.brandCompatibility ? ` compatible with ${product.brandCompatibility}` : ""} rock drilling equipment. Contact us for price, stock and delivery time.`}
                 </p>
               </motion.div>
             </div>
@@ -360,28 +358,14 @@ export default function ProductDetail() {
                   <Package className="text-primary" size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-muted-foreground mb-2">Product Code</p>
+                  <p className="text-sm text-muted-foreground mb-2">OEM Part Number</p>
                   {(() => {
                     const variants = getCodeVariants(product.delkomCode || '', product.brandCompatibility || '');
-                    if (!variants) {
-                      return (
-                        <p className="font-bold text-lg font-mono tracking-wider text-foreground" data-testid="product-code-raw">
-                          {product.delkomCode}
-                        </p>
-                      );
-                    }
+                    const primary = variants ? variants.spaced : product.delkomCode;
                     return (
-                      <div className="space-y-1">
-                        <p className="font-bold text-lg font-mono tracking-widest text-foreground" data-testid="product-code-spaced">
-                          {variants.spaced}
-                        </p>
-                        <p className="font-semibold text-base font-mono text-muted-foreground tracking-wider" data-testid="product-code-joined">
-                          {variants.joined}
-                        </p>
-                        <p className="font-semibold text-base font-mono text-muted-foreground tracking-wider" data-testid="product-code-dashed">
-                          {variants.dashed}
-                        </p>
-                      </div>
+                      <p className="font-bold text-lg font-mono tracking-widest text-foreground" data-testid="product-code">
+                        {primary}
+                      </p>
                     );
                   })()}
                 </div>

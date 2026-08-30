@@ -52,13 +52,12 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-lg font-bold mb-4">Product Categories</h4>
+            <h4 className="text-lg font-bold mb-4">Spare Parts by Brand</h4>
             <ul className="space-y-2">
-              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-drifter">Drifter Spare Parts</a></li>
-              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-machine">Machine Spare Parts</a></li>
-              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-pumps">Pump Motor Valves Bearings</a></li>
-              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-seals">Seal Kits Electrical Parts Filters</a></li>
-              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-category-hydraulic">Hydraulic Parts</a></li>
+              <li><a href="/spare-parts/atlas-copco-epiroc" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-brand-atlas-epiroc">Atlas Copco / Epiroc Parts</a></li>
+              <li><a href="/spare-parts/sandvik" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-brand-sandvik">Sandvik Parts</a></li>
+              <li><a href="/spare-parts/furukawa" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-brand-furukawa">Furukawa Parts</a></li>
+              <li><a href="/spare-parts" className="text-background/80 hover:text-accent transition-colors" data-testid="footer-all-parts">All Spare Parts</a></li>
             </ul>
           </div>
 

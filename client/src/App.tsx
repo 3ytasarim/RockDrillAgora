@@ -28,6 +28,7 @@ function Router() {
             <Switch>
               <Route path="/" component={Home} />
               <Route path="/spare-parts" component={SpareParts} />
+              <Route path="/spare-parts/:brandSlug" component={SpareParts} />
               <Route path="/contact" component={Contact} />
               <Route path="/about" component={About} />
               <Route path="/privacy" component={Privacy} />
