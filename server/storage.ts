@@ -3,6 +3,24 @@ import { getDb } from "./db";
 import { eq, like, or, desc, asc, sql, ilike } from "drizzle-orm";
 import { buildProductSlug } from "@shared/product-utils";
 
+// Part numbers are printed as "3128 3136 18", "3128-3136-18" or "3128313618".
+// We store the joined form; match all three by comparing the separator-stripped
+// query against a separator-stripped delkom_code (plus a normal name/code match).
+function productSearchWhere(query: string) {
+  const q = (query || "").trim();
+  const collapsed = q.replace(/[\s.\-_/]/g, "");
+  const conditions = [
+    ilike(products.name, `%${q}%`),
+    ilike(products.delkomCode, `%${q}%`),
+  ];
+  if (collapsed.length >= 3) {
+    conditions.push(
+      sql`regexp_replace(${products.delkomCode}, '[^A-Za-z0-9]', '', 'g') ILIKE ${`%${collapsed}%`}`
+    );
+  }
+  return or(...conditions);
+}
+
 export interface PaginatedResult<T> {
   data: T[];
   total: number;
@@ -217,7 +235,13 @@ export class DatabaseStorage implements IStorage {
     // Apply filters using raw SQL for flexibility
     let whereSQL = sql`TRUE`;
     if (filters.search) {
-      whereSQL = sql`${whereSQL} AND (${products.name} ILIKE ${`%${filters.search}%`} OR ${products.delkomCode} ILIKE ${`%${filters.search}%`})`;
+      const s = String(filters.search).trim();
+      const collapsed = s.replace(/[\s.\-_/]/g, "");
+      whereSQL = sql`${whereSQL} AND (${products.name} ILIKE ${`%${s}%`} OR ${products.delkomCode} ILIKE ${`%${s}%`}`;
+      if (collapsed.length >= 3) {
+        whereSQL = sql`${whereSQL} OR regexp_replace(${products.delkomCode}, '[^A-Za-z0-9]', '', 'g') ILIKE ${`%${collapsed}%`}`;
+      }
+      whereSQL = sql`${whereSQL})`;
     }
     if (filters.brand) {
       whereSQL = sql`${whereSQL} AND ${products.brandCompatibility} ILIKE ${`%${filters.brand}%`}`;
@@ -269,14 +293,9 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
-      .where(
-        or(
-          like(products.name, `%${query}%`),
-          like(products.delkomCode, `%${query}%`)
-        )
-      )
+      .where(productSearchWhere(query))
       .orderBy(desc(products.createdAt));
-    
+
     return results.map(result => ({
       ...result.products,
       category: result.categories,

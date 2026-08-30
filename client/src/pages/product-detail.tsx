@@ -256,13 +256,15 @@ export default function ProductDetail() {
                       <motion.div
                         key={index}
                         className="flex-[0_0_100%] min-w-0"
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.3 }}
                       >
                         <img
                           src={image}
-                          alt={`${product.name} - Image ${index + 1}`}
-                          className="w-full h-96 object-cover bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl"
+                          alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""} – image ${index + 1}`}
+                          width={1000}
+                          height={1000}
+                          className="w-full aspect-square object-contain bg-white rounded-2xl p-3"
                           loading={index === 0 ? "eager" : "lazy"}
                         />
                       </motion.div>
@@ -304,8 +306,8 @@ export default function ProductDetail() {
                   >
                     <img
                       src={image}
-                      alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-20 object-cover bg-slate-50"
+                      alt={`${product.name} thumbnail ${index + 1}`}
+                      className="w-full h-20 object-contain bg-white p-1"
                       loading="lazy"
                     />
                   </motion.button>
