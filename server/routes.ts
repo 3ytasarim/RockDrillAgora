@@ -6,6 +6,7 @@ import { buildProductTitle, getCodeVariants, getProductSlug } from "@shared/prod
 import { STATIC_SITEMAP_PAGES } from "@shared/sitemap-pages";
 import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getProductDescription } from "@shared/product-content";
 import { BRANDS, brandBySlug, brandForProduct, pickRelated, pickBrandShowcase } from "@shared/catalog";
+import { INDEXNOW_KEY, keyFileBody, pingIndexNow } from "@shared/indexnow";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 import { sendQuoteRequestEmail } from "./email";
@@ -629,6 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const product = await storage.createProduct(validatedProduct);
+      pingIndexNow(`https://agorarockdrill.shop/urun/${getProductSlug(product as any)}`);
       res.status(201).json(product);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -651,6 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const product = await storage.updateProduct(req.params.id, validatedProduct);
+      pingIndexNow(`https://agorarockdrill.shop/urun/${getProductSlug(product as any)}`);
       res.json(product);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -816,8 +819,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imagePath = `/public-objects/${imagePath}`;
       }
       
-      await storage.updateProduct(req.params.id, { imageUrl: imagePath });
-      
+      const updated = await storage.updateProduct(req.params.id, { imageUrl: imagePath });
+      pingIndexNow(`https://agorarockdrill.shop/urun/${getProductSlug(updated as any)}`);
+
       res.json({ imagePath });
     } catch (error) {
       console.error('Error updating product image:', error);
@@ -840,8 +844,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return imagePath;
       });
       
-      await storage.updateProduct(req.params.id, { imageUrls: imagePaths });
-      
+      const updated = await storage.updateProduct(req.params.id, { imageUrls: imagePaths });
+      pingIndexNow(`https://agorarockdrill.shop/urun/${getProductSlug(updated as any)}`);
+
       res.json({ imagePaths });
     } catch (error) {
       console.error('Error updating product images:', error);
@@ -1159,6 +1164,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error redirecting legacy product page:", error);
       next();
     }
+  });
+
+  // IndexNow ownership key file — https://agorarockdrill.shop/<key>.txt
+  app.get(`/${INDEXNOW_KEY}.txt`, (_req, res) => {
+    res.header("Content-Type", "text/plain").send(keyFileBody());
   });
 
   // robots.txt
