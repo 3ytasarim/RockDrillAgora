@@ -91,9 +91,9 @@ export function buildProductSlug(code: string, name: string, brand = ""): string
   return [codePart, namePart].filter(Boolean).join("-");
 }
 
-// Build the combined display title:
-// `Brand – Name – spaced – joined – dashed`
-// e.g. "Epiroc – Atlas Copco – Solenoid Valve – 9106 1607 98 – 9106106798 – 9106-1607-98"
+// Build the display title: `Name – <code> – Brand`
+// e.g. "Solenoid Valve – 9106 1607 98 – Epiroc / Atlas Copco"
+// One human-readable code form only (no 3-way spaced/joined/dashed keyword stuffing).
 // Accepts either { brand, name, code } or a product-like object
 // ({ brandCompatibility, name, delkomCode }) for caller convenience.
 export function buildProductTitle(input: {
@@ -108,24 +108,18 @@ export function buildProductTitle(input: {
   const code = input.code ?? input.delkomCode ?? "";
 
   const parts: string[] = [];
+  if (name) parts.push(name);
+
+  const variants = getCodeVariants(code, brand);
+  if (variants) parts.push(variants.spaced);
+  else if (code) parts.push(code);
 
   const cleanBrand = brand
     .split(",")
     .map((b) => b.trim())
     .filter(Boolean)
-    .join(" – ");
+    .join(" / ");
   if (cleanBrand) parts.push(cleanBrand);
-
-  if (name) parts.push(name);
-
-  const variants = getCodeVariants(code, brand);
-  if (variants) {
-    parts.push(variants.spaced);
-    parts.push(variants.joined);
-    parts.push(variants.dashed);
-  } else if (code) {
-    parts.push(code);
-  }
 
   return parts.join(" – ");
 }

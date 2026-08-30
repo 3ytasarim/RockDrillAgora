@@ -1,10 +1,10 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
 import { buildProductTitle, getCodeVariants, getProductSlug } from "@shared/product-utils";
 import { STATIC_SITEMAP_PAGES } from "@shared/sitemap-pages";
-import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getFaqItems, getProductDescription } from "@shared/product-content";
+import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getProductDescription } from "@shared/product-content";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 import { sendQuoteRequestEmail } from "./email";
@@ -109,7 +109,6 @@ function generateProductHtml(
     : '';
 
   // --- JSON-LD: Product schema ---
-  const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -121,15 +120,19 @@ function generateProductHtml(
     "brand": { "@type": "Brand", "name": primaryBrand || "Agora Rock Drill" },
     "manufacturer": { "@type": "Organization", "name": "Agora Rock Drill" },
     "category": product.category?.name || "Rock Drill Spare Parts",
+    // Quote-based B2B: no public price. Expose availability + seller only,
+    // so structured data matches the visible page (no fake "price": 0).
     "offers": {
       "@type": "Offer",
       "url": canonicalUrl,
       "availability": product.stockStatus === 'out_of_stock'
         ? "https://schema.org/OutOfStock"
         : "https://schema.org/InStock",
-      "price": "0",
-      "priceCurrency": "USD",
-      "priceValidUntil": priceValidUntil,
+      "priceSpecification": {
+        "@type": "PriceSpecification",
+        "priceCurrency": "USD",
+        "valueAddedTaxIncluded": false
+      },
       "seller": { "@type": "Organization", "name": "Agora Rock Drill" }
     }
   };
@@ -179,30 +182,7 @@ function generateProductHtml(
         </table>
       </div>`;
 
-  // --- FAQ (5 questions, consistent set across all products) ---
-  const faqItems = getFaqItems(product);
-  const faqHtml = `
-      <div style="margin-top:40px;padding:24px;background:#f0f4ff;border-radius:8px;">
-        <h2 style="font-size:20px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">Frequently Asked Questions</h2>
-        ${faqItems.map((f, i) => `
-        <div style="${i < faqItems.length - 1 ? 'margin-bottom:16px;' : ''}">
-          <h3 style="font-size:16px;font-weight:600;margin:0 0 6px;color:#2d3748;">${escapeHtml(f.q)}</h3>
-          <p style="color:#4a5568;margin:0;">${escapeHtml(f.a)}</p>
-        </div>`).join('')}
-      </div>`;
-
-  // --- JSON-LD: FAQPage (raw values; serialized via safeJsonLd) ---
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems.map(f => ({
-      "@type": "Question",
-      "name": f.q,
-      "acceptedAnswer": { "@type": "Answer", "text": f.a }
-    }))
-  };
-
-  // --- Product Description (300-500 words, deterministically varied per product) ---
+  // --- Product Description (one short factual paragraph) ---
   const descParas = getProductDescription(product);
   const descriptionHtml = `
       <div style="margin-top:48px;padding-top:32px;border-top:1px solid #e2e8f0;">
@@ -290,8 +270,6 @@ function generateProductHtml(
 
       ${compatibleMachinesHtml}
 
-      ${faqHtml}
-
       ${relatedProductsHtml}
 
       <div style="margin-top:40px;text-align:center;">
@@ -377,7 +355,7 @@ function generateProductHtml(
   // Add JSON-LD structured data before </head>
   html = html.replace(
     '</head>',
-    () => `<script type="application/ld+json">${safeJsonLd(productJsonLd)}</script>\n<script type="application/ld+json">${safeJsonLd(breadcrumbJsonLd)}</script>\n<script type="application/ld+json">${safeJsonLd(faqJsonLd)}</script>\n</head>`
+    () => `<script type="application/ld+json">${safeJsonLd(productJsonLd)}</script>\n<script type="application/ld+json">${safeJsonLd(breadcrumbJsonLd)}</script>\n</head>`
   );
   
   // Add SSR content inside <div id="root"> - React will hydrate over this
@@ -415,6 +393,21 @@ async function getRelatedProducts(product: {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Static product images (rsynced onto the server, not object storage).
+  // Folder lives at the project root; resolve it for both dev (server/) and prod (dist/).
+  const productImageDir = [
+    path.resolve(import.meta.dirname, "..", "product-images"),
+    path.resolve(process.cwd(), "product-images"),
+  ].find((p) => fs.existsSync(p)) || path.resolve(process.cwd(), "product-images");
+  app.use(
+    "/product-images",
+    express.static(productImageDir, {
+      immutable: true,
+      maxAge: "365d",
+      fallthrough: false,
+    })
+  );
+
   // Products API
   app.get("/api/products", async (req, res) => {
     try {

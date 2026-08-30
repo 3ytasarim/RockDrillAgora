@@ -18,9 +18,9 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             Featured
           </span>
         )}
-        <img 
-          src={product.imageUrl ? `${product.imageUrl}?w=400` : "/api/placeholder/300/300"} 
-          alt={product.name} 
+        <img
+          src={product.imageUrls?.[0] || product.imageUrl || "/api/placeholder/300/300"}
+          alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""}`}
           className="w-full h-48 object-contain p-4 bg-white"
           loading="lazy"
         />
