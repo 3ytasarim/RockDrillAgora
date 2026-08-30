@@ -1104,16 +1104,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const slug = decodeURIComponent(req.params.slug);
       const product = await storage.getProductBySlug(slug);
-      if (!product) return next();
 
       const templatePath = findTemplatePath();
       if (!templatePath) {
         console.warn("SSR template not found in any candidate path — serving SPA fallback");
         return next();
       }
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+
+      // Unknown product slug -> real 404 (no soft-200 SPA shell for a dead URL).
+      if (!product) {
+        const html404 = injectSeo(template, {
+          title: "Product not found | Agora Rock Drill",
+          description: "The product you requested does not exist or has been removed.",
+          canonical: `${BASE_URL}${req.originalUrl}`,
+          robots: "noindex, follow",
+        });
+        return res.status(404).set({ "Content-Type": "text/html" }).end(html404);
+      }
 
       const relatedProducts = await getRelatedProducts(product);
-      const template = await fs.promises.readFile(templatePath, "utf-8");
       const dynamicHtml = generateProductHtml(template, product, relatedProducts);
       res.status(200).set({ "Content-Type": "text/html" }).end(dynamicHtml);
     } catch (error) {

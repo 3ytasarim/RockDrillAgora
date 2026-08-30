@@ -82,18 +82,24 @@ export function getDashedCode(code: string, brand = ""): string {
   return (code || "").replace(/\s+/g, "");
 }
 
-// Build the SEO-friendly URL slug: `dashed-code` + `product-name`.
-// e.g. ("9128 7345 00", "Bushing") -> "9128-7345-00-bushing".
-// Uniqueness is guaranteed because the (unique) product code is part of the slug.
+// Build the URL slug: `brand-name-dashed-joined-dashed` (mirrors the sister
+// catalogue's structure so the same parts are searchable by full URL too).
+// e.g. ("3128 3136 18", "Bushing", "Epiroc / Atlas Copco")
+//   -> "epiroc-atlas-copco-bushing-3128-3136-18-3128313618-3128-3136-18"
+// Non-numeric codes just get "brand-name-code". Uniqueness holds because the
+// (unique) part code is always in the slug.
 export function buildProductSlug(code: string, name: string, brand = ""): string {
-  const codePart = slugify(getDashedCode(code, brand));
+  const brandPart = slugify(brand || "");
   const namePart = slugify(name || "");
-  return [codePart, namePart].filter(Boolean).join("-");
+  const variants = getCodeVariants(code, brand);
+  const codeParts = variants
+    ? [slugify(variants.dashed), slugify(variants.joined), slugify(variants.dashed)]
+    : [slugify(getDashedCode(code, brand))];
+  return [brandPart, namePart, ...codeParts].filter(Boolean).join("-");
 }
 
-// Build the display title: `Name – <code> – Brand`
-// e.g. "Solenoid Valve – 9106 1607 98 – Epiroc / Atlas Copco"
-// One human-readable code form only (no 3-way spaced/joined/dashed keyword stuffing).
+// Build the display title: `Brand – Name – spaced – joined – dashed`
+// e.g. "Epiroc / Atlas Copco – Bushing – 3128 3136 18 – 3128313618 – 3128-3136-18"
 // Accepts either { brand, name, code } or a product-like object
 // ({ brandCompatibility, name, delkomCode }) for caller convenience.
 export function buildProductTitle(input: {
@@ -108,11 +114,6 @@ export function buildProductTitle(input: {
   const code = input.code ?? input.delkomCode ?? "";
 
   const parts: string[] = [];
-  if (name) parts.push(name);
-
-  const variants = getCodeVariants(code, brand);
-  if (variants) parts.push(variants.spaced);
-  else if (code) parts.push(code);
 
   const cleanBrand = brand
     .split(",")
@@ -120,6 +121,15 @@ export function buildProductTitle(input: {
     .filter(Boolean)
     .join(" / ");
   if (cleanBrand) parts.push(cleanBrand);
+
+  if (name) parts.push(name);
+
+  const variants = getCodeVariants(code, brand);
+  if (variants) {
+    parts.push(variants.spaced, variants.joined, variants.dashed);
+  } else if (code) {
+    parts.push(code);
+  }
 
   return parts.join(" – ");
 }
