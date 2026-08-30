@@ -365,9 +365,16 @@ export default function ProductDetail() {
                     const variants = getCodeVariants(product.delkomCode || '', product.brandCompatibility || '');
                     const primary = variants ? variants.spaced : product.delkomCode;
                     return (
-                      <p className="font-bold text-lg font-mono tracking-widest text-foreground" data-testid="product-code">
-                        {primary}
-                      </p>
+                      <>
+                        <p className="font-bold text-lg font-mono tracking-widest text-foreground" data-testid="product-code">
+                          {primary}
+                        </p>
+                        {variants && (
+                          <p className="text-xs font-mono text-muted-foreground mt-1" data-testid="product-code-alt">
+                            Also written: {variants.joined} · {variants.dashed}
+                          </p>
+                        )}
+                      </>
                     );
                   })()}
                 </div>

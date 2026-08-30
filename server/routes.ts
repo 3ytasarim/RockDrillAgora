@@ -105,11 +105,13 @@ function generateProductHtml(
   });
   const canonicalUrl = `${baseUrl}/urun/${productSlug}`;
 
-  // --- Part number: show ONE human-readable form (spaced if numeric, else raw).
-  //     Search-friendly variants live in the backend search, not stacked in the UI. ---
+  // --- Part number: primary form (spaced) large, the other written forms once,
+  //     small and muted underneath (cross-reference aid, not keyword stacking). ---
   const codeVariants = getCodeVariants(code, brands);
   const displayCode = codeVariants ? codeVariants.spaced : code;
-  const codeVariantsHtml = '';
+  const codeVariantsHtml = codeVariants
+    ? `<p style="margin:4px 0 0;font-family:monospace;font-size:13px;color:#718096;">Also written: ${escapeHtml(codeVariants.joined)} &nbsp;·&nbsp; ${escapeHtml(codeVariants.dashed)}</p>`
+    : '';
 
   // --- JSON-LD: Product schema ---
   // description mirrors the visible "Product Description" section verbatim.
@@ -250,7 +252,8 @@ function generateProductHtml(
 
           <div style="background:#f7fafc;padding:20px;border-radius:8px;margin-bottom:20px;">
             <h2 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#2d3748;">OEM Part Number</h2>
-            <p style="margin:0 0 4px;font-family:monospace;font-size:17px;font-weight:700;color:#1a1a1a;">${escapeHtml(displayCode) || 'N/A'}</p>
+            <p style="margin:0;font-family:monospace;font-size:17px;font-weight:700;color:#1a1a1a;">${escapeHtml(displayCode) || 'N/A'}</p>
+            ${codeVariantsHtml}
             ${primaryBrand ? `<p style="margin:12px 0 0;"><strong style="color:#2d3748;">Brand:</strong> <span style="color:#1a1a1a;">${eBrands}</span></p>` : ''}
             ${categoryName ? `<p style="margin:8px 0 0;"><strong style="color:#2d3748;">Category:</strong> <span style="color:#1a1a1a;">${categoryName}</span></p>` : ''}
             <p style="margin:8px 0 0;"><strong style="color:#2d3748;">Availability:</strong>
