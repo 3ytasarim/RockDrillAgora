@@ -1171,9 +1171,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.header("Content-Type", "text/plain").send(keyFileBody());
   });
 
+  // SEO: unique <head> metadata in the first HTML response for the static
+  // pages too (their content itself renders after hydration, same as before).
+  const STATIC_PAGE_META: Record<string, { title: string; description: string }> = {
+    "/about": {
+      title: "About Us | Agora Rock Drill - Rock Drilling Spare Parts Specialists",
+      description: "Agora Rock Drill A.Ş. — Over 20 years of experience supplying high-quality spare parts for hydraulic rock drills and drill rigs. Atlas Copco, Epiroc, Sandvik, Furukawa compatible parts. Based in Ankara, Turkey.",
+    },
+    "/contact": {
+      title: "Contact Us | Agora Rock Drill",
+      description: "Contact Agora Rock Drill for a spare parts quote — hydraulic rock drill and drill rig components for Atlas Copco / Epiroc, Sandvik and Furukawa equipment. Ankara, Türkiye.",
+    },
+    "/privacy": {
+      title: "Privacy Policy | Agora Rock Drill",
+      description: "Privacy Policy for Agora Rock Drill A.Ş. — Learn how we collect, use, and protect your personal information when you use our website and services.",
+    },
+    "/terms": {
+      title: "Terms & Conditions | Agora Rock Drill",
+      description: "Terms and Conditions for using the Agora Rock Drill website and services. Read our policies on product information, quote requests, warranty, and liability.",
+    },
+  };
+  app.get(Object.keys(STATIC_PAGE_META), async (req, res, next) => {
+    try {
+      const templatePath = findTemplatePath();
+      if (!templatePath) return next();
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+      const meta = STATIC_PAGE_META[req.path];
+      const html = injectSeo(template, {
+        title: escapeHtml(meta.title),
+        description: escapeHtml(meta.description),
+        canonical: `${BASE_URL}${req.path}`,
+      });
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch (error) {
+      console.error("Error generating static page SSR meta:", error);
+      next();
+    }
+  });
+
+  // Admin routes are real client pages too (just not public/SEO pages —
+  // robots.txt disallows them). Serve them explicitly so they don't fall
+  // through to the catch-all 404 now that unknown paths are a real 404.
+  app.get(["/admin", "/agoraadminpanel"], async (req, res, next) => {
+    try {
+      const templatePath = findTemplatePath();
+      if (!templatePath) return next();
+      const template = await fs.promises.readFile(templatePath, "utf-8");
+      const html = injectSeo(template, {
+        title: "Agora Rock Drill",
+        description: "Admin",
+        canonical: `${BASE_URL}${req.path}`,
+        robots: "noindex, nofollow",
+      });
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch (error) {
+      next();
+    }
+  });
+
+  // /llms.txt — plain-text orientation file for LLM/AI-answer crawlers.
+  // https://llmstxt.org — supplementary only; does not replace SSR/sitemap/schema.
+  app.get("/llms.txt", async (_req, res) => {
+    try {
+      const all = await storage.getAllProducts();
+      const valid = all.filter((p) => p.delkomCode);
+      const counts = Object.fromEntries(BRANDS.map((b) => [b.label, valid.filter((p) => b.match(p.brandCompatibility || "")).length]));
+      const txt = `# Agora Rock Drill
+
+> Replacement spare parts supplier for hydraulic rock drills and drill rigs, based in Ankara, Türkiye. Parts are listed by OEM part number for Atlas Copco / Epiroc, Sandvik and Furukawa equipment.
+
+Agora Rock Drill A.Ş. supplies OEM-equivalent spare parts (pistons, drifters, rotation units, seal kits, hydraulic pumps and valves and related components) for rock drilling equipment, and ships internationally. This site is a searchable parts catalogue: each product page states the exact OEM part number, brand compatibility and stock status; ordering is via a quote request (no online checkout / listed price).
+
+## Catalogue
+- [Full spare parts catalogue](${BASE_URL}/spare-parts) — ${valid.length} parts total
+${BRANDS.map((b) => `- [${b.label} spare parts](${BASE_URL}/spare-parts/${b.slug}) — ${counts[b.label]} parts`).join("\n")}
+
+## Company
+- [About Agora Rock Drill](${BASE_URL}/about)
+- [Contact / request a quote](${BASE_URL}/contact)
+
+## Machine-readable
+- [XML sitemap](${BASE_URL}/sitemap.xml)
+`;
+      res.header("Content-Type", "text/plain; charset=utf-8").send(txt);
+    } catch (error) {
+      console.error("Error generating llms.txt:", error);
+      res.status(500).send("");
+    }
+  });
+
   // robots.txt
   app.get("/robots.txt", (req, res) => {
-    const robotsTxt = `User-agent: *
+    // Explicit per-bot rules for AI search/answer engines (GEO) in addition to
+    // the general crawler rule. Same SSR HTML is served to all of them — no
+    // user-agent-based cloaking.
+    const robotsTxt = `User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /agoraadminpanel

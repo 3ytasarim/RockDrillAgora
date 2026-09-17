@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet";
 
 export default function Contact() {
   const { toast } = useToast();
@@ -54,6 +55,15 @@ export default function Contact() {
 
   return (
     <div>
+      <Helmet>
+        <title>Contact Us | Agora Rock Drill</title>
+        <meta
+          name="description"
+          content="Contact Agora Rock Drill for a spare parts quote — hydraulic rock drill and drill rig components for Atlas Copco / Epiroc, Sandvik and Furukawa equipment. Ankara, Türkiye."
+        />
+        <link rel="canonical" href="https://agorarockdrill.shop/contact" />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       {/* Header */}
       <section className="industrial-gradient text-primary-foreground py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
