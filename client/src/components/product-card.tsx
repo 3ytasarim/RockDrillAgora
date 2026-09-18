@@ -1,4 +1,4 @@
-import { ShoppingCart, ArrowRight } from "lucide-react";
+import { ShoppingCart, ArrowRight, ImageOff } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import type { ProductWithCategory } from "@shared/schema";
@@ -10,6 +10,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  const image = product.imageUrls?.[0] || product.imageUrl;
   return (
     <div className="product-card bg-card rounded-lg shadow-md overflow-hidden border border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1" data-testid={`product-card-${product.id}`}>
       <div className="relative">
@@ -18,15 +19,21 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             Featured
           </span>
         )}
-        <img
-          src={product.imageUrls?.[0] || product.imageUrl || "/api/placeholder/300/300"}
-          alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""}`}
-          className="w-full h-48 object-contain p-4 bg-white"
-          width={300}
-          height={220}
-          loading="lazy"
-          decoding="async"
-        />
+        {image ? (
+          <img
+            src={image}
+            alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""}`}
+            className="w-full h-48 object-contain p-4 bg-white"
+            width={300}
+            height={220}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className="w-full h-48 flex items-center justify-center bg-slate-50 text-slate-300">
+            <ImageOff size={40} />
+          </div>
+        )}
       </div>
       <div className="p-4">
         <h3 className="font-bold text-base text-foreground mb-2 leading-snug" data-testid={`product-name-${product.id}`}>

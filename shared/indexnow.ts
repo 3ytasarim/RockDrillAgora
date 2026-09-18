@@ -7,7 +7,9 @@ export const INDEXNOW_KEY =
 
 const SITE = "https://agorarockdrill.shop";
 const ENDPOINT = "https://api.indexnow.org/indexnow";
-const MAX_PER_REQUEST = 10000;
+// The documented limit is 10,000 URLs/request, but api.indexnow.org has been
+// observed to 403 large first-time batches from a fresh key — chunk smaller.
+const MAX_PER_REQUEST = 500;
 
 export function keyFileBody(): string {
   return INDEXNOW_KEY;
@@ -38,6 +40,7 @@ export async function submitToIndexNow(urls: string[]): Promise<{ batch: number;
       console.error("IndexNow submit failed:", err);
       results.push({ batch: i / MAX_PER_REQUEST, status: 0 });
     }
+    if (i + MAX_PER_REQUEST < clean.length) await new Promise((r) => setTimeout(r, 1500));
   }
   return results;
 }

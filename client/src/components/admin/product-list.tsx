@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Edit, Trash2 } from "lucide-react";
+import { Search, Edit, Trash2, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { ProductWithCategory } from "@shared/schema";
@@ -72,12 +72,18 @@ export default function ProductList({ products, isLoading, onDelete, onEdit, isD
               {filteredProducts.map((product) => (
                 <tr key={product.id} className="border-b border-border hover:bg-muted/50" data-testid={`product-row-${product.id}`}>
                   <td className="px-4 py-3">
-                    <img 
-                      src={product.imageUrl || "/api/placeholder/64/64"} 
-                      alt={product.name}
-                      className="w-16 h-16 object-contain rounded"
-                      loading="lazy"
-                    />
+                    {(product.imageUrls?.[0] || product.imageUrl) ? (
+                      <img
+                        src={product.imageUrls?.[0] || product.imageUrl!}
+                        alt={product.name}
+                        className="w-16 h-16 object-contain rounded"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 flex items-center justify-center rounded bg-slate-100 text-slate-300">
+                        <ImageOff size={20} />
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="font-semibold text-foreground">{product.name}</div>

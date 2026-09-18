@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Package, FileText, Share2, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Package, FileText, Share2, Heart, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import useEmblaCarousel from "embla-carousel-react";
@@ -14,7 +14,7 @@ import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, g
 
 function ProductSchema({ product }: { product: ProductWithCategory }) {
   const baseUrl = "https://agorarockdrill.shop";
-  const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/api/placeholder/600/600`;
+  const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/og-image.jpg`;
 
   const canonicalUrl = `${baseUrl}/urun/${getProductSlug(product)}`;
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
@@ -153,13 +153,14 @@ export default function ProductDetail() {
     enabled: !!product?.id,
   });
 
-  // Use product imageUrls array, fallback to imageUrl or placeholder
+  // Use product imageUrls array, fallback to imageUrl, or none — no fake
+  // placeholder URL (there is no such endpoint; that just 404s as an <img>).
   const productImages = product ? (
     product.imageUrls && product.imageUrls.length > 0
       ? product.imageUrls
       : product.imageUrl
         ? [product.imageUrl]
-        : ["/api/placeholder/600/600"]
+        : []
   ) : [];
 
   useEffect(() => {
@@ -248,71 +249,86 @@ export default function ProductDetail() {
             transition={{ duration: 0.6 }}
           >
             <div className="bg-white rounded-3xl shadow-2xl overflow-hidden p-8 sticky top-24">
-              {/* Main Image Carousel */}
-              <div className="relative mb-6">
-                <div className="overflow-hidden rounded-2xl" ref={emblaRef}>
-                  <div className="flex">
-                    {productImages.map((image, index) => (
-                      <motion.div
-                        key={index}
-                        className="flex-[0_0_100%] min-w-0"
-                        whileHover={{ scale: 1.02 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <img
-                          src={image}
-                          alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""} – image ${index + 1}`}
-                          width={1000}
-                          height={1000}
-                          className="w-full aspect-square object-contain bg-white rounded-2xl p-3"
-                          loading={index === 0 ? "eager" : "lazy"}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
+              {productImages.length === 0 ? (
+                <div className="w-full aspect-square rounded-2xl bg-slate-50 flex flex-col items-center justify-center text-slate-300 gap-2">
+                  <ImageOff size={56} />
+                  <span className="text-sm text-slate-400">No photo yet</span>
                 </div>
+              ) : (
+                <>
+                  {/* Main Image Carousel */}
+                  <div className="relative mb-6">
+                    <div className="overflow-hidden rounded-2xl" ref={emblaRef}>
+                      <div className="flex">
+                        {productImages.map((image, index) => (
+                          <motion.div
+                            key={index}
+                            className="flex-[0_0_100%] min-w-0"
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <img
+                              src={image}
+                              alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""} – image ${index + 1}`}
+                              width={1000}
+                              height={1000}
+                              className="w-full aspect-square object-contain bg-white rounded-2xl p-3"
+                              loading={index === 0 ? "eager" : "lazy"}
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
 
-                {/* Navigation Buttons */}
-                <button
-                  onClick={scrollPrev}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white backdrop-blur-sm p-3 rounded-full shadow-lg transition-all hover:scale-110"
-                  data-testid="button-gallery-prev"
-                >
-                  <ChevronLeft size={24} className="text-primary" />
-                </button>
-                <button
-                  onClick={scrollNext}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white backdrop-blur-sm p-3 rounded-full shadow-lg transition-all hover:scale-110"
-                  data-testid="button-gallery-next"
-                >
-                  <ChevronRight size={24} className="text-primary" />
-                </button>
-              </div>
+                    {/* Navigation Buttons */}
+                    {productImages.length > 1 && (
+                      <>
+                        <button
+                          onClick={scrollPrev}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white backdrop-blur-sm p-3 rounded-full shadow-lg transition-all hover:scale-110"
+                          data-testid="button-gallery-prev"
+                        >
+                          <ChevronLeft size={24} className="text-primary" />
+                        </button>
+                        <button
+                          onClick={scrollNext}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white backdrop-blur-sm p-3 rounded-full shadow-lg transition-all hover:scale-110"
+                          data-testid="button-gallery-next"
+                        >
+                          <ChevronRight size={24} className="text-primary" />
+                        </button>
+                      </>
+                    )}
+                  </div>
 
-              {/* Thumbnail Gallery */}
-              <div className="grid grid-cols-4 gap-3">
-                {productImages.map((image, index) => (
-                  <motion.button
-                    key={index}
-                    onClick={() => emblaApi?.scrollTo(index)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`relative rounded-xl overflow-hidden border-2 transition-all ${
-                      selectedImageIndex === index
-                        ? 'border-primary shadow-lg'
-                        : 'border-transparent hover:border-slate-300'
-                    }`}
-                    data-testid={`button-thumbnail-${index}`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${product.name} thumbnail ${index + 1}`}
-                      className="w-full h-20 object-contain bg-white p-1"
-                      loading="lazy"
-                    />
-                  </motion.button>
-                ))}
-              </div>
+                  {/* Thumbnail Gallery */}
+                  {productImages.length > 1 && (
+                    <div className="grid grid-cols-4 gap-3">
+                      {productImages.map((image, index) => (
+                        <motion.button
+                          key={index}
+                          onClick={() => emblaApi?.scrollTo(index)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`relative rounded-xl overflow-hidden border-2 transition-all ${
+                            selectedImageIndex === index
+                              ? 'border-primary shadow-lg'
+                              : 'border-transparent hover:border-slate-300'
+                          }`}
+                          data-testid={`button-thumbnail-${index}`}
+                        >
+                          <img
+                            src={image}
+                            alt={`${product.name} thumbnail ${index + 1}`}
+                            className="w-full h-20 object-contain bg-white p-1"
+                            loading="lazy"
+                          />
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -524,7 +540,7 @@ export default function ProductDetail() {
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((related) => {
-                const relatedImage = related.imageUrls?.[0] || related.imageUrl || "/api/placeholder/300/300";
+                const relatedImage = related.imageUrls?.[0] || related.imageUrl;
                 const relatedUrl = getProductHref(related);
                 return (
                   <Link key={related.id} href={relatedUrl} data-testid={`related-product-${related.id}`}>
@@ -532,13 +548,17 @@ export default function ProductDetail() {
                       whileHover={{ scale: 1.02, y: -4 }}
                       className="bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer"
                     >
-                      <div className="aspect-square overflow-hidden bg-slate-50">
-                        <img
-                          src={relatedImage}
-                          alt={related.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
+                      <div className="aspect-square overflow-hidden bg-slate-50 flex items-center justify-center">
+                        {relatedImage ? (
+                          <img
+                            src={relatedImage}
+                            alt={related.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <ImageOff size={32} className="text-slate-300" />
+                        )}
                       </div>
                       <div className="p-4">
                         <h3 className="font-semibold text-foreground text-sm leading-tight mb-1 line-clamp-2">
