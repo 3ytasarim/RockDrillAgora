@@ -82,10 +82,18 @@ type Prod = {
   brandCompatibility?: string | null;
   imageUrls?: string[] | null;
   categoryId?: string | null;
+  imageIsSecondary?: boolean | null;
 };
 
 function hasUsableImage(p: Prod): boolean {
   return Array.isArray(p.imageUrls) && p.imageUrls.length > 0 && !!p.imageUrls[0];
+}
+// Primary (non-secondary) images are preferred wherever we can afford to
+// choose — showcases and related-product picks should favour them first and
+// only reach for a backfilled/secondary photo if there isn't enough primary
+// supply for the slot count.
+function isPrimaryImage(p: Prod): boolean {
+  return hasUsableImage(p) && !p.imageIsSecondary;
 }
 function hasSlug(p: Prod): boolean {
   return !!getProductSlug(p as any);
@@ -103,8 +111,11 @@ export function pickRelated<T extends Prod>(all: T[], current: Prod, count = 6):
   const sameBrand = all.filter(
     (p) => p.id !== current.id && hasSlug(p) && p.categoryId === current.categoryId
   );
+  // Prefer primary-photo products; only fall back to secondary-photo or
+  // photo-less ones if there isn't enough primary supply to fill the slots.
+  const primary = sameBrand.filter(isPrimaryImage);
   const withImg = sameBrand.filter(hasUsableImage);
-  const pool = withImg.length >= count ? withImg : sameBrand;
+  const pool = primary.length >= count ? primary : withImg.length >= count ? withImg : sameBrand;
 
   const fam = firstWord(current.name);
   const family = pool.filter((p) => firstWord(p.name) === fam);
@@ -116,9 +127,12 @@ export function pickRelated<T extends Prod>(all: T[], current: Prod, count = 6):
 }
 
 // Homepage: a stable, diverse set of image-having products for one brand.
+// Primary-photo products fill the slots first; secondary (backfilled) photos
+// only appear if a brand doesn't have enough primary-photo products.
 export function pickBrandShowcase<T extends Prod>(all: T[], brand: BrandDef, count = 8): T[] {
-  const pool = all.filter(
-    (p) => brand.match(p.brandCompatibility || "") && hasSlug(p) && hasUsableImage(p)
-  );
-  return pickDiverse(pool, count, `home|${brand.slug}`);
+  const inBrand = all.filter((p) => brand.match(p.brandCompatibility || "") && hasSlug(p));
+  const primary = inBrand.filter(isPrimaryImage);
+  if (primary.length >= count) return pickDiverse(primary, count, `home|${brand.slug}`);
+  const withImg = inBrand.filter(hasUsableImage);
+  return pickDiverse(withImg, count, `home|${brand.slug}`);
 }

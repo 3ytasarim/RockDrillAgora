@@ -183,7 +183,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
-      .orderBy(desc(products.createdAt));
+      .orderBy(asc(products.imageIsSecondary), desc(products.createdAt));
     
     return results.map(result => ({
       ...result.products,
@@ -272,7 +272,7 @@ export class DatabaseStorage implements IStorage {
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .where(whereSQL)
-      .orderBy(asc(brandPriority), desc(products.isFeatured), desc(products.createdAt))
+      .orderBy(asc(products.imageIsSecondary), asc(brandPriority), desc(products.isFeatured), desc(products.createdAt))
       .limit(limit)
       .offset(offset);
 
@@ -308,8 +308,8 @@ export class DatabaseStorage implements IStorage {
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .where(eq(products.categoryId, categoryId))
-      .orderBy(desc(products.createdAt));
-    
+      .orderBy(asc(products.imageIsSecondary), desc(products.createdAt));
+
     return results.map(result => ({
       ...result.products,
       category: result.categories,

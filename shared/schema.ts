@@ -23,6 +23,11 @@ export const products = pgTable("products", {
   finalPrice: decimal("final_price", { precision: 10, scale: 2 }).notNull(),
   imageUrl: text("image_url"),
   imageUrls: text("image_urls").array(),
+  // true for products whose photo was backfilled from a lower-confidence
+  // source after the initial catalogue import (vs. the primary photo set).
+  // Used only to sort these products after everything else in listings —
+  // it is not shown to buyers and does not affect indexability.
+  imageIsSecondary: boolean("image_is_secondary").notNull().default(false),
   categoryId: varchar("category_id").references(() => categories.id),
   brandCompatibility: text("brand_compatibility"),
   stockStatus: text("stock_status").notNull().default("in_stock"),
