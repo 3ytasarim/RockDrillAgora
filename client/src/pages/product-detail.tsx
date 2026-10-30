@@ -10,6 +10,7 @@ import type { ProductWithCategory } from "@shared/schema";
 import RequestQuoteModal from "@/components/request-quote-modal";
 import { Helmet } from "react-helmet";
 import { getCodeVariants, buildProductTitle, getProductSlug, getProductHref } from "@shared/product-utils";
+import { buildSeoTitle, buildSeoDescription, buildSeoSummary, buildImageAlt, buildImageCaption, getProductCodeForms } from "@shared/product-seo";
 import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getProductDescription } from "@shared/product-content";
 
 function ProductSchema({ product }: { product: ProductWithCategory }) {
@@ -18,20 +19,25 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
 
   const canonicalUrl = `${baseUrl}/urun/${getProductSlug(product)}`;
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
-  const displayTitle = buildProductTitle({ brand: product.brandCompatibility, name: product.name, code: product.delkomCode });
+  const codeForms = getProductCodeForms(product);
+  const allImageUrls = (product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [productImage])
+    .map((u) => (u.startsWith('http') ? u : `${baseUrl}${u}`));
+  const seoTitle = buildSeoTitle(product);
+  const seoDescription = buildSeoDescription(product);
 
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": product.name,
     "description": product.description || `${product.name} - Rock drill spare part`,
-    "sku": product.delkomCode,
-    "mpn": product.delkomCode,
+    "sku": codeForms.joined,
+    "mpn": codeForms.joined,
+    ...(codeForms.all.length > 1 ? { "alternateName": codeForms.all } : {}),
     "brand": {
       "@type": "Brand",
       "name": product.brandCompatibility || "Rock Drill Parts"
     },
-    "image": fullImageUrl,
+    "image": allImageUrls,
     "category": product.category?.name || "Spare Parts",
     "offers": {
       "@type": "Offer",
@@ -46,6 +52,7 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
       },
       "seller": {
         "@type": "Organization",
+        "@id": `${baseUrl}/#organization`,
         "name": "Agora Rock Drill"
       }
     }
@@ -88,10 +95,10 @@ function ProductSchema({ product }: { product: ProductWithCategory }) {
 
   return (
     <Helmet>
-      <title>{product.name} - {product.delkomCode} | Agora Rock Drill</title>
-      <meta name="description" content={`${product.name} (${product.delkomCode}) - ${product.brandCompatibility || 'Rock drill'} spare part. ${product.description || 'High quality replacement part for rock drilling equipment.'}`} />
-      <meta property="og:title" content={`${product.name} - ${product.delkomCode}`} />
-      <meta property="og:description" content={product.description || `Rock drill spare part - ${product.delkomCode}`} />
+      <title>{seoTitle}</title>
+      <meta name="description" content={seoDescription} />
+      <meta property="og:title" content={seoTitle} />
+      <meta property="og:description" content={seoDescription} />
       <meta property="og:image" content={fullImageUrl} />
       <meta property="og:type" content="product" />
       <meta property="og:url" content={canonicalUrl} />
@@ -269,16 +276,21 @@ export default function ProductDetail() {
                           >
                             <img
                               src={image}
-                              alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""} – image ${index + 1}`}
+                              alt={buildImageAlt(product, index)}
                               width={1000}
                               height={1000}
                               className="w-full aspect-square object-contain bg-white rounded-2xl p-3"
                               loading={index === 0 ? "eager" : "lazy"}
+                              {...(index === 0 ? { fetchPriority: "high" as const } : {})}
                             />
                           </motion.div>
                         ))}
                       </div>
                     </div>
+
+                    <p className="mt-2 text-xs text-muted-foreground" data-testid="text-image-caption">
+                      {buildImageCaption(product)}
+                    </p>
 
                     {/* Navigation Buttons */}
                     {productImages.length > 1 && (
@@ -319,7 +331,7 @@ export default function ProductDetail() {
                         >
                           <img
                             src={image}
-                            alt={`${product.name} thumbnail ${index + 1}`}
+                            alt={`${buildImageAlt(product, index)} thumbnail`}
                             className="w-full h-20 object-contain bg-white p-1"
                             loading="lazy"
                           />
@@ -355,9 +367,7 @@ export default function ProductDetail() {
                   {buildProductTitle({ brand: product.brandCompatibility, name: product.name, code: product.delkomCode })}
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  {product.description?.trim()
-                    ? product.description
-                    : `${product.name}${product.delkomCode ? `, OEM part number ${product.delkomCode}` : ""}${product.brandCompatibility ? ` compatible with ${product.brandCompatibility}` : ""} rock drilling equipment. Contact us for price, stock and delivery time.`}
+                  {buildSeoSummary(product)}
                 </p>
               </motion.div>
             </div>
@@ -552,7 +562,7 @@ export default function ProductDetail() {
                         {relatedImage ? (
                           <img
                             src={relatedImage}
-                            alt={related.name}
+                            alt={buildImageAlt(related)}
                             className="w-full h-full object-cover"
                             loading="lazy"
                           />

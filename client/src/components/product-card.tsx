@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import type { ProductWithCategory } from "@shared/schema";
 import { buildProductTitle, getProductHref } from "@shared/product-utils";
+import { buildImageAlt } from "@shared/product-seo";
 
 interface ProductCardProps {
   product: ProductWithCategory;
@@ -22,7 +23,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         {image ? (
           <img
             src={image}
-            alt={`${product.name}${product.delkomCode ? ` – ${product.delkomCode}` : ""}`}
+            alt={buildImageAlt(product)}
             className="w-full h-48 object-contain p-4 bg-white"
             width={300}
             height={220}
