@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
 import { buildProductTitle, getCodeVariants, getProductSlug } from "@shared/product-utils";
+import { buildSeoTitle, buildSeoDescription, buildSeoSummary, buildImageAlt, buildImageCaption, getProductCodeForms } from "@shared/product-seo";
 import { STATIC_SITEMAP_PAGES } from "@shared/sitemap-pages";
 import { getCompatibleMachines, getCompatibleMachinesIntro, getTechnicalSpecs, getProductDescription } from "@shared/product-content";
 import { BRANDS, brandBySlug, brandForProduct, pickRelated, pickBrandShowcase } from "@shared/catalog";
@@ -67,25 +68,17 @@ function generateProductHtml(
   // --- Combined display title (Brand – Name – spaced – joined – dashed) ---
   const displayTitle = buildProductTitle({ brand: brands, name: product.name, code });
 
-  // --- Unique SEO <title> (keeps brand/site suffix for search snippets) ---
-  const title = `${product.name}${code ? ` ${code}` : ''}${primaryBrand ? ` | ${primaryBrand}` : ''} spare part | Agora Rock Drill`;
-
-  // --- Visible one-line summary (shown under the H1) — clean, never truncated ---
-  const brandPart = primaryBrand ? ` compatible with ${primaryBrand}` : '';
-  const summary = `${product.name}${code ? `, OEM part number ${code}` : ''}${brandPart} rock drilling equipment. Contact Agora Rock Drill for price, stock and delivery time.`;
-
-  // --- Meta description: the real product description if we have one, else the summary ---
-  let description: string;
-  if (product.description && product.description.trim().length > 40) {
-    const d = product.description.trim().replace(/\s+/g, ' ');
-    description = d.length > 158 ? d.slice(0, 155).replace(/\s+\S*$/, '') + '…' : d;
-  } else {
-    description = summary.length > 158 ? summary.slice(0, 155).replace(/\s+\S*$/, '') + '…' : summary;
-  }
+  // --- SEO strings: every written form of the part number (spaced / joined / dashed) ---
+  const seoInput = { name: product.name, delkomCode: code, brandCompatibility: brands };
+  const title = buildSeoTitle(seoInput);
+  const summary = buildSeoSummary(seoInput);
+  const description = buildSeoDescription(seoInput);
+  const codeForms = getProductCodeForms(seoInput);
+  const imageAlt = buildImageAlt(seoInput);
+  const imageCaption = buildImageCaption(seoInput);
 
   // --- Escaped variants for safe HTML insertion (raw versions kept for JSON-LD) ---
   const eName = escapeHtml(product.name);
-  const eCode = escapeHtml(code);
   const eBrands = escapeHtml(brands);
   const ePrimaryBrand = escapeHtml(primaryBrand);
   const eTitle = escapeHtml(title);
@@ -96,6 +89,8 @@ function generateProductHtml(
   const productImage = product.imageUrls?.[0] || product.imageUrl || `${baseUrl}/og-image.jpg`;
   const fullImageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`;
   const eFullImageUrl = escapeHtml(fullImageUrl);
+  const allImageUrls = (product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [productImage])
+    .map((u) => (u.startsWith('http') ? u : `${baseUrl}${u}`));
 
   // --- Canonical URL (SEO-friendly /urun/ slug) ---
   const productSlug = getProductSlug({
@@ -122,9 +117,10 @@ function generateProductHtml(
     "@type": "Product",
     "name": product.name,
     "description": jsonLdDescription,
-    "sku": code,
-    "mpn": code,
-    "image": fullImageUrl,
+    "sku": codeForms.joined,
+    "mpn": codeForms.joined,
+    ...(codeForms.all.length > 1 ? { "alternateName": codeForms.all } : {}),
+    "image": allImageUrls,
     "brand": { "@type": "Brand", "name": primaryBrand || "Agora Rock Drill" },
     "manufacturer": { "@type": "Organization", "name": "Agora Rock Drill" },
     "category": product.category?.name || "Rock Drill Spare Parts",
@@ -141,7 +137,7 @@ function generateProductHtml(
         "priceCurrency": "USD",
         "valueAddedTaxIncluded": false
       },
-      "seller": { "@type": "Organization", "name": "Agora Rock Drill" }
+      "seller": { "@type": "Organization", "@id": `${baseUrl}/#organization`, "name": "Agora Rock Drill" }
     }
   };
 
@@ -212,14 +208,12 @@ function generateProductHtml(
             const rpImg = rp.imageUrls?.[0] || `${baseUrl}/og-image.jpg`;
             const rpFullImg = rpImg.startsWith('http') ? rpImg : `${baseUrl}${rpImg}`;
             const rpBrand = rp.brandCompatibility ? rp.brandCompatibility.split(',')[0].trim() : '';
-            const eRpName = escapeHtml(rp.name);
             const eRpTitle = escapeHtml(buildProductTitle(rp));
-            const eRpCode = escapeHtml(rpCode);
             const eRpBrand = escapeHtml(rpBrand);
             return `
             <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;">
               <a href="${escapeHtml(rpUrl)}" style="text-decoration:none;color:inherit;display:block;">
-                <img src="${escapeHtml(rpFullImg)}" alt="${eRpName} - ${eRpCode}" width="180" height="160"
+                <img src="${escapeHtml(rpFullImg)}" alt="${escapeHtml(buildImageAlt(rp))}" width="180" height="160"
                      loading="lazy" style="width:100%;height:160px;object-fit:cover;" />
                 <div style="padding:12px;">
                   <h3 style="font-size:14px;font-weight:600;margin:0 0 4px;color:#1a1a1a;line-height:1.3;">${eRpTitle}</h3>
@@ -243,10 +237,11 @@ function generateProductHtml(
       </nav>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;">
-        <div>
-          <img src="${eFullImageUrl}" alt="${eName} - ${eCode} spare part" width="500" height="500"
+        <figure style="margin:0;">
+          <img src="${eFullImageUrl}" alt="${escapeHtml(imageAlt)}" width="500" height="500" fetchpriority="high"
                style="width:100%;max-width:500px;height:auto;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,.1);" />
-        </div>
+          <figcaption style="margin-top:8px;font-size:13px;color:#718096;">${escapeHtml(imageCaption)}</figcaption>
+        </figure>
         <div>
           <h1 style="font-size:32px;font-weight:700;margin:0 0 12px;color:#1a1a1a;">${escapeHtml(displayTitle)}</h1>
           <p style="font-size:18px;color:#4a5568;margin-bottom:20px;line-height:1.6;">${eSummary}</p>
@@ -370,7 +365,7 @@ function generateProductHtml(
   // Add SSR content inside <div id="root"> - React will hydrate over this
   html = html.replace(
     '<div id="root"></div>',
-    () => `<div id="root">${ssrContent}</div>`
+    () => `<div id="root">${ssrSiteHeaderHtml()}${ssrContent}${ssrSiteFooterHtml()}</div>`
   );
   
   return html;
@@ -403,6 +398,37 @@ async function getRelatedProducts(product: {
 }
 
 const BASE_URL = "https://agorarockdrill.shop";
+
+// Crawlable site navigation + footer for the server-rendered HTML. React
+// replaces #root on hydration, so these only matter to crawlers and to people
+// on a slow first paint, but they give every page the same internal links.
+function ssrSiteHeaderHtml(): string {
+  const link = (href: string, label: string) =>
+    `<a href="${escapeHtml(href)}" style="color:#1a1a1a;text-decoration:none;font-weight:500;margin-right:20px;">${escapeHtml(label)}</a>`;
+  return `
+    <header id="ssr-site-header" style="border-bottom:1px solid #e2e8f0;padding:14px 20px;font-family:system-ui,-apple-system,sans-serif;font-size:15px;">
+      <nav aria-label="Main" style="max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;">
+        <a href="${BASE_URL}/" style="font-weight:800;color:#1a1a1a;text-decoration:none;margin-right:28px;">Agora Rock Drill</a>
+        ${link("/spare-parts", "Spare Parts")}
+        ${BRANDS.map((b) => link(`/spare-parts/${b.slug}`, b.label)).join("")}
+        ${link("/about", "About")}
+        ${link("/contact", "Contact")}
+      </nav>
+    </header>`;
+}
+
+function ssrSiteFooterHtml(): string {
+  const link = (href: string, label: string) =>
+    `<a href="${escapeHtml(href)}" style="color:#475569;text-decoration:none;margin-right:18px;">${escapeHtml(label)}</a>`;
+  return `
+    <footer id="ssr-site-footer" style="border-top:1px solid #e2e8f0;margin-top:48px;padding:28px 20px;font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:#64748b;">
+      <div style="max-width:1280px;margin:0 auto;">
+        <p style="margin:0 0 10px;">${BRANDS.map((b) => link(`/spare-parts/${b.slug}`, `${b.label} spare parts`)).join("")}</p>
+        <p style="margin:0 0 10px;">${link("/about", "About")}${link("/contact", "Contact")}${link("/privacy", "Privacy Policy")}${link("/terms", "Terms & Conditions")}</p>
+        <p style="margin:0;">&copy; Agora Rock Drill A.Ş. &middot; Ankara, Türkiye</p>
+      </div>
+    </footer>`;
+}
 
 // Replace the head SEO tags in the template. All values pre-escaped by caller.
 function injectSeo(
@@ -438,7 +464,7 @@ function productCardHtml(p: { name: string; slug?: string | null; delkomCode?: s
   const img = p.imageUrls?.[0];
   const fullImg = img ? (img.startsWith("http") ? img : `${BASE_URL}${img}`) : "";
   const title = escapeHtml(buildProductTitle(p));
-  const alt = escapeHtml(`${p.name}${p.delkomCode ? ` – ${p.delkomCode}` : ""}`);
+  const alt = escapeHtml(buildImageAlt(p));
   return `
     <li style="list-style:none;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;">
       <a href="${escapeHtml(url)}" style="text-decoration:none;color:inherit;display:block;">
@@ -960,9 +986,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <h1 style="font-size:28px;font-weight:700;margin:0 0 10px;color:#1a1a1a;">${escapeHtml(opts.h1)}</h1>
       <p style="font-size:16px;color:#555;margin:0 0 8px;max-width:760px;line-height:1.6;">${escapeHtml(opts.blurb)}</p>
       <p style="font-size:14px;color:#888;margin:0 0 28px;">${opts.totalCount} parts${opts.totalPages > 1 ? ` · page ${opts.page} of ${opts.totalPages}` : ""}</p>
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 16px;color:#1a1a1a;">${escapeHtml(opts.h1.replace(/ Catalogue$/, ""))} — part numbers</h2>
       ${catalogGridHtml(opts.pageProducts)}
       ${paginationHtml(opts.basePath, opts.page, opts.totalPages)}
     </div>`;
+    const brandForPath = brandBySlug(opts.basePath.split("/").filter(Boolean)[1] || "");
+    const crumbs = [
+      { name: "Home", url: BASE_URL },
+      { name: "Spare Parts", url: `${BASE_URL}/spare-parts` },
+      ...(brandForPath ? [{ name: brandForPath.label, url: `${BASE_URL}/spare-parts/${brandForPath.slug}` }] : []),
+    ];
+    const jsonLdDocs = [
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": crumbs.map((c, i) => ({ "@type": "ListItem", "position": i + 1, "name": c.name, "item": c.url })),
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": opts.h1,
+        "url": canonical,
+        "description": opts.description,
+        "isPartOf": { "@id": `${BASE_URL}/#website` },
+        "mainEntity": {
+          "@type": "ItemList",
+          "numberOfItems": opts.totalCount,
+          "itemListElement": opts.pageProducts.map((pr: any, i: number) => ({
+            "@type": "ListItem",
+            "position": (opts.page - 1) * CATALOG_PAGE_SIZE + i + 1,
+            "url": `${BASE_URL}/urun/${getProductSlug(pr)}`,
+            "name": buildProductTitle(pr),
+          })),
+        },
+      },
+    ];
     let html = injectSeo(template, {
       title: escapeHtml(opts.title),
       description: escapeHtml(opts.description),
@@ -971,7 +1029,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       prev: prev && escapeHtml(prev),
       next: next && escapeHtml(next),
     });
-    html = html.replace(/(<div id="root">)/, (m) => `${m}\n${ssr}`);
+    html = html.replace("</head>", () => jsonLdDocs.map((o) => `<script type="application/ld+json">${safeJsonLd(o)}</script>`).join("\n") + "\n</head>");
+    html = html.replace(/(<div id="root">)/, (m) => `${m}\n${ssrSiteHeaderHtml()}${ssr}${ssrSiteFooterHtml()}`);
     return html;
   }
 
@@ -1093,7 +1152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canonical: `${BASE_URL}/`,
         ogType: "website",
       });
-      html = html.replace(/(<div id="root">)/, (m) => `${m}\n${ssr}`);
+      html = html.replace(/(<div id="root">)/, (m) => `${m}\n${ssrSiteHeaderHtml()}${ssr}${ssrSiteFooterHtml()}`);
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (error) {
       console.error("Error generating home SSR:", error);
@@ -1231,6 +1290,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // /llms.txt — plain-text orientation file for LLM/AI-answer crawlers.
   // https://llmstxt.org — supplementary only; does not replace SSR/sitemap/schema.
+  // The old generated "parts-index" doorway pages were removed on purpose.
+  // 410 Gone tells Google to drop them faster than a 404 would.
+  app.get(["/parts-index", "/parts-index/*", "/sitemap-parts-index.xml", "/sitemap-parts-index-:n.xml"], (_req, res) => {
+    res.status(410).set("X-Robots-Tag", "noindex").type("text/plain").send("Gone");
+  });
+
   app.get("/llms.txt", async (_req, res) => {
     try {
       const all = await storage.getAllProducts();
@@ -1400,8 +1465,8 @@ Sitemap: https://agorarockdrill.shop/sitemap.xml
               const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${baseUrl}${imageUrl}`;
               xml += '    <image:image>\n';
               xml += `      <image:loc>${sitemapEscapeXml(fullImageUrl)}</image:loc>\n`;
-              xml += `      <image:title>${sitemapEscapeXml(product.name || 'Product Image')}</image:title>\n`;
-              xml += `      <image:caption>${sitemapEscapeXml(product.name + ' - ' + (product.delkomCode || ''))}</image:caption>\n`;
+              xml += `      <image:title>${sitemapEscapeXml(buildImageAlt(product))}</image:title>\n`;
+              xml += `      <image:caption>${sitemapEscapeXml(buildImageCaption(product))}</image:caption>\n`;
               xml += '    </image:image>\n';
             }
           });
