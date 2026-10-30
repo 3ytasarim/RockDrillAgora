@@ -76,7 +76,12 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Vite fingerprints everything under /assets, so it is safe to cache forever.
+  app.use(
+    "/assets",
+    express.static(path.join(distPath, "assets"), { maxAge: "1y", immutable: true }),
+  );
+  app.use(express.static(distPath, { maxAge: "1h" }));
 
   // Anything reaching this point matched no static asset and no explicit
   // route in server/routes.ts (all real pages — home, catalogue, brand,

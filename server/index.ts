@@ -26,6 +26,18 @@ app.use((req, res, next) => {
   next();
 });
 
+app.disable("x-powered-by");
+
+// Baseline security headers (no CSP here: the site loads Google Fonts, Font Awesome and GA).
+app.use((_req, res, next) => {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+});
+
 app.use(express.json({
   verify: (req, _res, buf) => {
     req.rawBody = buf;
